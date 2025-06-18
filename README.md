@@ -108,7 +108,7 @@ opencc-purepy convert -i input.txt -o output.txt -c s2t -p
 | **10,000 chars**  |      **9.665 ms** |
 | **100,000 chars** |     **97.003 ms** |
 
-### 📝 Benchmark Notes
+#### 📝 Benchmark Notes
 
 - All tests were performed using Python opencc_purepy with dictionaries preloaded from JSON.
 - Conversion used OpenCC.convert(input_text) with segmentation and replacement logic.
