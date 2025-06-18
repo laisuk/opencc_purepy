@@ -27,3 +27,7 @@ opencc_purepy = ["dicts/*.*"]
 
 [project.scripts]
 opencc-purepy = "opencc_purepy.__main__:main"
+
+[project.urls]
+Homepage = "https://github.com/laisuk/opencc_purepy"
+Issues = "https://github.com/laisuk/opencc_purepy/issues"
