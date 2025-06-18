@@ -22,24 +22,24 @@ It uses dictionary-based segmentation and mapping logic inspired by [BYVoid/Open
 
 ## 🔁 Supported Conversion Configs
 
-| Code     | Description                          |
-|----------|--------------------------------------|
-| `s2t`    | Simplified → Traditional             |
-| `t2s`    | Traditional → Simplified             |
-| `s2tw`   | Simplified → Traditional (Taiwan)    |
-| `tw2s`   | Taiwan → Simplified                  |
-| `s2twp`  | Simplified → Traditional → Taiwan    |
-| `tw2sp`  | Taiwan → Traditional → Simplified    |
-| `s2hk`   | Simplified → Hong Kong               |
-| `hk2s`   | Hong Kong → Simplified               |
-| `t2tw`   | Traditional → Taiwan                 |
-| `tw2t`   | Taiwan → Traditional                 |
-| `t2twp`  | Traditional → Taiwan                 |
-| `tw2tp`  | Taiwan → Traditional                 |
-| `t2hk`   | Traditional → Hong Kong              |
-| `hk2t`   | Hong Kong → Traditional              |
-| `t2jp`   | Traditional → Japanese Kanji         |
-| `jp2t`   | Japanese Kanji → Traditional         |
+| Code     | Description                                    |
+|----------|------------------------------------------------|
+| `s2t`    | Simplified → Traditional                       |
+| `t2s`    | Traditional → Simplified                       |
+| `s2tw`   | Simplified → Traditional (Taiwan)              |
+| `tw2s`   | Traditional (Taiwan) → Simplified              |
+| `s2twp`  | Simplified → Traditional (Taiwan) with idioms  |
+| `tw2sp`  | Traditional (Taiwan)  → Simplified with idioms |
+| `s2hk`   | Simplified → Traditional (Hong Kong)           |
+| `hk2s`   | Traditional (Hong Kong) → Simplified           |
+| `t2tw`   | Traditional → Traditional (Taiwan)             |
+| `tw2t`   | Traditional (Taiwan) → Traditional             |
+| `t2twp`  | Traditional → Traditional (Taiwan) with idioms |
+| `tw2tp`  | Traditional (Taiwan) → Traditional with idioms |
+| `t2hk`   | Traditional → Traditional (Hong Kong)          |
+| `hk2t`   | Traditional (Hong Kong) → Traditional          |
+| `t2jp`   | Japanese Kyojitai → Shinjitai                  |
+| `jp2t`   | Japanese Shinjitai → Kyojitai                  |
 
 ---
 
