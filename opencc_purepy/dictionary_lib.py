@@ -3,7 +3,15 @@ from typing import Dict, Tuple
 
 
 class DictionaryMaxlength:
+    """
+    A container for OpenCC-compatible dictionaries with each represented
+    as a (dict, max_length) tuple to optimize the longest match lookup.
+    """
+
     def __init__(self):
+        """
+        Initialize all supported dictionary attributes to empty dicts with max_length = 0.
+        """
         self.st_characters: Tuple[Dict[str, str], int] = ({}, 0)
         self.st_phrases: Tuple[Dict[str, str], int] = ({}, 0)
         self.ts_characters: Tuple[Dict[str, str], int] = ({}, 0)
@@ -23,11 +31,18 @@ class DictionaryMaxlength:
 
     @classmethod
     def new(cls):
-        # return cls.from_dicts()
+        """
+        Create a new instance by loading from precompiled JSON.
+        :return: DictionaryMaxlength instance
+        """
         return cls.from_json()
 
     @classmethod
     def from_json(cls):
+        """
+        Load dictionary data from a JSON file where each field is a list [dict, int].
+        :return: Populated DictionaryMaxlength instance
+        """
         import json
         path = Path(__file__).parent / "dicts" / "dictionary_maxlength.json"
         with open(path, "r", encoding="utf-8") as f:
@@ -36,7 +51,6 @@ class DictionaryMaxlength:
         instance = cls()
 
         for key, value in raw_data.items():
-            # Ensure the value is a list of [dict, int] and convert to tuple
             if isinstance(value, list) and len(value) == 2 and isinstance(value[0], dict) and isinstance(value[1], int):
                 setattr(instance, key, (value[0], value[1]))
             else:
@@ -46,6 +60,11 @@ class DictionaryMaxlength:
 
     @classmethod
     def from_dicts(cls):
+        """
+        Load dictionaries directly from text files in the 'dicts' folder.
+        Each file should contain tab-separated mappings.
+        :return: Populated DictionaryMaxlength instance
+        """
         instance = cls()
         paths = {
             'st_characters': "STCharacters.txt",
@@ -75,6 +94,12 @@ class DictionaryMaxlength:
 
     @staticmethod
     def load_dictionary_maxlength(content: str) -> Tuple[Dict[str, str], int]:
+        """
+        Load a dictionary from plain text and determine the max phrase length.
+
+        :param content: Raw dictionary text (one mapping per line)
+        :return: Tuple of dict and max key length
+        """
         dictionary = {}
         max_length = 1
 
@@ -90,6 +115,11 @@ class DictionaryMaxlength:
         return dictionary, max_length
 
     def serialize_to_json(self, path: str):
+        """
+        Serialize the current dictionary data to a JSON file.
+
+        :param path: Output file path
+        """
         import json
         with open(path, "w", encoding="utf-8") as f:
             json.dump(self.__dict__, f, ensure_ascii=False, indent=2)
