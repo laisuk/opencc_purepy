@@ -24,20 +24,20 @@ def main():
     parser_convert.add_argument('--out-enc', metavar='<encoding>', default='UTF-8', help='Output encoding')
     parser_convert.set_defaults(func=convert_cmd.main)
 
-    # ---- dict-generate subcommand ----
-    parser_dict = subparsers.add_parser('dictgen', help='Generate dictionary')
-    parser_dict.add_argument(
+    # ---- dictgen subcommand ----
+    parser_dictgen = subparsers.add_parser('dictgen', help='Generate dictionary')
+    parser_dictgen.add_argument(
         "-f", "--format",
         choices=["json"],
         default="json",
         help="Dictionary format: [json]"
     )
-    parser_dict.add_argument(
+    parser_dictgen.add_argument(
         "-o", "--output",
         metavar="<filename>",
         help="Write generated dictionary to <filename>. If not specified, a default filename is used."
     )
-    parser_dict.set_defaults(func=dictgen_cmd.main)
+    parser_dictgen.set_defaults(func=dictgen_cmd.main)
 
     args = parser.parse_args()
     return args.func(args)
