@@ -1,5 +1,6 @@
 # opencc_purepy
 
+[![PyPI version](https://img.shields.io/pypi/v/opencc-purepy.svg)](https://pypi.org/project/opencc-purepy/)
 [![License](https://img.shields.io/github/license/laisuk/opencc_pyo3)](https://github.com/laisuk/opencc_pyo3/blob/main/LICENSE)
 
 **`opencc_purepy`** is a **pure Python implementation** of OpenCC (Open Chinese Convert), enabling conversion between different Chinese text variants such as Simplified, Traditional, Hong Kong, Taiwan, and Japanese Kanji.  
@@ -45,7 +46,7 @@ It uses dictionary-based segmentation and mapping logic inspired by [BYVoid/Open
 
 ```bash
 pip install opencc-purepy
-````
+```
 
 ## 🚀 Usage
 
