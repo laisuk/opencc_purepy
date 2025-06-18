@@ -56,8 +56,10 @@ class OpenCC:
     def segment_replace(self, text: str, dictionaries: List[Tuple[Dict[str, str], int]]) -> str:
         max_word_length = max((length for _, length in dictionaries), default=1)
         ranges = self.get_split_ranges(text)
+        chars = list(text)  # convert once
+
         return "".join(
-            self.convert_by(list(text[start:end]), dictionaries, max_word_length)
+            self.convert_by(chars[start:end], dictionaries, max_word_length)
             for start, end in ranges
         )
 
@@ -65,33 +67,40 @@ class OpenCC:
         if not text_chars:
             return ""
 
-        delimiters = self.delimiters  # Local variable for speed
+        delimiters = self.delimiters
         if len(text_chars) == 1 and text_chars[0] in delimiters:
             return text_chars[0]
 
         result = []
         i = 0
-        text_chars_len = len(text_chars)
-        while i < text_chars_len:
+        n = len(text_chars)
+
+        # Pre-allocate buffer for match reuse
+        while i < n:
+            remaining = n - i
             best_match = None
             best_length = 0
-            # Use local variable for dictionaries
-            for length in range(min(max_word_length, text_chars_len - i), 0, -1):
-                word = "".join(text_chars[i:i + length])
+
+            for length in range(min(max_word_length, remaining), 0, -1):
+                end = i + length
+                word = ''.join(text_chars[i:end])
                 for d, _ in dictionaries:
                     match = d.get(word)
                     if match is not None:
                         best_match = match
                         best_length = length
                         break
-                if best_length:
+                if best_match:
                     break
-            if not best_length:
-                best_match = text_chars[i]
-                best_length = 1
-            result.append(best_match)
-            i += best_length
-        return "".join(result)
+
+            if best_match is not None:
+                result.append(best_match)
+                i += best_length
+            else:
+                result.append(text_chars[i])
+                i += 1
+
+        return ''.join(result)
 
     def get_split_ranges(self, text: str) -> List[Tuple[int, int]]:
         """

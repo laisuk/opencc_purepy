@@ -31,9 +31,17 @@ class DictionaryMaxlength:
         import json
         path = Path(__file__).parent / "dicts" / "dictionary_maxlength.json"
         with open(path, "r", encoding="utf-8") as f:
-            data = json.load(f)
+            raw_data = json.load(f)
+
         instance = cls()
-        instance.__dict__.update(data)
+
+        for key, value in raw_data.items():
+            # Ensure the value is a list of [dict, int] and convert to tuple
+            if isinstance(value, list) and len(value) == 2 and isinstance(value[0], dict) and isinstance(value[1], int):
+                setattr(instance, key, (value[0], value[1]))
+            else:
+                raise ValueError(f"Invalid dictionary format for key: {key}")
+
         return instance
 
     @classmethod
