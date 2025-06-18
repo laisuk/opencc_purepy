@@ -18,6 +18,10 @@ classifiers = [
     "Topic :: Text Processing :: Linguistic"
 ]
 
+[project.urls]
+Homepage = "https://github.com/laisuk/opencc_purepy"
+Issues = "https://github.com/laisuk/opencc_purepy/issues"
+
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["opencc_purepy"]
@@ -27,7 +31,3 @@ opencc_purepy = ["dicts/*.*"]
 
 [project.scripts]
 opencc-purepy = "opencc_purepy.__main__:main"
-
-[project.urls]
-Homepage = "https://github.com/laisuk/opencc_purepy"
-Issues = "https://github.com/laisuk/opencc_purepy/issues"
