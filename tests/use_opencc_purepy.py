@@ -1,4 +1,4 @@
-from opencc_purepy.core import OpenCC
+from opencc_purepy import OpenCC
 
 text = "“春眠不觉晓，处处闻啼鸟。”"
 opencc = OpenCC("s2t")
