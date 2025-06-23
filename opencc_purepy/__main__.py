@@ -3,19 +3,19 @@ from __future__ import print_function
 import argparse
 import sys
 from . import dictgen_cmd
-from . import convert_cmd  # We'll move your current logic into convert_cmd.py
+from . import convert_cmd
 
 def main():
     parser = argparse.ArgumentParser(
         prog='opencc_purepy',
-        description='OpenCC CLI with multiple tools',
+        description='Pure Python OpenCC CLI with multiple tools',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
 
     subparsers = parser.add_subparsers(dest='command', required=True)
 
     # ---- convert subcommand ----
-    parser_convert = subparsers.add_parser('convert', help='Convert text using OpenCC')
+    parser_convert = subparsers.add_parser('convert', help='Convert text using pure Python OpenCC')
     parser_convert.add_argument('-i', '--input', metavar='<file>', help='Input file')
     parser_convert.add_argument('-o', '--output', metavar='<file>', help='Output file')
     parser_convert.add_argument('-c', '--config', metavar='<conversion>', help='Conversion configuration')
@@ -25,7 +25,7 @@ def main():
     parser_convert.set_defaults(func=convert_cmd.main)
 
     # ---- dictgen subcommand ----
-    parser_dictgen = subparsers.add_parser('dictgen', help='Generate dictionary')
+    parser_dictgen = subparsers.add_parser('dictgen', help='Generate dictionary for pure Python OpenCC')
     parser_dictgen.add_argument(
         "-f", "--format",
         choices=["json"],
