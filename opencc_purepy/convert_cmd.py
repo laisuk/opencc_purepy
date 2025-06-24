@@ -2,7 +2,8 @@ import io
 import sys
 import os
 from opencc_purepy import OpenCC
-from .office_doc_helper import OFFICE_FORMATS, convert_office_doc # Must be available
+from .office_doc_helper import OFFICE_FORMATS, convert_office_doc
+
 
 def main(args):
     if getattr(args, "office", False):
@@ -24,7 +25,8 @@ def main(args):
         if not output_file:
             input_name = os.path.splitext(os.path.basename(input_file))[0]
             input_dir = os.path.dirname(input_file) or os.getcwd()
-            ext = f".{office_format}" if auto_ext and office_format and office_format in OFFICE_FORMATS else os.path.splitext(input_file)[1]
+            ext = f".{office_format}" if auto_ext and office_format and office_format in OFFICE_FORMATS else \
+            os.path.splitext(input_file)[1]
             output_file = os.path.join(input_dir, f"{input_name}_converted{ext}")
             print(f"ℹ️ Output file not specified. Using: {output_file}", file=sys.stderr)
 
@@ -41,7 +43,7 @@ def main(args):
             print(f"ℹ️ Auto-extension applied: {output_file}", file=sys.stderr)
 
         try:
-            success, message =convert_office_doc(
+            success, message = convert_office_doc(
                 input_file,
                 output_file,
                 office_format,
