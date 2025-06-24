@@ -15,13 +15,20 @@ def main():
     subparsers = parser.add_subparsers(dest='command', required=True)
 
     # ---- convert subcommand ----
-    parser_convert = subparsers.add_parser('convert', help='Convert text using pure Python OpenCC')
+    parser_convert = subparsers.add_parser('convert', help='Convert text or Office files using pure Python OpenCC')
     parser_convert.add_argument('-i', '--input', metavar='<file>', help='Input file')
     parser_convert.add_argument('-o', '--output', metavar='<file>', help='Output file')
     parser_convert.add_argument('-c', '--config', metavar='<conversion>', help='Conversion configuration')
     parser_convert.add_argument('-p', '--punct', action='store_true', default=False, help='Punctuation conversion: True/False')
     parser_convert.add_argument('--in-enc', metavar='<encoding>', default='UTF-8', help='Input encoding')
     parser_convert.add_argument('--out-enc', metavar='<encoding>', default='UTF-8', help='Output encoding')
+
+    # 🆕 Office-specific options
+    parser_convert.add_argument('--office', action='store_true', default=False, help='Enable Office document conversion mode')
+    parser_convert.add_argument('--format', metavar='<format>', help='Target Office format (e.g., docx, xlsx, pptx, odt, epub)')
+    parser_convert.add_argument('--auto-ext', action='store_true', default=False, help='Auto-append extension to output file')
+    parser_convert.add_argument('--keep-font', action='store_true', default=False, help='Preserve font-family information in Office content')
+
     parser_convert.set_defaults(func=convert_cmd.main)
 
     # ---- dictgen subcommand ----

@@ -66,6 +66,8 @@ print(converted)  # 「春眠不覺曉，處處聞啼鳥。」
 
 ### 🖥 CLI
 
+#### 🔤 Text File Conversion
+
 ```sh
 python -m opencc_purepy convert -i input.txt -o output.txt -c s2t -p
 ```
@@ -75,6 +77,22 @@ Or if installed as a script:
 ```bash
 opencc-purepy convert -i input.txt -o output.txt -c s2t -p
 ```
+
+#### 🧾 Office Document Conversion (`--office`)
+Supports: `.docx`, `.xlsx`, `.pptx`, `.odt`, `.ods`, `.odp`, `.epub`
+
+```bash
+# Convert Word document (.docx) with font preservation
+opencc-purepy convert --office -i example.docx -c t2s --keep-font
+
+# Convert EPUB and auto-detect output name
+opencc-purepy convert --office -i book.epub -c s2t --auto-ext
+
+# Convert Excel and specify output path and format explicitly
+opencc-purepy convert --office -i sheet.xlsx -o result.xlsx -c s2tw --format xlsx
+```
+
+> ℹ️ When --office is enabled, it will process the input as an Office or EPUB document and apply OpenCC conversion internally.
 
 ## 🧩 API Reference
 
