@@ -1,3 +1,9 @@
+"""
+Helpers for converting Office and EPUB documents using OpenCC.
+
+Includes functions for extracting, converting, and re-packaging Office XML-based formats
+(docx, xlsx, pptx, odt, ods, odp, epub) with optional font preservation.
+"""
 import os
 import re
 import shutil
@@ -68,6 +74,7 @@ def convert_office_doc(
                 font_counter = 0
 
                 if pattern:
+                    # Replace font-family values with unique markers to preserve them during conversion
                     def replace_font(match):
                         nonlocal font_counter
                         font_key = f"__F_O_N_T_{font_counter}__"
@@ -115,6 +122,17 @@ def convert_office_doc(
 
 
 def _get_target_xml_paths(office_format: str, base_dir: str) -> Optional[List[str]]:
+    """
+    Returns a list of XML file paths within the extracted Office/EPUB directory
+    that should be converted for the given format.
+
+    Args:
+        office_format: The document format (e.g., 'docx', 'xlsx', 'epub').
+        base_dir: The root directory of the extracted archive.
+
+    Returns:
+        List of relative XML file paths to process, or None if unsupported.
+    """
     if office_format == "docx":
         return [os.path.join("word", "document.xml")]
     elif office_format == "xlsx":
@@ -147,6 +165,15 @@ def _get_target_xml_paths(office_format: str, base_dir: str) -> Optional[List[st
 
 
 def _get_font_regex_pattern(office_format: str) -> Optional[str]:
+    """
+    Returns a regex pattern to match font-family attributes for the given format.
+
+    Args:
+        office_format: The document format.
+
+    Returns:
+        Regex string or None if not applicable.
+    """
     return {
         "docx": r'(w:(?:eastAsia|ascii|hAnsi|cs)=")([^"]+)(")',
         "xlsx": r'(val="")(.*?)("")',

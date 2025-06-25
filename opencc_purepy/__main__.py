@@ -6,6 +6,18 @@ from . import dictgen_cmd
 from . import convert_cmd
 
 def main():
+    """
+    Main entry point for the opencc_purepy command-line interface.
+
+    Sets up argument parsing for subcommands:
+      - convert: Convert text or Office files using OpenCC.
+      - dictgen: Generate dictionary files for OpenCC.
+
+    Parses command-line arguments and dispatches to the appropriate subcommand handler.
+
+    Returns:
+        int: Exit code from the invoked subcommand.
+    """
     parser = argparse.ArgumentParser(
         prog='opencc_purepy',
         description='Pure Python OpenCC CLI with multiple tools',
@@ -50,4 +62,5 @@ def main():
     return args.func(args)
 
 if __name__ == '__main__':
+    # Entry point for the CLI tool
     sys.exit(main())
