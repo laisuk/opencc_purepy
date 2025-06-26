@@ -39,7 +39,8 @@ def main():
     parser_convert.add_argument('--office', action='store_true', default=False, help='Enable Office document conversion mode')
     parser_convert.add_argument('--format', metavar='<format>', help='Target Office format (e.g., docx, xlsx, pptx, odt, epub)')
     parser_convert.add_argument('--auto-ext', action='store_true', default=False, help='Auto-append extension to output file')
-    parser_convert.add_argument('--keep-font', action='store_true', default=False, help='Preserve font-family information in Office content')
+    parser_convert.add_argument('--keep-font', action='store_true', default=True, help='Preserve font-family information in Office content (Default: True)')
+    parser_convert.add_argument('--no-keep-font', action='store_false', dest='keep_font', help='Do not preserve font-family information in Office content (Overrides --keep-font)')
 
     parser_convert.set_defaults(func=convert_cmd.main)
 
