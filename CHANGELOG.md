@@ -8,7 +8,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [1.0.1] – 2025-06-26
 - Code optimized.
-- Add support for Office document fotmats text convertion.
+- Add support for Office documents and epub convertion.
 - Rebuild JSON dictionary after some minor Lexicon corrections.
 
 ---
