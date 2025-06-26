@@ -23,6 +23,7 @@ classifiers = [
 [project.urls]
 Homepage = "https://github.com/laisuk/opencc_purepy"
 Issues = "https://github.com/laisuk/opencc_purepy/issues"
+ChangeLog = "https://github.com/laisuk/opencc_purepy/blob/master/CHANGELOG.md"
 
 [tool.setuptools.packages.find]
 where = ["."]

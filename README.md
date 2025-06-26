@@ -19,6 +19,7 @@ It uses dictionary-based segmentation and mapping logic inspired by [BYVoid/Open
     - Traditional ↔ Hong Kong / Taiwan / Japanese
 - ✨ Optional punctuation style conversion
 - 🧠 Automatic simplified/traditional code detection
+- 🧾 CLI with Office document formats text conversion.
 
 ---
 
