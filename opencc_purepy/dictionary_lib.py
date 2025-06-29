@@ -7,7 +7,6 @@ class DictionaryMaxlength:
     A container for OpenCC-compatible dictionaries with each represented
     as a (dict, max_length) tuple to optimize the longest match lookup.
     """
-
     def __init__(self):
         """
         Initialize all supported dictionary attributes to empty dicts with max_length = 0.
@@ -29,10 +28,14 @@ class DictionaryMaxlength:
         self.jp_variants: Tuple[Dict[str, str], int] = ({}, 0)
         self.jp_variants_rev: Tuple[Dict[str, str], int] = ({}, 0)
 
+    def __repr__(self):
+        count = sum(bool(v[0]) for v in self.__dict__.values())
+        return "<DictionaryMaxlength with {} loaded dicts>".format(count)
+
     @classmethod
     def new(cls):
         """
-        Create a new instance by loading from precompiled JSON.
+        Shortcut to load from precompiled JSON for fast startup.
         :return: DictionaryMaxlength instance
         """
         return cls.from_json()
@@ -54,7 +57,7 @@ class DictionaryMaxlength:
             if isinstance(value, list) and len(value) == 2 and isinstance(value[0], dict) and isinstance(value[1], int):
                 setattr(instance, key, (value[0], value[1]))
             else:
-                raise ValueError(f"Invalid dictionary format for key: {key}")
+                raise ValueError("Invalid dictionary format for key: {}".format(key))
 
         return instance
 
@@ -110,7 +113,8 @@ class DictionaryMaxlength:
                 dictionary[phrase] = translation
                 max_length = max(max_length, len(phrase))
             else:
-                print(f"Invalid line format: {line}")
+                import warnings
+                warnings.warn("Ignoring malformed dictionary line: {}".format(line))
 
         return dictionary, max_length
 

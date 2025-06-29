@@ -18,6 +18,9 @@ It uses dictionary-based segmentation and mapping logic inspired by the original
 - **Automatic code detection** (Simplified/Traditional)
 - **CLI** with Office document support (`.docx`, `.xlsx`, `.pptx`, `.odt`, `.ods`, `.odp`, `.epub`)
 
+> 🐍 `opencc_purepy` core library is compatible with **Python 2.7+** if used as an import module.  
+The CLI tool `opencc-purepy` requires **Python 3.7 or later** (due to `f-string` usage).
+
 ---
 
 ## 🔁 Supported Conversion Configs
@@ -117,14 +120,14 @@ opencc-purepy convert --office -i sheet.xlsx -o result.xlsx -c s2tw --format xls
 ## ⚡ Benchmark
 
 > Measured on a local machine using the default "s2t" configuration.  
-> Each test averaged over 5 runs with preloaded dictionaries.
+> Each test averaged over 20 runs with preloaded dictionaries.
 
 | Input Size        | Avg. Time (ms) |
 |-------------------|---------------:|
-| **100 chars**     |        0.12 ms |
-| **1,000 chars**   |        0.96 ms |
-| **10,000 chars**  |        9.67 ms |
-| **100,000 chars** |       97.00 ms |
+| **100 chars**     |        0.15 ms |
+| **1,000 chars**   |        0.93 ms |
+| **10,000 chars**  |        8.76 ms |
+| **100,000 chars** |       86.05 ms |
 
 *Timings exclude initialization; focus is on pure conversion speed.*
 

@@ -1,13 +1,54 @@
 import re
-from typing import List, Dict, Tuple
+
+try:
+    from typing import List, Dict, Tuple, Optional
+except ImportError:
+    # Fallback for Python < 3.5
+    List = list
+    Dict = dict
+    Tuple = tuple
+    Optional = lambda x: x
+
 from .dictionary_lib import DictionaryMaxlength
 
-# Set of delimiters used to split input text into ranges
-DELIMITERS = set(
+# Pre-compiled regex for better performance
+STRIP_REGEX = re.compile(r"[!-/:-@\[-`{-~\t\n\v\f\r 0-9A-Za-z_著]")
+
+DELIMITERS = frozenset(
     " \t\n\r!\"#$%&'()*+,-./:;<=>?@[\\]^_{}|~＝、。“”‘’『』「」﹁﹂—－（）《》〈〉？！…／＼︒︑︔︓︿﹀︹︺︙︐［﹇］﹈︕︖︰︳︴︽︾︵︶｛︷｝︸﹃﹄【︻】︼　～．，；：")
 
-# Regex used to strip punctuation, ASCII and numbers from input
-STRIP_REGEX = re.compile(r"[!-/:-@\[-`{-~\t\n\v\f\r 0-9A-Za-z_著]")
+# Pre-computed punctuation mappings - fallback for older Python versions
+try:
+    PUNCT_S2T_MAP = str.maketrans({
+        '“': '「',
+        '”': '」',
+        '‘': '『',
+        '’': '』',
+    })
+
+    PUNCT_T2S_MAP = str.maketrans({
+        '「': '“',
+        '」': '”',
+        '『': '‘',
+        '』': '’',
+    })
+    HAS_MAKETRANS = True
+except (AttributeError, TypeError):
+    # Fallback for Python < 3.0
+    HAS_MAKETRANS = False
+    PUNCT_S2T_MAP = {
+        '“': '「',
+        '”': '」',
+        '‘': '『',
+        '’': '』',
+    }
+
+    PUNCT_T2S_MAP = {
+        '「': '“',
+        '」': '”',
+        '『': '‘',
+        '』': '’',
+    }
 
 
 class DictRefs:
@@ -15,6 +56,7 @@ class DictRefs:
     A utility class that wraps up to 3 rounds of dictionary applications
     to be used in multi-pass segment-replacement conversions.
     """
+    __slots__ = ['round_1', 'round_2', 'round_3', '_max_lengths']
 
     def __init__(self, round_1):
         """
@@ -23,6 +65,7 @@ class DictRefs:
         self.round_1 = round_1
         self.round_2 = None
         self.round_3 = None
+        self._max_lengths = None
 
     def with_round_2(self, round_2):
         """
@@ -30,6 +73,7 @@ class DictRefs:
         :return: self (for chaining)
         """
         self.round_2 = round_2
+        self._max_lengths = None  # Reset cache
         return self
 
     def with_round_3(self, round_3):
@@ -38,7 +82,20 @@ class DictRefs:
         :return: self (for chaining)
         """
         self.round_3 = round_3
+        self._max_lengths = None  # Reset cache
         return self
+
+    def _get_max_lengths(self):
+        """Cache max lengths for each round to avoid recomputation"""
+        if self._max_lengths is None:
+            self._max_lengths = []
+            for round_dicts in [self.round_1, self.round_2, self.round_3]:
+                if round_dicts:
+                    max_len = max((length for _, length in round_dicts), default=1)
+                    self._max_lengths.append(max_len)
+                else:
+                    self._max_lengths.append(0)
+        return self._max_lengths
 
     def apply_segment_replace(self, input_text, segment_replace):
         """
@@ -48,11 +105,13 @@ class DictRefs:
         :param segment_replace: The function to apply per segment
         :return: Transformed string
         """
-        output = segment_replace(input_text, self.round_1)
+        max_lengths = self._get_max_lengths()
+
+        output = segment_replace(input_text, self.round_1, max_lengths[0])
         if self.round_2:
-            output = segment_replace(output, self.round_2)
+            output = segment_replace(output, self.round_2, max_lengths[1])
         if self.round_3:
-            output = segment_replace(output, self.round_3)
+            output = segment_replace(output, self.round_3, max_lengths[2])
         return output
 
 
@@ -72,10 +131,13 @@ class OpenCC:
 
         :param config: Configuration name (optional)
         """
+        self._last_error = None
+        self._config_cache = {}
+
         if config in self.CONFIG_LIST:
             self.config = config
         else:
-            self._last_error = f"Invalid config: {config}"
+            self._last_error = "Invalid config: {}".format(config) if config else None
             self.config = "s2t"
 
         try:
@@ -95,7 +157,7 @@ class OpenCC:
         if config in self.CONFIG_LIST:
             self.config = config
         else:
-            self._last_error = f"Invalid config: {config}"
+            self._last_error = "Invalid config: {}".format(config)
             self.config = "s2t"
 
     def get_config(self):
@@ -123,70 +185,6 @@ class OpenCC:
         """
         return self._last_error
 
-    def segment_replace(self, text: str, dictionaries: List[Tuple[Dict[str, str], int]]) -> str:
-        """
-        Segment text by delimiters and apply dictionary replacements
-        on each segment.
-
-        :param text: Input string
-        :param dictionaries: List of (dict, max_length) tuples
-        :return: Converted string
-        """
-        max_word_length = max((length for _, length in dictionaries), default=1)
-        ranges = self.get_split_ranges(text)
-        chars = list(text)
-
-        return "".join(
-            self.convert_by(chars[start:end], dictionaries, max_word_length)
-            for start, end in ranges
-        )
-
-    def convert_by(self, text_chars: List[str], dictionaries, max_word_length: int) -> str:
-        """
-        Apply dictionary replacements to a character list using greedy max-length matching.
-
-        :param text_chars: List of characters to convert
-        :param dictionaries: List of (dict, max_length) tuples
-        :param max_word_length: Maximum matching word length
-        :return: Converted string
-        """
-        if not text_chars:
-            return ""
-
-        delimiters = self.delimiters
-        if len(text_chars) == 1 and text_chars[0] in delimiters:
-            return text_chars[0]
-
-        result = []
-        i = 0
-        n = len(text_chars)
-
-        while i < n:
-            remaining = n - i
-            best_match = None
-            best_length = 0
-
-            for length in range(min(max_word_length, remaining), 0, -1):
-                end = i + length
-                word = ''.join(text_chars[i:end])
-                for d, _ in dictionaries:
-                    match = d.get(word)
-                    if match is not None:
-                        best_match = match
-                        best_length = length
-                        break
-                if best_match:
-                    break
-
-            if best_match is not None:
-                result.append(best_match)
-                i += best_length
-            else:
-                result.append(text_chars[i])
-                i += 1
-
-        return ''.join(result)
-
     def get_split_ranges(self, text: str) -> List[Tuple[int, int]]:
         """
         Split the input into ranges of text between delimiters.
@@ -197,15 +195,143 @@ class OpenCC:
         """
         ranges = []
         start = 0
+        delimiters = self.delimiters
+
         for i, ch in enumerate(text):
-            if ch in self.delimiters:
+            if ch in delimiters:
                 ranges.append((start, i + 1))
                 start = i + 1
+
         if start < len(text):
             ranges.append((start, len(text)))
         return ranges
 
-    def s2t(self, input_text: str, punctuation: bool = False) -> str:
+    def segment_replace(self, text: str, dictionaries: List[Tuple[Dict[str, str], int]], max_word_length: int) -> str:
+        """
+        Segment text by delimiters and apply dictionary replacements
+        on each segment.
+
+        :param text: Input string
+        :param dictionaries: List of (dict, max_length) tuples
+        :param max_word_length: Pre-computed maximum word length
+        :return: Converted string
+        """
+        if not text:
+            return text
+
+        ranges = self.get_split_ranges(text)
+        if len(ranges) == 1 and ranges[0] == (0, len(text)):
+            # No delimiters, process entire text
+            return self.convert_segment(text, dictionaries, max_word_length)
+
+        # Process each range
+        result_parts = []
+        for start, end in ranges:
+            segment = text[start:end]
+            converted = self.convert_segment(segment, dictionaries, max_word_length)
+            result_parts.append(converted)
+
+        return ''.join(result_parts)
+
+    def convert_segment(self, segment: str, dictionaries, max_word_length: int) -> str:
+        """
+        Apply dictionary replacements to a text segment using greedy max-length matching.
+
+        :param segment: Text segment to convert
+        :param dictionaries: List of (dict, max_length) tuples
+        :param max_word_length: Maximum matching word length
+        :return: Converted string
+        """
+        if not segment:
+            return segment
+
+        # Check if segment is a single delimiter
+        if len(segment) == 1 and segment in self.delimiters:
+            return segment
+
+        result = []
+        i = 0
+        n = len(segment)
+
+        while i < n:
+            remaining = n - i
+            best_match = None
+            best_length = 0
+
+            # Try matches from longest to shortest
+            for length in range(min(max_word_length, remaining), 0, -1):
+                end = i + length
+                word = segment[i:end]
+
+                # Check all dictionaries for this word
+                for dict_data, _ in dictionaries:
+                    match = dict_data.get(word)
+                    if match is not None:
+                        best_match = match
+                        best_length = length
+                        break
+
+                if best_match:
+                    break
+
+            if best_match is not None:
+                result.append(best_match)
+                i += best_length
+            else:
+                result.append(segment[i])
+                i += 1
+
+        return ''.join(result)
+
+    def _get_dict_refs(self, config_key: str) -> Optional[DictRefs]:
+        """Get cached DictRefs for a config to avoid recreation"""
+        if config_key in self._config_cache:
+            return self._config_cache[config_key]
+
+        refs = None
+        d = self.dictionary
+
+        if config_key == "s2t":
+            refs = DictRefs([d.st_phrases, d.st_characters])
+        elif config_key == "t2s":
+            refs = DictRefs([d.ts_phrases, d.ts_characters])
+        elif config_key == "s2tw":
+            refs = DictRefs([d.st_phrases, d.st_characters]).with_round_2([d.tw_variants])
+        elif config_key == "tw2s":
+            refs = DictRefs([d.tw_variants_rev_phrases, d.tw_variants_rev]).with_round_2(
+                [d.ts_phrases, d.ts_characters])
+        elif config_key == "s2twp":
+            refs = DictRefs([d.st_phrases, d.st_characters, ]).with_round_2([d.tw_phrases, ]).with_round_3(
+                [d.tw_variants])
+        elif config_key == "tw2sp":
+            refs = DictRefs([d.tw_phrases_rev, d.tw_variants_rev_phrases, d.tw_variants_rev, ]).with_round_2(
+                [d.ts_phrases, d.ts_characters])
+        elif config_key == "s2hk":
+            refs = DictRefs([d.st_phrases, d.st_characters, ]).with_round_2([d.hk_variants])
+        elif config_key == "hk2s":
+            refs = DictRefs([d.hk_variants_rev_phrases, d.hk_variants_rev, ]).with_round_2(
+                [d.ts_phrases, d.ts_characters])
+
+        if refs:
+            self._config_cache[config_key] = refs
+        return refs
+
+    @staticmethod
+    def _convert_punctuation_legacy(text, punct_map):
+        """
+        (Fallback punctuation conversion for older Python versions)
+        Convert between Simplified and Traditional punctuation styles.
+
+        :param text: Input text
+        :param punct_map: Conversion punctuation map
+        :return: Text with punctuation converted
+        """
+        result = []
+        for char in text:
+            result.append(punct_map.get(char, char))
+        return ''.join(result)
+
+    def s2t(self, input_text, punctuation=False):
         """
         Convert Simplified Chinese to Traditional Chinese.
 
@@ -216,14 +342,18 @@ class OpenCC:
         if not input_text:
             self._last_error = "Input text is empty"
             return ""
-        refs = DictRefs([
-            self.dictionary.st_phrases,
-            self.dictionary.st_characters
-        ])
-        output = refs.apply_segment_replace(input_text, self.segment_replace)
-        return self.convert_punctuation(output, "s") if punctuation else output
 
-    def t2s(self, input_text: str, punctuation: bool = False) -> str:
+        refs = self._get_dict_refs("s2t")
+        output = refs.apply_segment_replace(input_text, self.segment_replace)
+
+        if punctuation:
+            if HAS_MAKETRANS:
+                return output.translate(PUNCT_S2T_MAP)
+            else:
+                return self._convert_punctuation_legacy(output, PUNCT_S2T_MAP)
+        return output
+
+    def t2s(self, input_text, punctuation=False):
         """
         Convert Traditional Chinese to Simplified Chinese.
 
@@ -231,14 +361,17 @@ class OpenCC:
         :param punctuation: Whether to convert punctuation
         :return: Transformed string in Simplified Chinese
         """
-        refs = DictRefs([
-            self.dictionary.ts_phrases,
-            self.dictionary.ts_characters
-        ])
+        refs = self._get_dict_refs("t2s")
         output = refs.apply_segment_replace(input_text, self.segment_replace)
-        return self.convert_punctuation(output, "t") if punctuation else output
 
-    def s2tw(self, input_text: str, punctuation: bool = False) -> str:
+        if punctuation:
+            if HAS_MAKETRANS:
+                return output.translate(PUNCT_T2S_MAP)
+            else:
+                return self._convert_punctuation_legacy(output, PUNCT_T2S_MAP)
+        return output
+
+    def s2tw(self, input_text, punctuation=False):
         """
         Convert Simplified Chinese to Traditional Chinese (Taiwan Standard).
 
@@ -246,16 +379,17 @@ class OpenCC:
         :param punctuation: Whether to convert punctuation
         :return: Transformed string in Taiwan Traditional Chinese
         """
-        refs = DictRefs([
-            self.dictionary.st_phrases,
-            self.dictionary.st_characters
-        ]).with_round_2([
-            self.dictionary.tw_variants
-        ])
+        refs = self._get_dict_refs("s2tw")
         output = refs.apply_segment_replace(input_text, self.segment_replace)
-        return self.convert_punctuation(output, "s") if punctuation else output
 
-    def tw2s(self, input_text: str, punctuation: bool = False) -> str:
+        if punctuation:
+            if HAS_MAKETRANS:
+                return output.translate(PUNCT_S2T_MAP)
+            else:
+                return self._convert_punctuation_legacy(output, PUNCT_S2T_MAP)
+        return output
+
+    def tw2s(self, input_text, punctuation=False):
         """
         Convert Traditional Chinese (Taiwan) to Simplified Chinese.
 
@@ -263,17 +397,17 @@ class OpenCC:
         :param punctuation: Whether to convert punctuation
         :return: Transformed string in Simplified Chinese
         """
-        refs = DictRefs([
-            self.dictionary.tw_variants_rev_phrases,
-            self.dictionary.tw_variants_rev
-        ]).with_round_2([
-            self.dictionary.ts_phrases,
-            self.dictionary.ts_characters
-        ])
+        refs = self._get_dict_refs("tw2s")
         output = refs.apply_segment_replace(input_text, self.segment_replace)
-        return self.convert_punctuation(output, "t") if punctuation else output
 
-    def s2twp(self, input_text: str, punctuation: bool = False) -> str:
+        if punctuation:
+            if HAS_MAKETRANS:
+                return output.translate(PUNCT_T2S_MAP)
+            else:
+                return self._convert_punctuation_legacy(output, PUNCT_T2S_MAP)
+        return output
+
+    def s2twp(self, input_text, punctuation=False):
         """
         Convert Simplified Chinese to Traditional (Taiwan) using phrases + variants.
 
@@ -281,18 +415,17 @@ class OpenCC:
         :param punctuation: Whether to convert punctuation
         :return: Transformed string
         """
-        refs = DictRefs([
-            self.dictionary.st_phrases,
-            self.dictionary.st_characters
-        ]).with_round_2([
-            self.dictionary.tw_phrases
-        ]).with_round_3([
-            self.dictionary.tw_variants
-        ])
+        refs = self._get_dict_refs("s2twp")
         output = refs.apply_segment_replace(input_text, self.segment_replace)
-        return self.convert_punctuation(output, "s") if punctuation else output
 
-    def tw2sp(self, input_text: str, punctuation: bool = False) -> str:
+        if punctuation:
+            if HAS_MAKETRANS:
+                return output.translate(PUNCT_S2T_MAP)
+            else:
+                return self._convert_punctuation_legacy(output, PUNCT_S2T_MAP)
+        return output
+
+    def tw2sp(self, input_text, punctuation=False):
         """
         Convert Traditional (Taiwan) with phrases to Simplified Chinese.
 
@@ -300,18 +433,17 @@ class OpenCC:
         :param punctuation: Whether to convert punctuation
         :return: Transformed string
         """
-        refs = DictRefs([
-            self.dictionary.tw_phrases_rev,
-            self.dictionary.tw_variants_rev_phrases,
-            self.dictionary.tw_variants_rev
-        ]).with_round_2([
-            self.dictionary.ts_phrases,
-            self.dictionary.ts_characters
-        ])
+        refs = self._get_dict_refs("tw2sp")
         output = refs.apply_segment_replace(input_text, self.segment_replace)
-        return self.convert_punctuation(output, "t") if punctuation else output
 
-    def s2hk(self, input_text: str, punctuation: bool = False) -> str:
+        if punctuation:
+            if HAS_MAKETRANS:
+                return output.translate(PUNCT_T2S_MAP)
+            else:
+                return self._convert_punctuation_legacy(output, PUNCT_T2S_MAP)
+        return output
+
+    def s2hk(self, input_text, punctuation=False):
         """
         Convert Simplified Chinese to Traditional (Hong Kong Standard).
 
@@ -319,16 +451,17 @@ class OpenCC:
         :param punctuation: Whether to convert punctuation
         :return: Transformed string
         """
-        refs = DictRefs([
-            self.dictionary.st_phrases,
-            self.dictionary.st_characters
-        ]).with_round_2([
-            self.dictionary.hk_variants
-        ])
+        refs = self._get_dict_refs("s2hk")
         output = refs.apply_segment_replace(input_text, self.segment_replace)
-        return self.convert_punctuation(output, "s") if punctuation else output
 
-    def hk2s(self, input_text: str, punctuation: bool = False) -> str:
+        if punctuation:
+            if HAS_MAKETRANS:
+                return output.translate(PUNCT_S2T_MAP)
+            else:
+                return self._convert_punctuation_legacy(output, PUNCT_S2T_MAP)
+        return output
+
+    def hk2s(self, input_text, punctuation=False):
         """
         Convert Traditional (Hong Kong) to Simplified Chinese.
 
@@ -336,119 +469,75 @@ class OpenCC:
         :param punctuation: Whether to convert punctuation
         :return: Simplified Chinese output
         """
-        refs = DictRefs([
-            self.dictionary.hk_variants_rev_phrases,
-            self.dictionary.hk_variants_rev
-        ]).with_round_2([
-            self.dictionary.ts_phrases,
-            self.dictionary.ts_characters
-        ])
+        refs = self._get_dict_refs("hk2s")
         output = refs.apply_segment_replace(input_text, self.segment_replace)
-        return self.convert_punctuation(output, "t") if punctuation else output
+
+        if punctuation:
+            if HAS_MAKETRANS:
+                return output.translate(PUNCT_T2S_MAP)
+            else:
+                return self._convert_punctuation_legacy(output, PUNCT_T2S_MAP)
+        return output
 
     def t2tw(self, input_text: str) -> str:
         """
         Convert Traditional Chinese to Taiwan Standard Traditional Chinese.
-
-        :param input_text: Input in Traditional Chinese
-        :return: Taiwan-style Traditional Chinese output
         """
-        refs = DictRefs([
-            self.dictionary.tw_variants
-        ])
+        refs = DictRefs([self.dictionary.tw_variants])
         return refs.apply_segment_replace(input_text, self.segment_replace)
 
     def t2twp(self, input_text: str) -> str:
         """
         Convert Traditional Chinese to Taiwan Standard using phrase and variant mappings.
-
-        :param input_text: Input in Traditional Chinese
-        :return: Output in Taiwan Traditional with phrases
         """
-        refs = DictRefs([
-            self.dictionary.tw_phrases
-        ]).with_round_2([
-            self.dictionary.tw_variants
-        ])
+        d = self.dictionary
+        refs = DictRefs([d.tw_phrases, ]).with_round_2([d.tw_variants])
         return refs.apply_segment_replace(input_text, self.segment_replace)
 
     def tw2t(self, input_text: str) -> str:
         """
         Convert Taiwan Traditional to general Traditional Chinese.
-
-        :param input_text: Input in Taiwan Traditional Chinese
-        :return: Output in generic Traditional Chinese
         """
-        refs = DictRefs([
-            self.dictionary.tw_variants_rev_phrases,
-            self.dictionary.tw_variants_rev
-        ])
+        d = self.dictionary
+        refs = DictRefs([d.tw_variants_rev_phrases, d.tw_variants_rev])
         return refs.apply_segment_replace(input_text, self.segment_replace)
 
     def tw2tp(self, input_text: str) -> str:
         """
         Convert Taiwan Traditional to Traditional with phrase reversal.
-
-        :param input_text: Input in Taiwan Traditional Chinese
-        :return: Output in Traditional Chinese with phrase map
         """
-        refs = DictRefs([
-            self.dictionary.tw_variants_rev_phrases,
-            self.dictionary.tw_variants_rev
-        ]).with_round_2([
-            self.dictionary.tw_phrases_rev
-        ])
+        d = self.dictionary
+        refs = DictRefs([d.tw_variants_rev_phrases, d.tw_variants_rev]).with_round_2([d.tw_phrases_rev])
         return refs.apply_segment_replace(input_text, self.segment_replace)
 
     def t2hk(self, input_text: str) -> str:
         """
         Convert Traditional Chinese to Hong Kong variant.
-
-        :param input_text: Input in Traditional Chinese
-        :return: Output in Hong Kong Traditional
         """
-        refs = DictRefs([
-            self.dictionary.hk_variants
-        ])
+        refs = DictRefs([self.dictionary.hk_variants])
         return refs.apply_segment_replace(input_text, self.segment_replace)
 
     def hk2t(self, input_text: str) -> str:
         """
         Convert Hong Kong Traditional to standard Traditional Chinese.
-
-        :param input_text: Input in Hong Kong Traditional Chinese
-        :return: Output in standard Traditional
         """
-        refs = DictRefs([
-            self.dictionary.hk_variants_rev_phrases,
-            self.dictionary.hk_variants_rev
-        ])
+        d = self.dictionary
+        refs = DictRefs([d.hk_variants_rev_phrases, d.hk_variants_rev])
         return refs.apply_segment_replace(input_text, self.segment_replace)
 
     def t2jp(self, input_text: str) -> str:
         """
         Convert Traditional Chinese to Japanese variants.
-
-        :param input_text: Input in Traditional Chinese
-        :return: Output in Japanese forms
         """
-        refs = DictRefs([
-            self.dictionary.jp_variants
-        ])
+        refs = DictRefs([self.dictionary.jp_variants])
         return refs.apply_segment_replace(input_text, self.segment_replace)
 
     def jp2t(self, input_text: str) -> str:
         """
         Convert Japanese Shinjitai (modern Kanji) to Traditional Chinese.
-
-        :param input_text: Input in Japanese Kanji
-        :return: Output in Traditional Chinese
         """
-        refs = DictRefs([
-            self.dictionary.jps_phrases,
-            self.dictionary.jps_characters,
-            self.dictionary.jp_variants_rev
-        ])
+        d = self.dictionary
+        refs = DictRefs([d.jps_phrases, d.jps_characters, d.jp_variants_rev])
         return refs.apply_segment_replace(input_text, self.segment_replace)
 
     def convert(self, input_text: str, punctuation: bool = False) -> str:
@@ -503,31 +592,29 @@ class OpenCC:
     def st(self, input_text: str) -> str:
         """
         Convert Simplified Chinese characters only (no phrases).
-
-        :param input_text: Input text in Simplified Chinese
-        :return: Output in Traditional Chinese characters only
         """
-        dict_refs = [self.dictionary.st_characters]
-        chars = list(input_text)
-        return self.convert_by(chars, dict_refs, 1)
+        if not input_text:
+            return input_text
+
+        dict_data = [self.dictionary.st_characters]
+        return self.convert_segment(input_text, dict_data, 1)
 
     def ts(self, input_text: str) -> str:
         """
         Convert Traditional Chinese characters only (no phrases).
-
-        :param input_text: Input text in Traditional Chinese
-        :return: Output in Simplified Chinese characters only
         """
-        dict_refs = [self.dictionary.ts_characters]
-        chars = list(input_text)
-        return self.convert_by(chars, dict_refs, 1)
+        if not input_text:
+            return input_text
+
+        dict_data = [self.dictionary.ts_characters]
+        return self.convert_segment(input_text, dict_data, 1)
 
     def zho_check(self, input_text: str) -> int:
         """
         Heuristically determine whether input text is Simplified or Traditional Chinese.
 
         :param input_text: Input string
-        :return: 0 = unknown, 2 = simplified, 1 = traditional
+        :return: 0 = unknown, 1 = traditional, 2 = simplified
         """
         if not input_text:
             return 0
@@ -543,38 +630,6 @@ class OpenCC:
         else:
             return 0
 
-    @staticmethod
-    def convert_punctuation(input_text: str, config: str) -> str:
-        """
-        Convert between Simplified and Traditional punctuation styles.
-
-        :param input_text: Input text
-        :param config: 's' for Simplified to Traditional, 't' for Traditional to Simplified
-        :return: Text with punctuation converted
-        """
-        s2t = {
-            '“': '「',
-            '”': '」',
-            '‘': '『',
-            '’': '』',
-        }
-
-        t2s = {
-            '「': '“',
-            '」': '”',
-            '『': '‘',
-            '』': '’',
-        }
-
-        if config[0] == 's':
-            mapping = s2t
-            pattern = "[" + "".join(re.escape(c) for c in s2t.keys()) + "]"
-        else:
-            pattern = "[" + "".join(re.escape(c) for c in t2s.keys()) + "]"
-            mapping = t2s
-
-        return re.sub(pattern, lambda m: mapping[m.group()], input_text)
-
 
 def find_max_utf8_length(s: str, max_byte_count: int) -> int:
     """
@@ -585,11 +640,11 @@ def find_max_utf8_length(s: str, max_byte_count: int) -> int:
     :param max_byte_count: Byte cutoff
     :return: Number of valid UTF-8 bytes within limit
     """
-    encoded = s.encode('utf-8')
-    if len(encoded) <= max_byte_count:
-        return len(encoded)
-
-    byte_count = max_byte_count
-    while byte_count > 0 and (encoded[byte_count] & 0b11000000) == 0b10000000:
-        byte_count -= 1
-    return byte_count
+    left, right = 0, len(s)
+    while left < right:
+        mid = (left + right + 1) // 2
+        if len(s[:mid].encode('utf-8')) <= max_byte_count:
+            left = mid
+        else:
+            right = mid - 1
+    return left

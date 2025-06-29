@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "opencc-purepy"
-version = "1.0.2"
+version = "1.0.3"
 description = "Pure Python implementation of OpenCC for Chinese text conversion"
 authors = [{ name = "laisuk", email = "laisuk@yahoo.com" }]
 readme = "README.md"
@@ -13,6 +13,14 @@ requires-python = ">=3.7"
 keywords = ["opencc", "chinese", "text", "conversion", "pure-python"]
 classifiers = [
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Topic :: Text Processing :: Linguistic",

@@ -6,26 +6,40 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
-## [1.0.2] – 2025-06-27
-- Code optimized.
-- Fix a few Chinese text code detection interference.
-- Rebuild JSON dictionary after some optimizations.
+## [1.0.3] – 2025-07-01
+### Changed
+- Optimized internal dictionary caching for better performance.
+- Improved punctuation replacement logic using `str.translate()` fallback.
+- Improved UTF-8 byte-limit handling in zho_check() by using safe character slicing based on actual encoded byte count
+- Ensured accurate language detection without cutting multibyte characters mid-way
+- Clarified that the module is compatible with Python 2.7+ (core only).
 
+---
+
+## [1.0.2] – 2025-06-27
+### Fixed
+- Improved Chinese text detection accuracy for mixed input.
+
+### Changed
+- Rebuilt JSON dictionary after lexicon structure optimization.
+- General code cleanup and performance tuning.
+
+---
 
 ## [1.0.1] – 2025-06-26
-- Code optimized.
-- Add support for Office documents and epub convertion.
-- Rebuild JSON dictionary after some minor Lexicon corrections.
+### Added
+- Support for Office document (`.docx`, `.xlsx`, `.pptx`, `.odt`) and EPUB text conversion.
+
+### Changed
+- Rebuilt dictionary with minor lexicon corrections.
+- Codebase optimization and structural cleanup.
 
 ---
 
 ## [1.0.0] – 2025-06-18
-
 ### Added
-- Initial release of `opencc--purepy` on PyPI.
-- Pure Python bindings for OpenCC Chinese text conversion.
-- Support for standard OpenCC conversion configs:
+- Initial release of `opencc-purepy` on PyPI.
+- Pure Python OpenCC-compatible engine for Chinese text conversion.
+- Supported standard OpenCC configs:
   - `s2t`, `s2tw`, `s2twp`, `s2hk`, `t2s`, `tw2s`, `tw2sp`, `hk2s`, `jp2t`, `t2jp`
-- CLI tool: `python -m opencc_purepy` with options for text conversion.
-
----
+- CLI tool: `python -m opencc_purepy` for simple command-line conversion.
