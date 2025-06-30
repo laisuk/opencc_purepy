@@ -296,21 +296,24 @@ class OpenCC:
         elif config_key == "t2s":
             refs = DictRefs([d.ts_phrases, d.ts_characters])
         elif config_key == "s2tw":
-            refs = DictRefs([d.st_phrases, d.st_characters]).with_round_2([d.tw_variants])
+            refs = (DictRefs([d.st_phrases, d.st_characters])
+                .with_round_2([d.tw_variants]))
         elif config_key == "tw2s":
-            refs = DictRefs([d.tw_variants_rev_phrases, d.tw_variants_rev]).with_round_2(
-                [d.ts_phrases, d.ts_characters])
+            refs = (DictRefs([d.tw_variants_rev_phrases, d.tw_variants_rev])
+                .with_round_2([d.ts_phrases, d.ts_characters]))
         elif config_key == "s2twp":
-            refs = DictRefs([d.st_phrases, d.st_characters, ]).with_round_2([d.tw_phrases, ]).with_round_3(
-                [d.tw_variants])
+            refs = (DictRefs([d.st_phrases, d.st_characters])
+                .with_round_2([d.tw_phrases])
+                .with_round_3([d.tw_variants]))
         elif config_key == "tw2sp":
-            refs = DictRefs([d.tw_phrases_rev, d.tw_variants_rev_phrases, d.tw_variants_rev, ]).with_round_2(
-                [d.ts_phrases, d.ts_characters])
+            refs = (DictRefs([d.tw_phrases_rev, d.tw_variants_rev_phrases, d.tw_variants_rev])
+                .with_round_2([d.ts_phrases, d.ts_characters]))
         elif config_key == "s2hk":
-            refs = DictRefs([d.st_phrases, d.st_characters, ]).with_round_2([d.hk_variants])
+            refs = (DictRefs([d.st_phrases, d.st_characters])
+                .with_round_2([d.hk_variants]))
         elif config_key == "hk2s":
-            refs = DictRefs([d.hk_variants_rev_phrases, d.hk_variants_rev, ]).with_round_2(
-                [d.ts_phrases, d.ts_characters])
+            refs = (DictRefs([d.hk_variants_rev_phrases, d.hk_variants_rev])
+                .with_round_2([d.ts_phrases, d.ts_characters]))
 
         if refs:
             self._config_cache[config_key] = refs
@@ -491,7 +494,8 @@ class OpenCC:
         Convert Traditional Chinese to Taiwan Standard using phrase and variant mappings.
         """
         d = self.dictionary
-        refs = DictRefs([d.tw_phrases, ]).with_round_2([d.tw_variants])
+        refs = (DictRefs([d.tw_phrases])
+                .with_round_2([d.tw_variants]))
         return refs.apply_segment_replace(input_text, self.segment_replace)
 
     def tw2t(self, input_text: str) -> str:
@@ -507,7 +511,8 @@ class OpenCC:
         Convert Taiwan Traditional to Traditional with phrase reversal.
         """
         d = self.dictionary
-        refs = DictRefs([d.tw_variants_rev_phrases, d.tw_variants_rev]).with_round_2([d.tw_phrases_rev])
+        refs = (DictRefs([d.tw_variants_rev_phrases, d.tw_variants_rev])
+                .with_round_2([d.tw_phrases_rev]))
         return refs.apply_segment_replace(input_text, self.segment_replace)
 
     def t2hk(self, input_text: str) -> str:
@@ -640,6 +645,7 @@ def find_max_utf8_length(s: str, max_byte_count: int) -> int:
     :param max_byte_count: Byte cutoff
     :return: Number of valid UTF-8 bytes within limit
     """
+    # Binary search for the optimal cut point
     left, right = 0, len(s)
     while left < right:
         mid = (left + right + 1) // 2
