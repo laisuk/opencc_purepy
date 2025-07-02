@@ -6,7 +6,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
-## [1.0.3] – 2025-07-01
+## [1.0.3] – 2025-07-02
 ### Changed
 - Optimized internal dictionary caching for better performance.
 - Improved punctuation replacement logic using `str.translate()` fallback.
