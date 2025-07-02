@@ -264,7 +264,10 @@ class OpenCC:
                 word = segment[i:end]
 
                 # Check all dictionaries for this word
-                for dict_data, _ in dictionaries:
+                for dict_data, max_len in dictionaries:
+                    if max_len < length:
+                        continue
+
                     match = dict_data.get(word)
                     if match is not None:
                         best_match = match
