@@ -27,6 +27,10 @@ def main(args):
     Returns:
         int: Exit code (0 for success, 1 for failure).
     """
+    if args.config is None:
+        print("Please specify conversion.", file=sys.stderr)
+        return 1
+
     # Office document conversion branch
     if getattr(args, "office", False):
         input_file = args.input
@@ -89,10 +93,6 @@ def main(args):
             return 1
 
     # Plain text conversion fallback
-    if args.config is None:
-        print("Please specify conversion.", file=sys.stderr)
-        return 1
-
     opencc = OpenCC(args.config)
 
     # Prompt user if input is from terminal

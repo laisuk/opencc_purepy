@@ -181,7 +181,7 @@ def _get_font_regex_pattern(office_format: str) -> Optional[str]:
         "odt": r'((?:style:font-name(?:-asian|-complex)?|svg:font-family|style:name)=["\'])([^"\']+)(["\'])',
         "ods": r'((?:style:font-name(?:-asian|-complex)?|svg:font-family|style:name)=["\'])([^"\']+)(["\'])',
         "odp": r'((?:style:font-name(?:-asian|-complex)?|svg:font-family|style:name)=["\'])([^"\']+)(["\'])',
-        "epub": r'(font-family\s*:\s*)([^;"\']+)([;"\'])?',
+        "epub": r'(font-family\s*:\s*)([^;]+)([;])?',
     }.get(office_format)
 
 
