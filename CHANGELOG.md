@@ -6,13 +6,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
-## [1.0.3] – 2025-07-02
+## [1.0.3] – 2025-07-06
 ### Changed
 - Optimized internal dictionary caching for better performance.
 - Improved punctuation replacement logic using `str.translate()` fallback.
 - Improved UTF-8 byte-limit handling in zho_check() by using safe character slicing based on actual encoded byte count
 - Ensured accurate language detection without cutting multibyte characters mid-way
 - Clarified that the module is compatible with Python 2.7+ (core only).
+- Optimized conversion code to reduce intermediate allocations.
 
 ---
 
