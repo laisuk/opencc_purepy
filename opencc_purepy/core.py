@@ -221,17 +221,15 @@ class OpenCC:
 
         ranges = self.get_split_ranges(text)
         if len(ranges) == 1 and ranges[0] == (0, len(text)):
-            # No delimiters, process entire text
             return self.convert_segment(text, dictionaries, max_word_length)
 
-        # Process each range
-        result_parts = []
-        for start, end in ranges:
-            segment = text[start:end]
-            converted = self.convert_segment(segment, dictionaries, max_word_length)
-            result_parts.append(converted)
+        # Generator to avoid creating intermediate lists
+        def segment_generator():
+            for start, end in ranges:
+                segment = text[start:end]
+                yield self.convert_segment(segment, dictionaries, max_word_length)
 
-        return ''.join(result_parts)
+        return ''.join(segment_generator())
 
     def convert_segment(self, segment: str, dictionaries, max_word_length: int) -> str:
         """
@@ -300,23 +298,23 @@ class OpenCC:
             refs = DictRefs([d.ts_phrases, d.ts_characters])
         elif config_key == "s2tw":
             refs = (DictRefs([d.st_phrases, d.st_characters])
-                .with_round_2([d.tw_variants]))
+                    .with_round_2([d.tw_variants]))
         elif config_key == "tw2s":
             refs = (DictRefs([d.tw_variants_rev_phrases, d.tw_variants_rev])
-                .with_round_2([d.ts_phrases, d.ts_characters]))
+                    .with_round_2([d.ts_phrases, d.ts_characters]))
         elif config_key == "s2twp":
             refs = (DictRefs([d.st_phrases, d.st_characters])
-                .with_round_2([d.tw_phrases])
-                .with_round_3([d.tw_variants]))
+                    .with_round_2([d.tw_phrases])
+                    .with_round_3([d.tw_variants]))
         elif config_key == "tw2sp":
             refs = (DictRefs([d.tw_phrases_rev, d.tw_variants_rev_phrases, d.tw_variants_rev])
-                .with_round_2([d.ts_phrases, d.ts_characters]))
+                    .with_round_2([d.ts_phrases, d.ts_characters]))
         elif config_key == "s2hk":
             refs = (DictRefs([d.st_phrases, d.st_characters])
-                .with_round_2([d.hk_variants]))
+                    .with_round_2([d.hk_variants]))
         elif config_key == "hk2s":
             refs = (DictRefs([d.hk_variants_rev_phrases, d.hk_variants_rev])
-                .with_round_2([d.ts_phrases, d.ts_characters]))
+                    .with_round_2([d.ts_phrases, d.ts_characters]))
 
         if refs:
             self._config_cache[config_key] = refs
