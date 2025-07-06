@@ -176,8 +176,8 @@ def _get_font_regex_pattern(office_format: str) -> Optional[str]:
     """
     return {
         "docx": r'(w:(?:eastAsia|ascii|hAnsi|cs)=")([^"]+)(")',
-        "xlsx": r'(val="")(.*?)("")',
-        "pptx": r'(typeface="")(.*?)("")',
+        "xlsx": r'(val=")(.*?)(")',
+        "pptx": r'(typeface=")(.*?)(")',
         "odt": r'((?:style:font-name(?:-asian|-complex)?|svg:font-family|style:name)=["\'])([^"\']+)(["\'])',
         "ods": r'((?:style:font-name(?:-asian|-complex)?|svg:font-family|style:name)=["\'])([^"\']+)(["\'])',
         "odp": r'((?:style:font-name(?:-asian|-complex)?|svg:font-family|style:name)=["\'])([^"\']+)(["\'])',
