@@ -281,11 +281,7 @@ class OpenCC:
         :param max_word_length: Maximum matching word length
         :return: Converted string
         """
-        if not segment:
-            return segment
-
-        # Check if segment is a single delimiter
-        if len(segment) == 1 and segment in DELIMITERS:
+        if not segment or (len(segment) == 1 and segment in DELIMITERS):
             return segment
 
         result = []
