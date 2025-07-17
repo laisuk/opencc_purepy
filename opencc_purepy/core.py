@@ -663,9 +663,7 @@ class OpenCC:
             return 0
 
         stripped = STRIP_REGEX.sub("", input_text)
-        stripped = stripped if len(stripped) <= 100 else stripped[:100]
-        max_chars = find_max_utf8_length(stripped, 200)
-        strip_text = stripped[:max_chars]
+        strip_text = stripped[:100]
 
         if strip_text != self.ts(strip_text):
             return 1
