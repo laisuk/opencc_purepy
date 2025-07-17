@@ -1,4 +1,5 @@
 import re
+from multiprocessing import Pool, cpu_count
 
 try:
     from typing import List, Dict, Tuple, Optional
@@ -147,6 +148,9 @@ class OpenCC:
             self.dictionary = DictionaryMaxlength()
 
         self.delimiters = DELIMITERS
+        # Escape special regex characters in delimiters
+        escaped_delimiters = ''.join(map(re.escape, self.delimiters))
+        self.delimiter_regex = re.compile(f'[{escaped_delimiters}]')
 
     def set_config(self, config):
         """
@@ -185,53 +189,90 @@ class OpenCC:
         """
         return self._last_error
 
-    def get_split_ranges(self, text: str) -> List[Tuple[int, int]]:
+    def get_split_ranges(self, text: str, inclusive: bool = False) -> List[Tuple[int, int]]:
         """
-        Split the input into ranges of text between delimiters.
-        Each returned (start, end) range includes the delimiter.
+        Split the input into ranges of text between delimiters using regex.
+
+        If `inclusive` is True:
+            - Each (start, end) range includes the delimiter (like forward mmseg).
+        If `inclusive` is False:
+            - Each (start, end) range excludes the delimiter.
+            - Delimiters are returned as separate (start, end) segments.
 
         :param text: Input string
+        :param inclusive: Whether to include delimiters in the same segment
         :return: List of (start, end) index pairs
         """
         ranges = []
         start = 0
-        delimiters = self.delimiters
-
-        for i, ch in enumerate(text):
-            if ch in delimiters:
-                ranges.append((start, i + 1))
-                start = i + 1
+        for match in self.delimiter_regex.finditer(text):
+            delim_start, delim_end = match.start(), match.end()
+            if inclusive:
+                # Include delimiter in the same range
+                ranges.append((start, delim_end))
+            else:
+                # Exclude delimiter from main segment, and add as its own
+                if delim_start > start:
+                    ranges.append((start, delim_start))
+                ranges.append((delim_start, delim_end))
+            start = delim_end
 
         if start < len(text):
             ranges.append((start, len(text)))
+
         return ranges
 
     def segment_replace(self, text: str, dictionaries: List[Tuple[Dict[str, str], int]], max_word_length: int) -> str:
         """
-        Segment text by delimiters and apply dictionary replacements
-        on each segment.
+        Perform dictionary-based replacement on segmented text.
 
-        :param text: Input string
-        :param dictionaries: List of (dict, max_length) tuples
-        :param max_word_length: Pre-computed maximum word length
-        :return: Converted string
+        This method splits the input string into segments based on predefined delimiter characters.
+        It applies greedy maximum-length dictionary replacement to each segment. For large inputs,
+        the segments are grouped and processed in parallel using multiprocessing for performance.
+
+        - For short inputs or few segments, processing is done serially.
+        - For large inputs (default threshold: ≥ 1,000,000 characters and > 1000 segments),
+          the segments are divided into chunks and processed in parallel using a pool of up to 4 workers.
+
+        :param text: Input string to be converted.
+        :param dictionaries: List of (dictionary, max_length) tuples, where each dictionary maps input strings
+                             to replacements, and max_length indicates the longest key in that dictionary.
+        :param max_word_length: Precomputed maximum word length to attempt for matching.
+        :return: A converted string with all segments processed and recombined.
         """
         if not text:
             return text
 
-        ranges = self.get_split_ranges(text)
+        ranges = self.get_split_ranges(text, inclusive=False)
+
         if len(ranges) == 1 and ranges[0] == (0, len(text)):
-            return self.convert_segment(text, dictionaries, max_word_length)
+            return OpenCC.convert_segment(text, dictionaries, max_word_length)
 
-        # Generator to avoid creating intermediate lists
-        def segment_generator():
-            for start, end in ranges:
-                segment = text[start:end]
-                yield self.convert_segment(segment, dictionaries, max_word_length)
+        # total_length = sum(end - start for start, end in ranges)
+        total_length = len(text)
+        use_parallel = len(ranges) > 1_000 and total_length >= 1_000_000
 
-        return ''.join(segment_generator())
+        if use_parallel:
+            group_count = min(4, cpu_count())
+            groups = chunk_ranges(ranges, group_count)
 
-    def convert_segment(self, segment: str, dictionaries, max_word_length: int) -> str:
+            with Pool(processes=group_count) as pool:
+                results = pool.map(
+                    convert_range_group,
+                    [
+                        (text, group, dictionaries, max_word_length, OpenCC.convert_segment)
+                        for group in groups
+                    ]
+                )
+            return ''.join(results)
+        else:
+            return ''.join(
+                OpenCC.convert_segment(text[start:end], dictionaries, max_word_length)
+                for start, end in ranges
+            )
+
+    @staticmethod
+    def convert_segment(segment: str, dictionaries, max_word_length: int) -> str:
         """
         Apply dictionary replacements to a text segment using greedy max-length matching.
 
@@ -244,7 +285,7 @@ class OpenCC:
             return segment
 
         # Check if segment is a single delimiter
-        if len(segment) == 1 and segment in self.delimiters:
+        if len(segment) == 1 and segment in DELIMITERS:
             return segment
 
         result = []
@@ -343,10 +384,6 @@ class OpenCC:
         :param punctuation: Whether to convert punctuation
         :return: Transformed string in Traditional Chinese
         """
-        if not input_text:
-            self._last_error = "Input text is empty"
-            return ""
-
         refs = self._get_dict_refs("s2t")
         output = refs.apply_segment_replace(input_text, self.segment_replace)
 
@@ -554,6 +591,10 @@ class OpenCC:
         :param punctuation: Whether to apply punctuation conversion
         :return: Converted string or error message
         """
+        if not input_text:
+            self._last_error = "Input text is empty"
+            return ""
+
         config = self.config.lower()
         try:
             if config == "s2t":
@@ -626,6 +667,7 @@ class OpenCC:
             return 0
 
         stripped = STRIP_REGEX.sub("", input_text)
+        stripped = stripped if len(stripped) <= 200 else stripped[:200]
         max_chars = find_max_utf8_length(stripped, 200)
         strip_text = stripped[:max_chars]
 
@@ -655,3 +697,41 @@ def find_max_utf8_length(s: str, max_byte_count: int) -> int:
         else:
             right = mid - 1
     return left
+
+
+def chunk_ranges(ranges, group_count):  # type: (List[Tuple[int, int]], int) -> List[List[Tuple[int, int]]]
+    """
+    Split a list of (start, end) index ranges into evenly sized chunks.
+
+    This function divides the input list of ranges into approximately equal-sized sublists,
+    useful for distributing work across multiple worker processes or threads.
+
+    :param ranges: A list of (start, end) index tuples representing text segments.
+    :param group_count: Number of groups to divide the ranges into (typically the number of worker processes).
+    :return: A list of range groups, each being a list of (start, end) tuples.
+    """
+    chunk_size = (len(ranges) + group_count - 1) // group_count
+    return [ranges[i:i + chunk_size] for i in range(0, len(ranges), chunk_size)]
+
+
+def convert_range_group(args):
+    """
+    Convert a group of text segments using the provided conversion function.
+
+    This function is designed for use with multiprocessing. It processes a group of
+    (start, end) index ranges from the original input text, applies the dictionary-based
+    segment conversion to each, and joins the results.
+
+    :param args: A tuple containing:
+        - text: The original input string.
+        - group_ranges: A list of (start, end) index tuples for this group.
+        - dictionaries: A list of (dictionary, max_length) tuples.
+        - max_word_length: The maximum matching length used for dictionary lookup.
+        - convert_segment_fn: A callable function to convert each segment.
+    :return: A string representing the converted result for the group.
+    """
+    text, group_ranges, dictionaries, max_word_length, convert_segment_fn = args
+    return ''.join(
+        convert_segment_fn(text[start:end], dictionaries, max_word_length)
+        for start, end in group_ranges
+    )

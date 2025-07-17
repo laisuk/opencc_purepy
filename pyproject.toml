@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "opencc-purepy"
-version = "1.0.3"
+version = "1.1.0"
 description = "Pure Python implementation of OpenCC for Chinese text conversion"
 authors = [{ name = "laisuk", email = "laisuk@yahoo.com" }]
 readme = "README.md"

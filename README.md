@@ -41,8 +41,8 @@ The CLI tool `opencc-purepy` requires **Python 3.7 or later** (due to `f-string`
 | `tw2tp` | Traditional (Taiwan) → Traditional with idioms |
 | `t2hk`  | Traditional → Traditional (Hong Kong)          |
 | `hk2t`  | Traditional (Hong Kong) → Traditional          |
-| `t2jp`  | Japanese Kyojitai → Shinjitai                  |
-| `jp2t`  | Japanese Shinjitai → Kyojitai                  |
+| `t2jp`  | Japanese Kyujitai → Shinjitai                  |
+| `jp2t`  | Japanese Shinjitai → Kyujitai                  |
 
 ---
 
@@ -77,22 +77,22 @@ python -m opencc_purepy convert -i input.txt -o output.txt -c s2t -p
 opencc-purepy convert -i input.txt -o output.txt -c s2t -p
 ```
 
-#### Office Document Conversion (`--office`)
+#### Office Document Conversion subcommand (`office`)
 
 Supports: `.docx`, `.xlsx`, `.pptx`, `.odt`, `.ods`, `.odp`, `.epub`
 
 ```sh
 # Convert Word document with font preservation
-opencc-purepy convert --office -i example.docx -c t2s --keep-font
+opencc-purepy office -i example.docx -c t2s --keep-font
 
 # Convert EPUB and auto-detect output name
-opencc-purepy convert --office -i book.epub -c s2t --auto-ext
+opencc-purepy office -i book.epub -c s2t --auto-ext
 
 # Convert Excel and specify output path and format
-opencc-purepy convert --office -i sheet.xlsx -o result.xlsx -c s2tw --format xlsx
+opencc-purepy office -i sheet.xlsx -o result.xlsx -c s2tw --format xlsx
 ```
 
-> ℹ️ When `--office` is enabled, the input is processed as an Office or EPUB document and OpenCC conversion is applied internally.
+> ℹ️ With `office` subcommand, the input is processed as an Office or EPUB document and OpenCC conversion is applied internally.
 
 ---
 
@@ -139,4 +139,4 @@ This project is licensed under the [MIT License](https://github.com/laisuk/openc
 
 ---
 
-Powered by Pure Python and OpenCC Lexicons.
+Powered by **Pure Python** and **OpenCC** Lexicons.
