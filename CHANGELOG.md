@@ -19,6 +19,7 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 - Office helper now use pathlib module to avoid path string type mismatch warnings.
 - Added split string ranges parameters: delimiters inclusive/exclusive.
 - Some minor code optimizations.
+- Updated STPhrases.txt
 
 ---
 
