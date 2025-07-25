@@ -7,7 +7,7 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ---
 
-## [1.1.0] - 2025-07-17
+## [1.1.0] - 2025-07-18
 
 ### Added
 
