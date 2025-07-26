@@ -7,7 +7,7 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ---
 
-## [1.1.0] - 2025-07-18
+## [1.1.0] - 2025-07-27
 
 ### Added
 
@@ -18,6 +18,7 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 - Changed flag --office to subcommand office
 - Office helper now use pathlib module to avoid path string type mismatch warnings.
 - Added split string ranges parameters: delimiters inclusive/exclusive.
+- Optimized text split for conversion.
 - Some minor code optimizations.
 - Updated STPhrases.txt
 
