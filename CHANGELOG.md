@@ -6,6 +6,29 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ---
+## [1.2.0-beta1] - 2025-08-16
+
+### Added
+- Integrated **StarterUnion** and **union_cache** fast-path conversion into the core workflow, providing a major performance boost for large-scale conversions compared to previous pure Python versions.
+- Unified `apply_segment_replace()` method to handle both legacy `(dict, max_len)` and `StarterUnion` fast path in a single entry point, accepting either bridge or core converter delegates.
+- Added safety checks to detect incorrect delegate type usage (e.g., passing `convert_union` as `segment_replace`).
+- Table-driven `_get_legacy_dict_refs()` for cleaner legacy config mapping, maintaining compatibility with pre-1.2.0 behavior.
+- New dictionary configs: `t2tw`, `t2twp`, `tw2t`, `tw2tp`, `t2hk`, `hk2t`, `t2jp`, `jp2t`.
+
+### Changed
+- Default conversion path now prefers **StarterUnion** where applicable; legacy dict refs still supported for compatibility.
+- Dropped Python 2.7 compatibility; library now requires Python 3.7+ (matches `pyproject.toml`).
+- Cleaned up imports using `TYPE_CHECKING` for `StarterUnion` to avoid unnecessary runtime imports and potential circular dependencies.
+- Updated README and project metadata to reflect Python 3.7+ requirement.
+- Removed unused imports and improved typing annotations for Python 3.8+ features.
+
+### Notes
+- Legacy dict refs conversion is still available for compatibility.  
+  You can explicitly use it by passing a legacy-compatible delegate (e.g., `segment_replace=self.convert_segment` or `segment_replace=self.segment_replace`) to `apply_segment_replace()`.  
+- The new default `StarterUnion` path will be used automatically when a round is already a `StarterUnion` object or when merging legacy dicts to a union for faster lookups.
+- Users on Python 2.7 or 3.6 should pin to `<1.2.0`.
+
+---
 
 ## [1.1.0] - 2025-08-13
 

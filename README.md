@@ -5,7 +5,8 @@
 [![Downloads](https://static.pepy.tech/personalized-badge/opencc-purepy?period=month&units=international_system&left_color=black&right_color=orange&left_text=Downloads)](https://pepy.tech/project/opencc-purepy)
 [![Build & Release](https://github.com/laisuk/opencc_purepy/actions/workflows/release.yml/badge.svg)](https://github.com/laisuk/opencc_purepy/actions/workflows/release.yml)
 
-**opencc_purepy** is a **pure Python** implementation of [OpenCC (Open Chinese Convert)](https://github.com/BYVoid/OpenCC), supporting conversion between Simplified, Traditional, Hong Kong, Taiwan, and Japanese Kanji.  
+**opencc_purepy** is a **pure Python** implementation of [OpenCC (Open Chinese Convert)](https://github.com/BYVoid/OpenCC), 
+supporting conversion between Simplified, Traditional, Hong Kong, Taiwan, and Japanese Kanji.  
 It uses dictionary-based segmentation and mapping logic inspired by the original OpenCC.
 
 ---
@@ -18,8 +19,7 @@ It uses dictionary-based segmentation and mapping logic inspired by the original
 - **Automatic code detection** (Simplified/Traditional)
 - **CLI** with Office document support (`.docx`, `.xlsx`, `.pptx`, `.odt`, `.ods`, `.odp`, `.epub`)
 
-> 🐍 `opencc_purepy` core library is compatible with **Python 2.7+** if used as an import module.  
-The CLI tool `opencc-purepy` requires **Python 3.7 or later** (due to `f-string` usage).
+> 🐍 `opencc_purepy` requires **Python 3.7 or later**.
 
 ---
 
@@ -130,6 +130,13 @@ opencc-purepy office -i sheet.xlsx -o result.xlsx -c s2tw --format xlsx
 | **100,000 chars** |       86.05 ms |
 
 *Timings exclude initialization; focus is on pure conversion speed.*
+
+
+---
+
+## Projects That Use `opencc-purepy`
+
+[OpenccPurepyGui](https://github.com/laisuk/OpenccPurepyGui)
 
 ---
 
