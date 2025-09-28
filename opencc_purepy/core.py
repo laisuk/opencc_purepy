@@ -222,54 +222,68 @@ class OpenCC:
 
         return ranges
 
-    def segment_replace(self, text: str, dictionaries: List[Tuple[Dict[str, str], int]], max_word_length: int) -> str:
+    def segment_replace(
+            self,
+            text: str,
+            dictionaries: List[Tuple[Dict[str, str], int]],
+            max_word_length: int
+    ) -> str:
         """
-        Perform dictionary-based replacement on segmented text.
+        Perform dictionary-based greedy replacement on segmented text (legacy path).
 
-        This method splits the input string into segments based on predefined delimiter characters.
-        It applies greedy maximum-length dictionary replacement to each segment. For large inputs,
-        the segments are grouped and processed in parallel using multiprocessing for performance.
+        This version is simplified to work cleanly with DictRefs normalization:
+        - No StarterIndex / fast-path logic.
+        - Accepts a round's `dictionaries` as List[(dict, max_len)] and a round
+          `max_word_length` (already computed by DictRefs).
+        - Keeps the existing parallelization behavior.
 
-        - For short inputs or few segments, processing is done serially.
-        - For large inputs (default threshold: ≥ 1,000,000 characters and > 1000 segments),
-          the segments are divided into chunks and processed in parallel using a pool of up to 4 workers.
+        Parameters
+        ----------
+        text : str
+            The input text to be converted.
+        dictionaries : list of (dict, int)
+            Sequence of dictionaries and their respective maximum key lengths.
+            The order determines replacement precedence (earlier wins).
+        max_word_length : int
+            Global maximum match length for this round (from DictRefs).
 
-        :param text: Input string to be converted.
-        :param dictionaries: List of (dictionary, max_length) tuples, where each dictionary maps input strings
-                             to replacements, and max_length indicates the longest key in that dictionary.
-        :param max_word_length: Precomputed maximum word length to attempt for matching.
-        :return: A converted string with all segments processed and recombined.
+        Returns
+        -------
+        str
+            Converted text.
         """
         if not text:
             return text
 
-        ranges = self.get_split_ranges(text, inclusive=False)
+        total_length = len(text)
+        if total_length < 500_000:
+            return OpenCC.convert_segment(text, dictionaries, max_word_length)
 
+        # Split into segments (inclusive keeps delimiters attached to segments)
+        ranges = self.get_split_ranges(text, inclusive=True)
+
+        # Single segment → direct convert (avoids slicing/join overhead)
         if len(ranges) == 1 and ranges[0] == (0, len(text)):
             return OpenCC.convert_segment(text, dictionaries, max_word_length)
 
-        # total_length = sum(end - start for start, end in ranges)
-        total_length = len(text)
+        # Parallel threshold
         use_parallel = len(ranges) > 1_000 and total_length >= 1_000_000
 
         if use_parallel:
-            group_count = min(4, cpu_count())
+            group_count = min(4, max(1, cpu_count()))
             groups = chunk_ranges(ranges, group_count)
-
             with Pool(processes=group_count) as pool:
                 results = pool.map(
                     convert_range_group,
-                    [
-                        (text, group, dictionaries, max_word_length, OpenCC.convert_segment)
-                        for group in groups
-                    ]
+                    [(text, group, dictionaries, max_word_length, OpenCC.convert_segment) for group in groups],
                 )
-            return ''.join(results)
-        else:
-            return ''.join(
-                OpenCC.convert_segment(text[start:end], dictionaries, max_word_length)
-                for start, end in ranges
-            )
+            return "".join(results)
+
+        # Serial path
+        return "".join(
+            OpenCC.convert_segment(text[s:e], dictionaries, max_word_length)
+            for (s, e) in ranges
+        )
 
     @staticmethod
     def convert_segment(segment: str, dictionaries, max_word_length: int) -> str:
@@ -705,7 +719,8 @@ def convert_range_group(args):
     :return: A string representing the converted result for the group.
     """
     text, group_ranges, dictionaries, max_word_length, convert_segment_fn = args
+    conv = convert_segment_fn  # local bind
     return ''.join(
-        convert_segment_fn(text[start:end], dictionaries, max_word_length)
+        conv(text[start:end], dictionaries, max_word_length)
         for start, end in group_ranges
     )
