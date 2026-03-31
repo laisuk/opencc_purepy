@@ -80,7 +80,7 @@ def main(args):
             print(f"❌  Invalid Office file extension: {file_ext}", file=sys.stderr)
             print("   Valid extensions: .docx | .xlsx | .pptx | .odt | .ods | .odp | .epub", file=sys.stderr)
             return 1
-        office_format = file_ext[1:]
+        office_format = str(file_ext[1:])
 
     # Auto-append extension to output file if needed
     if auto_ext and output_file and not os.path.splitext(output_file)[1] and office_format in OFFICE_FORMATS:

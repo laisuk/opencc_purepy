@@ -133,7 +133,7 @@ class OpenCC:
         :param config: Configuration name (optional)
         """
         self._last_error = None
-        self._config_cache = {}
+        self._config_cache: Dict[str, DictRefs] = {}
 
         if config in self.CONFIG_LIST:
             self.config = config
@@ -335,12 +335,12 @@ class OpenCC:
 
         return ''.join(result)
 
-    def _get_dict_refs(self, config_key: str) -> Optional[DictRefs]:
-        """Get cached DictRefs for a config to avoid recreation"""
-        if config_key in self._config_cache:
-            return self._config_cache[config_key]
+    def _get_dict_refs(self, config_key: str) -> DictRefs:
+        """Get cached DictRefs for a config to avoid recreation."""
+        cached = self._config_cache.get(config_key)
+        if cached is not None:
+            return cached
 
-        refs = None
         d = self.dictionary
 
         if config_key == "s2t":
@@ -348,27 +348,40 @@ class OpenCC:
         elif config_key == "t2s":
             refs = DictRefs([d.ts_phrases, d.ts_characters])
         elif config_key == "s2tw":
-            refs = (DictRefs([d.st_phrases, d.st_characters])
-                    .with_round_2([d.tw_variants]))
+            refs = (
+                DictRefs([d.st_phrases, d.st_characters])
+                .with_round_2([d.tw_variants])
+            )
         elif config_key == "tw2s":
-            refs = (DictRefs([d.tw_variants_rev_phrases, d.tw_variants_rev])
-                    .with_round_2([d.ts_phrases, d.ts_characters]))
+            refs = (
+                DictRefs([d.tw_variants_rev_phrases, d.tw_variants_rev])
+                .with_round_2([d.ts_phrases, d.ts_characters])
+            )
         elif config_key == "s2twp":
-            refs = (DictRefs([d.st_phrases, d.st_characters])
-                    .with_round_2([d.tw_phrases])
-                    .with_round_3([d.tw_variants]))
+            refs = (
+                DictRefs([d.st_phrases, d.st_characters])
+                .with_round_2([d.tw_phrases])
+                .with_round_3([d.tw_variants])
+            )
         elif config_key == "tw2sp":
-            refs = (DictRefs([d.tw_phrases_rev, d.tw_variants_rev_phrases, d.tw_variants_rev])
-                    .with_round_2([d.ts_phrases, d.ts_characters]))
+            refs = (
+                DictRefs([d.tw_phrases_rev, d.tw_variants_rev_phrases, d.tw_variants_rev])
+                .with_round_2([d.ts_phrases, d.ts_characters])
+            )
         elif config_key == "s2hk":
-            refs = (DictRefs([d.st_phrases, d.st_characters])
-                    .with_round_2([d.hk_variants]))
+            refs = (
+                DictRefs([d.st_phrases, d.st_characters])
+                .with_round_2([d.hk_variants])
+            )
         elif config_key == "hk2s":
-            refs = (DictRefs([d.hk_variants_rev_phrases, d.hk_variants_rev])
-                    .with_round_2([d.ts_phrases, d.ts_characters]))
+            refs = (
+                DictRefs([d.hk_variants_rev_phrases, d.hk_variants_rev])
+                .with_round_2([d.ts_phrases, d.ts_characters])
+            )
+        else:
+            raise ValueError(f"Unsupported config: {config_key}")
 
-        if refs:
-            self._config_cache[config_key] = refs
+        self._config_cache[config_key] = refs
         return refs
 
     @staticmethod

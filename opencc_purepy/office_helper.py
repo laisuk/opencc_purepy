@@ -1,7 +1,7 @@
 """
 OpenCC-based Office and EPUB document converter.
 
-This module provides helper functions to convert and repackage Office documents and EPUBs,
+This module provides services functions to convert and repackage Office documents and EPUBs,
 supporting optional font preservation.
 
 Supported formats: docx, xlsx, pptx, odt, ods, odp, epub.
@@ -16,7 +16,7 @@ import shutil
 import tempfile
 import zipfile
 from pathlib import Path
-from typing import Tuple, List, Optional
+from typing import Tuple, List, Optional, IO
 
 # Global list of supported Office document formats
 OFFICE_FORMATS = [
@@ -53,8 +53,8 @@ def convert_office_doc(
     Returns:
         (success: bool, message: str)
     """
-    input_path = Path(input_path)
-    output_path = Path(output_path)
+    input_path = str(Path(input_path))
+    output_path = str(Path(output_path))
 
     # --- NEW: normalized temp root and pre-created working dir
     temp_root = _normalized_temp_root()
@@ -72,8 +72,10 @@ def convert_office_doc(
                     dest_path.mkdir(parents=True, exist_ok=True)
                 else:
                     dest_path.parent.mkdir(parents=True, exist_ok=True)
-                    with archive.open(entry) as src, open(dest_path, 'wb') as dst:
-                        shutil.copyfileobj(src, dst)  # type: ignore
+                    with archive.open(entry) as src_raw, open(dest_path, "wb") as dst_raw:
+                        src: IO[bytes] = src_raw
+                        dst: IO[bytes] = dst_raw
+                        shutil.copyfileobj(src, dst)
 
         target_paths = _get_target_xml_paths(office_format, temp_dir)
         if not target_paths:
@@ -118,13 +120,13 @@ def convert_office_doc(
 
         # Ensure output path is clear
         try:
-            output_path.unlink(missing_ok=True)  # Python 3.8+: ok
+            Path(output_path).unlink(missing_ok=True) # Python 3.8+: ok
         except TypeError:
-            if output_path.exists():
-                output_path.unlink()
+            if Path(output_path).exists():
+                Path(output_path).unlink()
 
         if office_format == "epub":
-            return create_epub_zip_with_spec(temp_dir, output_path)
+            return create_epub_zip_with_spec(temp_dir, Path(output_path))
         else:
             with zipfile.ZipFile(output_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
                 for file in temp_dir.rglob("*"):
