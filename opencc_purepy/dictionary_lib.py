@@ -8,8 +8,8 @@ class DictionaryMaxlength:
     A container for OpenCC-compatible dictionaries with each represented
     as a (dict, max_length) tuple to optimize the longest match lookup.
     """
-    _shared_instance = None
-    _shared_lock = Lock()
+    _provider = None
+    _provider_lock = Lock()
 
     def __init__(self):
         """
@@ -37,16 +37,24 @@ class DictionaryMaxlength:
         return "<DictionaryMaxlength with {} loaded dicts>".format(count)
 
     @classmethod
-    def new(cls):
+    def get_provider(cls):
         """
-        Shortcut to load from precompiled JSON for fast startup.
+        Return a shared dictionary provider loaded from precompiled JSON.
         :return: DictionaryMaxlength instance
         """
-        if cls._shared_instance is None:
-            with cls._shared_lock:
-                if cls._shared_instance is None:
-                    cls._shared_instance = cls.from_json()
-        return cls._shared_instance
+        if cls._provider is None:
+            with cls._provider_lock:
+                if cls._provider is None:
+                    cls._provider = cls.from_json()
+        return cls._provider
+
+    @classmethod
+    def new(cls):
+        """
+        Backward-compatible alias for the shared dictionary provider.
+        :return: DictionaryMaxlength instance
+        """
+        return cls.get_provider()
 
     @classmethod
     def from_json(cls):
