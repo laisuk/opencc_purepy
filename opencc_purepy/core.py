@@ -378,6 +378,28 @@ class OpenCC:
                 DictRefs([d.hk_variants_rev_phrases, d.hk_variants_rev])
                 .with_round_2([d.ts_phrases, d.ts_characters])
             )
+        elif config_key == "t2tw":
+            refs = DictRefs([d.tw_variants])
+        elif config_key == "t2twp":
+            refs = (
+                DictRefs([d.tw_phrases])
+                .with_round_2([d.tw_variants])
+            )
+        elif config_key == "tw2t":
+            refs = DictRefs([d.tw_variants_rev_phrases, d.tw_variants_rev])
+        elif config_key == "tw2tp":
+            refs = (
+                DictRefs([d.tw_variants_rev_phrases, d.tw_variants_rev])
+                .with_round_2([d.tw_phrases_rev])
+            )
+        elif config_key == "t2hk":
+            refs = DictRefs([d.hk_variants])
+        elif config_key == "hk2t":
+            refs = DictRefs([d.hk_variants_rev_phrases, d.hk_variants_rev])
+        elif config_key == "t2jp":
+            refs = DictRefs([d.jp_variants])
+        elif config_key == "jp2t":
+            refs = DictRefs([d.jps_phrases, d.jps_characters, d.jp_variants_rev])
         else:
             raise ValueError(f"Unsupported config: {config_key}")
 
@@ -547,63 +569,56 @@ class OpenCC:
         """
         Convert Traditional Chinese to Taiwan Standard Traditional Chinese.
         """
-        refs = DictRefs([self.dictionary.tw_variants])
+        refs = self._get_dict_refs("t2tw")
         return refs.apply_segment_replace(input_text, self.segment_replace)
 
     def t2twp(self, input_text: str) -> str:
         """
         Convert Traditional Chinese to Taiwan Standard using phrase and variant mappings.
         """
-        d = self.dictionary
-        refs = (DictRefs([d.tw_phrases])
-                .with_round_2([d.tw_variants]))
+        refs = self._get_dict_refs("t2twp")
         return refs.apply_segment_replace(input_text, self.segment_replace)
 
     def tw2t(self, input_text: str) -> str:
         """
         Convert Taiwan Traditional to general Traditional Chinese.
         """
-        d = self.dictionary
-        refs = DictRefs([d.tw_variants_rev_phrases, d.tw_variants_rev])
+        refs = self._get_dict_refs("tw2t")
         return refs.apply_segment_replace(input_text, self.segment_replace)
 
     def tw2tp(self, input_text: str) -> str:
         """
         Convert Taiwan Traditional to Traditional with phrase reversal.
         """
-        d = self.dictionary
-        refs = (DictRefs([d.tw_variants_rev_phrases, d.tw_variants_rev])
-                .with_round_2([d.tw_phrases_rev]))
+        refs = self._get_dict_refs("tw2tp")
         return refs.apply_segment_replace(input_text, self.segment_replace)
 
     def t2hk(self, input_text: str) -> str:
         """
         Convert Traditional Chinese to Hong Kong variant.
         """
-        refs = DictRefs([self.dictionary.hk_variants])
+        refs = self._get_dict_refs("t2hk")
         return refs.apply_segment_replace(input_text, self.segment_replace)
 
     def hk2t(self, input_text: str) -> str:
         """
         Convert Hong Kong Traditional to standard Traditional Chinese.
         """
-        d = self.dictionary
-        refs = DictRefs([d.hk_variants_rev_phrases, d.hk_variants_rev])
+        refs = self._get_dict_refs("hk2t")
         return refs.apply_segment_replace(input_text, self.segment_replace)
 
     def t2jp(self, input_text: str) -> str:
         """
         Convert Traditional Chinese to Japanese variants.
         """
-        refs = DictRefs([self.dictionary.jp_variants])
+        refs = self._get_dict_refs("t2jp")
         return refs.apply_segment_replace(input_text, self.segment_replace)
 
     def jp2t(self, input_text: str) -> str:
         """
         Convert Japanese Shinjitai (modern Kanji) to Traditional Chinese.
         """
-        d = self.dictionary
-        refs = DictRefs([d.jps_phrases, d.jps_characters, d.jp_variants_rev])
+        refs = self._get_dict_refs("jp2t")
         return refs.apply_segment_replace(input_text, self.segment_replace)
 
     def convert(self, input_text: str, punctuation: bool = False) -> str:
