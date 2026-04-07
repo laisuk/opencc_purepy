@@ -2,7 +2,21 @@ from __future__ import print_function
 
 import argparse
 import sys
-from . import convert_cmd, dictgen_cmd, office_cmd
+
+
+def _run_convert(args):
+    from . import convert_cmd
+    return convert_cmd.main(args)
+
+
+def _run_office(args):
+    from . import office_cmd
+    return office_cmd.main(args)
+
+
+def _run_dictgen(args):
+    from . import dictgen_cmd
+    return dictgen_cmd.main(args)
 
 
 def main():
@@ -37,7 +51,7 @@ def main():
     parser_convert.add_argument('--in-enc', metavar='<encoding>', default='UTF-8', help='Input encoding')
     parser_convert.add_argument('--out-enc', metavar='<encoding>', default='UTF-8', help='Output encoding')
 
-    parser_convert.set_defaults(func=convert_cmd.main)
+    parser_convert.set_defaults(func=_run_convert)
 
     # ---- Office SUBCOMMAND ----
     parser_office = subparsers.add_parser('office', help='Convert Office files using pure Python OpenCC')
@@ -55,7 +69,7 @@ def main():
     parser_office.add_argument('--no-keep-font', action='store_false', dest='keep_font',
                                help='Do not preserve font-family information in Office content (Overrides --keep-font)')
 
-    parser_office.set_defaults(func=office_cmd.main)
+    parser_office.set_defaults(func=_run_office)
 
     # ---- dictgen subcommand ----
     parser_dictgen = subparsers.add_parser('dictgen', help='Generate dictionary for pure Python OpenCC')
@@ -70,7 +84,7 @@ def main():
         metavar="<filename>",
         help="Write generated dictionary to <filename>. If not specified, a default filename is used."
     )
-    parser_dictgen.set_defaults(func=dictgen_cmd.main)
+    parser_dictgen.set_defaults(func=_run_dictgen)
 
     args = parser.parse_args()
     return args.func(args)

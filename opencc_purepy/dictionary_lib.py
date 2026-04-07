@@ -1,4 +1,5 @@
 from pathlib import Path
+from threading import Lock
 from typing import Dict, Tuple
 
 
@@ -7,6 +8,9 @@ class DictionaryMaxlength:
     A container for OpenCC-compatible dictionaries with each represented
     as a (dict, max_length) tuple to optimize the longest match lookup.
     """
+    _shared_instance = None
+    _shared_lock = Lock()
+
     def __init__(self):
         """
         Initialize all supported dictionary attributes to empty dicts with max_length = 0.
@@ -38,7 +42,11 @@ class DictionaryMaxlength:
         Shortcut to load from precompiled JSON for fast startup.
         :return: DictionaryMaxlength instance
         """
-        return cls.from_json()
+        if cls._shared_instance is None:
+            with cls._shared_lock:
+                if cls._shared_instance is None:
+                    cls._shared_instance = cls.from_json()
+        return cls._shared_instance
 
     @classmethod
     def from_json(cls):
@@ -107,7 +115,11 @@ class DictionaryMaxlength:
         max_length = 1
 
         for line in content.strip().splitlines():
-            parts = line.strip().split()
+            stripped_line = line.strip()
+            if not stripped_line or stripped_line.startswith("#"):
+                continue
+
+            parts = stripped_line.split()
             if len(parts) >= 2:
                 phrase, translation = parts[0], parts[1]
                 dictionary[phrase] = translation
