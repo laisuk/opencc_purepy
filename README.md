@@ -182,7 +182,7 @@ opencc-purepy office -i sheet.xlsx -o result.xlsx -c s2tw --format xlsx
 ## ⚡ Benchmark
 
 > Measured on a local machine using the default "s2t" configuration.  
-> Each test averaged over 20 runs with preloaded dictionaries.
+> Each test averaged over 20 runs with the shared dictionary cache reused across runs.
 
 | Input Size        | Avg. Time (ms) |
 |-------------------|---------------:|
@@ -191,7 +191,7 @@ opencc-purepy office -i sheet.xlsx -o result.xlsx -c s2tw --format xlsx
 | **10,000 chars**  |        8.76 ms |
 | **100,000 chars** |       86.05 ms |
 
-*Timings exclude initialization; focus is on pure conversion speed.*
+*Timings reuse the shared dictionary cache, but still include per-run `OpenCC` instance setup; results depend on local hardware and background system load.*
 
 
 ---
