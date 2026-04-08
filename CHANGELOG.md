@@ -6,16 +6,23 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ---
-## [1.2.0-beta1] - 2025-08-16
+
+## [1.2.0] - 2026-04-08
 
 ### Added
 
+- Added `OpenccConfig` enum for canonical config names and typed config handling.
 
 ### Changed
 
+- Updated dictionary data.
+- Optimized core conversion and config normalization.
+- Improved serial conversion strategy by preferring delimiter-based split ranges for punctuated text while keeping
+  direct conversion for single-range input and parallel conversion for very large input.
 
 ### Notes
 
+- No breaking public API change.
 
 ---
 

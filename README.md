@@ -5,7 +5,8 @@
 [![Downloads](https://static.pepy.tech/personalized-badge/opencc-purepy?period=month&units=international_system&left_color=black&right_color=orange&left_text=Downloads)](https://pepy.tech/project/opencc-purepy)
 [![Build & Release](https://github.com/laisuk/opencc_purepy/actions/workflows/release.yml/badge.svg)](https://github.com/laisuk/opencc_purepy/actions/workflows/release.yml)
 
-**opencc_purepy** is a **pure Python** implementation of [OpenCC (Open Chinese Convert)](https://github.com/BYVoid/OpenCC), 
+**opencc_purepy** is a **pure Python** implementation
+of [OpenCC (Open Chinese Convert)](https://github.com/BYVoid/OpenCC),
 supporting conversion between Simplified, Traditional, Hong Kong, Taiwan, and Japanese Kanji.  
 It uses dictionary-based segmentation and mapping logic inspired by the original OpenCC.
 
@@ -92,27 +93,88 @@ opencc-purepy office -i book.epub -c s2t --auto-ext
 opencc-purepy office -i sheet.xlsx -o result.xlsx -c s2tw --format xlsx
 ```
 
-> ℹ️ With `office` subcommand, the input is processed as an Office or EPUB document and OpenCC conversion is applied internally.
+> ℹ️ With `office` subcommand, the input is processed as an Office or EPUB document and OpenCC conversion is applied
+> internally.
 
 ---
 
 ## 🧩 API Reference
 
+### Exports
+
+- `OpenCC`
+- `OpenccConfig`
+
 ### `OpenCC` class
 
-- `OpenCC(config: str = "s2t")`  
-  Create a converter with the specified config.
+- `OpenCC(config: str | OpenccConfig = "s2t")`  
+  Create a converter with a supported config string or `OpenccConfig` enum value.
+- `set_config(config: str | OpenccConfig) -> None`  
+  Update the active conversion config.
+- `get_config() -> str`  
+  Return the current canonical config name.
+- `supported_configs() -> list[str]`  
+  Return all supported config names.
+- `get_last_error() -> str | None`  
+  Return the last validation or conversion error, if any.
 - `convert(input: str, punctuation: bool = False) -> str`  
-  Convert text with optional punctuation conversion.
+  Convert text using the active config, with optional punctuation conversion where supported.
+- `s2t(input: str, punctuation: bool = False) -> str`  
+  Simplified Chinese to Traditional Chinese.
+- `t2s(input: str, punctuation: bool = False) -> str`  
+  Traditional Chinese to Simplified Chinese.
+- `s2tw(input: str, punctuation: bool = False) -> str`  
+  Simplified Chinese to Taiwan Traditional.
+- `tw2s(input: str, punctuation: bool = False) -> str`  
+  Taiwan Traditional to Simplified Chinese.
+- `s2twp(input: str, punctuation: bool = False) -> str`  
+  Simplified Chinese to Taiwan Traditional with idiom and phrase conversion.
+- `tw2sp(input: str, punctuation: bool = False) -> str`  
+  Taiwan Traditional with idioms to Simplified Chinese.
+- `s2hk(input: str, punctuation: bool = False) -> str`  
+  Simplified Chinese to Hong Kong Traditional.
+- `hk2s(input: str, punctuation: bool = False) -> str`  
+  Hong Kong Traditional to Simplified Chinese.
+- `t2tw(input: str) -> str`  
+  Traditional Chinese to Taiwan Traditional.
+- `t2twp(input: str) -> str`  
+  Traditional Chinese to Taiwan Traditional with phrase mappings.
+- `tw2t(input: str) -> str`  
+  Taiwan Traditional to standard Traditional Chinese.
+- `tw2tp(input: str) -> str`  
+  Taiwan Traditional to standard Traditional Chinese with phrase reversal.
+- `t2hk(input: str) -> str`  
+  Traditional Chinese to Hong Kong variant.
+- `hk2t(input: str) -> str`  
+  Hong Kong Traditional to standard Traditional Chinese.
+- `t2jp(input: str) -> str`  
+  Traditional Chinese to Japanese variants.
+- `jp2t(input: str) -> str`  
+  Japanese Shinjitai to Traditional Chinese.
+- `st(input: str) -> str`  
+  Character-only Simplified to Traditional conversion.
+- `ts(input: str) -> str`  
+  Character-only Traditional to Simplified conversion.
 - `zho_check(input: str) -> int`  
-  Detect the code of the input text:  
-  &nbsp;&nbsp;1 - Traditional, 2 - Simplified, 0 - Others
+  Detect the input text type:  
+  &nbsp;&nbsp;`1` - Traditional, `2` - Simplified, `0` - Others
+
+### `OpenccConfig` enum
+
+- Members include: `S2T`, `T2S`, `S2TW`, `TW2S`, `S2TWP`, `TW2SP`, `S2HK`, `HK2S`, `T2TW`, `TW2T`, `T2TWP`, `TW2TP`,
+  `T2HK`, `HK2T`, `T2JP`, `JP2T`
+- `to_canonical_name() -> str`  
+  Return the lowercase OpenCC config string.
+- `parse(value: str) -> OpenccConfig`  
+  Parse a config string into an enum value.
 
 ---
 
 ## 🛠 Development
 
-- Python bindings: [`opencc_purepy/__init__.py`](https://github.com/laisuk/opencc_purepy/blob/master/opencc_purepy/__init__.py), [`opencc_purepy/opencc_purepy.pyi`](https://github.com/laisuk/opencc_purepy/blob/master/opencc_purepy/opencc_purepy.pyi)
+- Python bindings: [
+  `opencc_purepy/__init__.py`](https://github.com/laisuk/opencc_purepy/blob/master/opencc_purepy/__init__.py), [
+  `opencc_purepy/opencc_purepy.pyi`](https://github.com/laisuk/opencc_purepy/blob/master/opencc_purepy/opencc_purepy.pyi)
 - CLI: [`opencc_purepy/__main__.py`](https://github.com/laisuk/opencc_purepy/blob/master/opencc_purepy/__main__.py)
 
 ---
