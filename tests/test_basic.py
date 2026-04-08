@@ -46,6 +46,14 @@ class TestOpenCC(unittest.TestCase):
         self.assertIn("「", result)
         self.assertIn("」", result)
 
+    def test_segment_replace_matches_direct_conversion_for_short_punctuated_text(self):
+        refs = self.converter._get_dict_refs("s2t")
+        text = "汉字转换测试，意大利的罗马城不是一天里就能建成的。" * 20
+        expected = OpenCC.convert_segment(text, refs.round_1, refs._get_max_lengths()[0])
+
+        result = self.converter.segment_replace(text, refs.round_1, refs._get_max_lengths()[0])
+        self.assertEqual(expected, result)
+
     def test_zho_check(self):
         mixed = "這是一個測試test123"  # Should be treated as Traditional
         result = self.converter.zho_check(mixed)

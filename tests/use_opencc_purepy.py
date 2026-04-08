@@ -1,9 +1,10 @@
-from opencc_purepy import OpenCC
+from opencc_purepy import OpenCC, OpenccConfig
 
 def main():
     text = "“春眠不觉晓，处处闻啼鸟。”"
     # text = "“恶名昭著”"  # Test zho_check() for interference "著"
-    opencc = OpenCC("s2t")
+    opencc = OpenCC()
+    opencc.set_config(OpenccConfig.S2T)
     converted = opencc.convert(text, punctuation=True)
 
     print("Conversion config: {}".format(opencc.get_config()))

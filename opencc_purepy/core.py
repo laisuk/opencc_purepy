@@ -1,14 +1,25 @@
 import re
+from enum import Enum
 from multiprocessing import Pool, cpu_count
 
 try:
-    from typing import List, Dict, Tuple, Optional
+    from typing import List, Dict, Tuple, Optional, Union
 except ImportError:
     # Fallback for Python < 3.5
+    # Very old Python fallback:
+    # these names only need to exist so runtime does not fail.
     List = list
     Dict = dict
     Tuple = tuple
-    Optional = lambda x: x
+
+
+    class _TypingStub(object):
+        def __getitem__(self, item):
+            return object
+
+
+    Optional = _TypingStub()
+    Union = _TypingStub()
 
 from .dictionary_lib import DictionaryMaxlength
 
@@ -50,6 +61,38 @@ except (AttributeError, TypeError):
         '『': '‘',
         '』': '’',
     }
+
+
+class OpenccConfig(Enum):
+    S2T = "s2t"
+    T2S = "t2s"
+    S2TW = "s2tw"
+    TW2S = "tw2s"
+    S2TWP = "s2twp"
+    TW2SP = "tw2sp"
+    S2HK = "s2hk"
+    HK2S = "hk2s"
+    T2TW = "t2tw"
+    TW2T = "tw2t"
+    T2TWP = "t2twp"
+    TW2TP = "tw2tp"
+    T2HK = "t2hk"
+    HK2T = "hk2t"
+    T2JP = "t2jp"
+    JP2T = "jp2t"
+
+    value: str
+
+    def to_canonical_name(self) -> str:
+        """Return OpenCC canonical config name (e.g. 's2t')."""
+        return self.value
+
+    @classmethod
+    def parse(cls, s: str) -> "OpenccConfig":
+        return cls(s.lower())
+
+
+_ConfigLike = Optional[Union[str, OpenccConfig]]
 
 
 class DictRefs:
@@ -121,12 +164,9 @@ class OpenCC:
     A pure-Python implementation of OpenCC for text conversion between
     different Chinese language variants using segmentation and replacement.
     """
-    CONFIG_LIST = [
-        "s2t", "t2s", "s2tw", "tw2s", "s2twp", "tw2sp", "s2hk", "hk2s",
-        "t2tw", "tw2t", "t2twp", "tw2tp", "t2hk", "hk2t", "t2jp", "jp2t"
-    ]
+    CONFIG_LIST = [c.value for c in OpenccConfig]
 
-    def __init__(self, config=None):
+    def __init__(self, config: _ConfigLike = None):
         """
         Initialize OpenCC with a given config (default: s2t).
 
@@ -134,12 +174,7 @@ class OpenCC:
         """
         self._last_error = None
         self._config_cache: Dict[str, DictRefs] = {}
-
-        if config in self.CONFIG_LIST:
-            self.config = config
-        else:
-            self._last_error = "Invalid config: {}".format(config) if config else None
-            self.config = "s2t"
+        self.config = self._normalize_config(config)
 
         try:
             self.dictionary = DictionaryMaxlength.new()
@@ -152,17 +187,39 @@ class OpenCC:
         escaped_delimiters = ''.join(map(re.escape, self.delimiters))
         self.delimiter_regex = re.compile(f'[{escaped_delimiters}]')
 
-    def set_config(self, config):
+    def _normalize_config(self, config: _ConfigLike) -> str:
+        """
+        Normalize config to canonical lowercase OpenCC name.
+
+        Returns:
+            str: Valid canonical config name. Falls back to "s2t" if invalid.
+        """
+        if config is None:
+            return "s2t"
+
+        if isinstance(config, OpenccConfig):
+            self._last_error = None
+            return config.value
+
+        if isinstance(config, str):
+            cfg = config.strip().lower()
+            if cfg in self.CONFIG_LIST:
+                self._last_error = None
+                return cfg
+
+            self._last_error = "Invalid config: {}".format(config)
+            return "s2t"
+
+        self._last_error = "Invalid config: {}".format(config)
+        return "s2t"
+
+    def set_config(self, config: _ConfigLike) -> None:
         """
         Set the conversion configuration.
 
-        :param config: One of OpenCC.CONFIG_LIST
+        :param config: Configuration name or OpenccConfig enum
         """
-        if config in self.CONFIG_LIST:
-            self.config = config
-        else:
-            self._last_error = "Invalid config: {}".format(config)
-            self.config = "s2t"
+        self.config = self._normalize_config(config)
 
     def get_config(self):
         """
@@ -255,10 +312,6 @@ class OpenCC:
         if not text:
             return text
 
-        total_length = len(text)
-        if total_length < 500_000:
-            return OpenCC.convert_segment(text, dictionaries, max_word_length)
-
         # Split into segments (inclusive keeps delimiters attached to segments)
         ranges = self.get_split_ranges(text, inclusive=True)
 
@@ -267,6 +320,7 @@ class OpenCC:
             return OpenCC.convert_segment(text, dictionaries, max_word_length)
 
         # Parallel threshold
+        total_length = len(text)
         use_parallel = len(ranges) > 1_000 and total_length >= 1_000_000
 
         if use_parallel:
