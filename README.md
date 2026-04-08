@@ -174,7 +174,7 @@ opencc-purepy office -i sheet.xlsx -o result.xlsx -c s2tw --format xlsx
 
 - Python bindings: [
   `opencc_purepy/__init__.py`](https://github.com/laisuk/opencc_purepy/blob/master/opencc_purepy/__init__.py), [
-  `opencc_purepy/opencc_purepy.pyi`](https://github.com/laisuk/opencc_purepy/blob/master/opencc_purepy/opencc_purepy.pyi)
+  `opencc_purepy/core.py`](https://github.com/laisuk/opencc_purepy/blob/master/opencc_purepy/core.py)
 - CLI: [`opencc_purepy/__main__.py`](https://github.com/laisuk/opencc_purepy/blob/master/opencc_purepy/__main__.py)
 
 ---
@@ -191,7 +191,8 @@ opencc-purepy office -i sheet.xlsx -o result.xlsx -c s2tw --format xlsx
 | **10,000 chars**  |        8.76 ms |
 | **100,000 chars** |       86.05 ms |
 
-*Timings reuse the shared dictionary cache, but still include per-run `OpenCC` instance setup; results depend on local hardware and background system load.*
+*Timings reuse the shared dictionary cache, but still include per-run `OpenCC` instance setup; results depend on local
+hardware and background system load.*
 
 
 ---
