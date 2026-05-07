@@ -181,17 +181,31 @@ opencc-purepy office -i sheet.xlsx -o result.xlsx -c s2tw --format xlsx
 
 ## ⚡ Benchmark
 
-> Measured on a local machine using the default "s2t" configuration.  
+> Measured on GitHub Actions `ubuntu-latest` using the default `s2t` configuration.  
 > Each test averaged over 20 runs with the shared dictionary cache reused across runs.
+
+### Runner Platform
+
+| Field     | Value                                                                                                                      |
+|-----------|----------------------------------------------------------------------------------------------------------------------------|
+| Runner    | Linux X64                                                                                                                  |
+| Image     | ubuntu24 20260413.86.1                                                                                                     |
+| Kernel    | `Linux runnervmeorf1 6.17.0-1010-azure #10~24.04.1-Ubuntu SMP Fri Mar  6 22:00:57 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux` |
+| CPU       | Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz                                                                              |
+| CPU Cores | 4                                                                                                                          |
+| Memory    | Not reported                                                                                                               |
+| Python    | Python 3.10.20                                                                                                             |
+
+### Results
 
 | Input Size        | Avg. Time (ms) |
 |-------------------|---------------:|
-| **100 chars**     |        0.15 ms |
-| **1,000 chars**   |        0.93 ms |
-| **10,000 chars**  |        8.76 ms |
-| **100,000 chars** |       86.05 ms |
+| **100 chars**     |       0.221 ms |
+| **1,000 chars**   |       1.769 ms |
+| **10,000 chars**  |      17.584 ms |
+| **100,000 chars** |     173.838 ms |
 
-*Timings reuse the shared dictionary cache, but still include per-run `OpenCC` instance setup; results depend on local
+*Timings reuse the shared dictionary cache, but still include per-run `OpenCC` instance setup; results depend on runner
 hardware and background system load.*
 
 

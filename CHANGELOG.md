@@ -9,9 +9,14 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ## [1.2.1-beta1] - 2026-05-08
 
+### Added
+
+- Added PyPI publishing workflow.
+
 ### Changed
 
 - Update dictionary data.
+- Benchmark results from GitHub CI instead of local.
 
 ---
 
