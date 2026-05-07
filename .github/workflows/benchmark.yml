@@ -1,0 +1,103 @@
+name: CI Bench
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark:
+    name: OpenCC benchmark
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install package
+        run: python -m pip install -e .
+
+      - name: Collect runner platform info
+        run: |
+          {
+            echo "RUNNER_OS=${RUNNER_OS}"
+            echo "RUNNER_ARCH=${RUNNER_ARCH}"
+            echo "IMAGE_OS=${ImageOS}"
+            echo "IMAGE_VERSION=${ImageVersion}"
+            echo "UNAME=$(uname -a)"
+            echo "CPU_MODEL=$(awk -F': ' '/model name/ { print $2; exit }' /proc/cpuinfo)"
+            echo "CPU_CORES=$(nproc)"
+            echo "MEMORY_TOTAL=$(awk '/MemTotal/ { printf \"%.1f GiB\", $2 / 1024 / 1024 }' /proc/meminfo)"
+            echo "PYTHON_VERSION=$(python --version)"
+          } > runner-platform.env
+
+      - name: Run benchmark
+        run: python tests/benchmarks_opencc.py | tee benchmark-output.txt
+
+      - name: Create benchmark summary
+        run: |
+          python - <<'PY'
+          import os
+          import re
+          from pathlib import Path
+
+          platform_info = {}
+          for line in Path("runner-platform.env").read_text(encoding="utf-8").splitlines():
+              if "=" in line:
+                  key, value = line.split("=", 1)
+                  platform_info[key] = value
+
+          rows = []
+          pattern = re.compile(r"Input size:\s*([0-9]+)\s+chars\s+\|\s+Avg time:\s*([0-9.]+)\s+ms")
+          for line in Path("benchmark-output.txt").read_text(encoding="utf-8").splitlines():
+              match = pattern.search(line)
+              if match:
+                  size = int(match.group(1))
+                  avg_ms = float(match.group(2))
+                  rows.append((size, avg_ms))
+
+          if not rows:
+              raise RuntimeError("No benchmark rows were parsed from benchmark-output.txt")
+
+          def input_label(size: int) -> str:
+              return f"{size:,} chars"
+
+          with Path(os.environ["GITHUB_STEP_SUMMARY"]).open("a", encoding="utf-8") as summary:
+              summary.write("## ⚡ Benchmark\n\n")
+              summary.write("> Measured on GitHub Actions `ubuntu-latest` using the default `s2t` configuration.  \n")
+              summary.write("> Each test averaged over 20 runs with the shared dictionary cache reused across runs.\n\n")
+
+              summary.write("### Runner Platform\n\n")
+              summary.write("| Field | Value |\n")
+              summary.write("|---|---|\n")
+              summary.write(f"| Runner | {platform_info.get('RUNNER_OS', '')} {platform_info.get('RUNNER_ARCH', '')} |\n")
+              summary.write(f"| Image | {platform_info.get('IMAGE_OS', '')} {platform_info.get('IMAGE_VERSION', '')} |\n")
+              summary.write(f"| Kernel | `{platform_info.get('UNAME', '')}` |\n")
+              summary.write(f"| CPU | {platform_info.get('CPU_MODEL', '')} |\n")
+              summary.write(f"| CPU Cores | {platform_info.get('CPU_CORES', '')} |\n")
+              summary.write(f"| Memory | {platform_info.get('MEMORY_TOTAL', '')} |\n")
+              summary.write(f"| Python | {platform_info.get('PYTHON_VERSION', '')} |\n\n")
+
+              summary.write("### Results\n\n")
+              summary.write("| Input Size | Avg. Time (ms) |\n")
+              summary.write("|---|---:|\n")
+              for size, avg_ms in rows:
+                  summary.write(f"| **{input_label(size)}** | {avg_ms:.3f} ms |\n")
+
+              summary.write("\n")
+              summary.write("*Timings reuse the shared dictionary cache, but still include per-run `OpenCC` instance setup; results depend on runner hardware and background system load.*\n")
+          PY
+
+      - name: Upload benchmark artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: opencc-benchmark
+          path: |
+            benchmark-output.txt
+            runner-platform.env
