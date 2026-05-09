@@ -6,11 +6,8 @@ import sys
 try:
     from importlib.metadata import version, PackageNotFoundError
 except ImportError:
-    try:
-        from importlib_metadata import version, PackageNotFoundError
-    except ImportError:
-        version = None
-        PackageNotFoundError = Exception
+    version = None
+    PackageNotFoundError = Exception
 
 
 def _get_version():
