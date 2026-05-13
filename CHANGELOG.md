@@ -7,7 +7,19 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ---
 
-## [1.2.1-beta1] - 2026-05-08
+## [1.3.0-beta1] - 2026-05-14
+
+### Added
+
+- StarterUnion and UnionCache implementation.
+
+### Changed
+
+- Update dictionary data.
+
+---
+
+## [1.2.1] - 2026-05-08
 
 ### Added
 
