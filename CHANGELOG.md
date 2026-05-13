@@ -7,15 +7,17 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ---
 
-## [1.3.0-beta1] - 2026-05-14
-
-### Added
-
-- StarterUnion and UnionCache implementation.
+## [1.2.2] - 2026-05-14
 
 ### Changed
 
-- Update dictionary data.
+- Updated dictionary data.
+
+### Notes
+
+- This release remains based on the legacy sequential conversion pipeline.
+- The next major version (`v1.3.0`) is planned to introduce `StarterUnion` + `UnionCache` optimizations to reduce
+  repeated dictionary lookup overhead and improve conversion performance.
 
 ---
 
