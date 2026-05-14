@@ -1,4 +1,5 @@
 import io
+import os
 import sys
 
 from opencc_purepy import OpenCC
@@ -25,6 +26,10 @@ def main(args):
     if args.config is None:
         print("ℹ️  Config not specified. Use default 's2t'", file=sys.stderr)
         args.config = 's2t'
+
+    if args.input and not os.path.isfile(args.input):
+        print(f"Error: Input file not found: {args.input}", file=sys.stderr)
+        return 1
 
     # Plain text conversion fallback
     opencc = OpenCC(args.config)
