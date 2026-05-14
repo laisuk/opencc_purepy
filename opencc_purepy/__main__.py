@@ -52,6 +52,11 @@ def main():
     Returns:
         int: Exit code from the invoked subcommand.
     """
+    from .core import OpenCC
+    from .office_helper import OFFICE_FORMATS
+
+    config_choices = OpenCC.supported_configs()
+
     parser = argparse.ArgumentParser(
         prog="opencc_purepy",
         description="Pure Python OpenCC CLI with multiple tools",
@@ -73,7 +78,13 @@ def main():
     )
     parser_convert.add_argument("-i", "--input", metavar="<file>", help="Input file")
     parser_convert.add_argument("-o", "--output", metavar="<file>", help="Output file")
-    parser_convert.add_argument("-c", "--config", metavar="<conversion>", help="Conversion configuration")
+    parser_convert.add_argument(
+        "-c",
+        "--config",
+        metavar="<conversion>",
+        choices=config_choices,
+        help="Conversion configuration",
+    )
     parser_convert.add_argument(
         "-p",
         "--punct",
@@ -92,7 +103,13 @@ def main():
     )
     parser_office.add_argument("-i", "--input", metavar="<file>", help="Office document Input file")
     parser_office.add_argument("-o", "--output", metavar="<file>", help="Office document Output file")
-    parser_office.add_argument("-c", "--config", metavar="<conversion>", help="Conversion configuration")
+    parser_office.add_argument(
+        "-c",
+        "--config",
+        metavar="<conversion>",
+        choices=config_choices,
+        help="Conversion configuration",
+    )
     parser_office.add_argument(
         "-p",
         "--punct",
@@ -103,6 +120,7 @@ def main():
     parser_office.add_argument(
         "--format",
         metavar="<format>",
+        choices=OFFICE_FORMATS,
         help="Target Office format (e.g., docx, xlsx, pptx, odt, epub)",
     )
     parser_office.add_argument(

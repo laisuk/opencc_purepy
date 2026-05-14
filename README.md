@@ -108,9 +108,10 @@ opencc-purepy office -i sheet.xlsx -o result.xlsx -c s2tw --format xlsx
 ### `OpenCC` class
 
 - `OpenCC(config: str | OpenccConfig = "s2t")`  
-  Create a converter with a supported config string or `OpenccConfig` enum value.
+  Create a converter with a supported config string or `OpenccConfig` enum value. Raises `ValueError` for unsupported
+  configs.
 - `set_config(config: str | OpenccConfig) -> None`  
-  Update the active conversion config.
+  Update the active conversion config. Raises `ValueError` for unsupported configs.
 - `get_config() -> str`  
   Return the current canonical config name.
 - `supported_configs() -> list[str]`  
@@ -118,7 +119,7 @@ opencc-purepy office -i sheet.xlsx -o result.xlsx -c s2tw --format xlsx
 - `get_last_error() -> str | None`  
   Return the last validation or conversion error, if any.
 - `convert(input: str, punctuation: bool = False) -> str`  
-  Convert text using the active config, with optional punctuation conversion where supported.
+  Convert text using the active config, with optional punctuation conversion.
 - `s2t(input: str, punctuation: bool = False) -> str`  
   Simplified Chinese to Traditional Chinese.
 - `t2s(input: str, punctuation: bool = False) -> str`  
@@ -135,21 +136,21 @@ opencc-purepy office -i sheet.xlsx -o result.xlsx -c s2tw --format xlsx
   Simplified Chinese to Hong Kong Traditional.
 - `hk2s(input: str, punctuation: bool = False) -> str`  
   Hong Kong Traditional to Simplified Chinese.
-- `t2tw(input: str) -> str`  
+- `t2tw(input: str, punctuation: bool = False) -> str`  
   Traditional Chinese to Taiwan Traditional.
-- `t2twp(input: str) -> str`  
+- `t2twp(input: str, punctuation: bool = False) -> str`  
   Traditional Chinese to Taiwan Traditional with phrase mappings.
-- `tw2t(input: str) -> str`  
+- `tw2t(input: str, punctuation: bool = False) -> str`  
   Taiwan Traditional to standard Traditional Chinese.
-- `tw2tp(input: str) -> str`  
+- `tw2tp(input: str, punctuation: bool = False) -> str`  
   Taiwan Traditional to standard Traditional Chinese with phrase reversal.
-- `t2hk(input: str) -> str`  
+- `t2hk(input: str, punctuation: bool = False) -> str`  
   Traditional Chinese to Hong Kong variant.
-- `hk2t(input: str) -> str`  
+- `hk2t(input: str, punctuation: bool = False) -> str`  
   Hong Kong Traditional to standard Traditional Chinese.
-- `t2jp(input: str) -> str`  
+- `t2jp(input: str, punctuation: bool = False) -> str`  
   Traditional Chinese to Japanese variants.
-- `jp2t(input: str) -> str`  
+- `jp2t(input: str, punctuation: bool = False) -> str`  
   Japanese Shinjitai to Traditional Chinese.
 - `st(input: str) -> str`  
   Character-only Simplified to Traditional conversion.

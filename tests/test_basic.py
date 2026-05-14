@@ -1,5 +1,5 @@
 import unittest
-from opencc_purepy.core import OpenCC
+from opencc_purepy.core import OpenCC, OpenccConfig
 
 
 class TestOpenCC(unittest.TestCase):
@@ -34,15 +34,21 @@ class TestOpenCC(unittest.TestCase):
         self.assertEqual(result, "汉字转换测试：意大利的罗马城不是一天里就能建成的")
 
     def test_invalid_config(self):
-        converter = OpenCC("bad_config")
-        # print(converter.config)
-        result = converter.convert("测试")
-        self.assertEqual("測試", result)  # s2t
-        self.assertIn("Invalid config", converter.get_last_error())
+        with self.assertRaises(ValueError):
+            OpenCC("bad_config")
+
+    def test_config_parse_normalizes_supported_names(self):
+        self.assertEqual(OpenccConfig.parse(" S2T "), OpenccConfig.S2T)
 
     def test_convert_with_punctuation(self):
         simplified = "“汉字转换测试”"
         result = self.converter.s2t(simplified, punctuation=True)
+        self.assertIn("「", result)
+        self.assertIn("」", result)
+
+    def test_punctuation_applies_to_variant_configs(self):
+        converter = OpenCC("t2tw")
+        result = converter.convert("“軟體”", punctuation=True)
         self.assertIn("「", result)
         self.assertIn("」", result)
 

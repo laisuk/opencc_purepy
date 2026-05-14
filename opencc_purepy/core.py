@@ -3,7 +3,7 @@ from enum import Enum
 from multiprocessing import Pool, cpu_count
 
 try:
-    from typing import List, Dict, Tuple, Optional, Union
+    from typing import List, Dict, Tuple, Optional, Union, Mapping, cast
 except ImportError:
     # Fallback for Python < 3.5
     # Very old Python fallback:
@@ -11,6 +11,11 @@ except ImportError:
     List = list
     Dict = dict
     Tuple = tuple
+    Mapping = dict
+
+
+    def cast(_typ, value):
+        return value
 
 
     class _TypingStub(object):
@@ -20,6 +25,11 @@ except ImportError:
 
     Optional = _TypingStub()
     Union = _TypingStub()
+
+try:
+    _PunctuationTranslateTable = Mapping[int, Union[int, str, None]]
+except TypeError:
+    _PunctuationTranslateTable = object
 
 from .dictionary_lib import DictionaryMaxlength
 
@@ -89,7 +99,9 @@ class OpenccConfig(Enum):
 
     @classmethod
     def parse(cls, s: str) -> "OpenccConfig":
-        return cls(s.lower())
+        if not isinstance(s, str):
+            raise ValueError("Invalid config: {}".format(s))
+        return cls(s.strip().lower())
 
 
 _ConfigLike = Optional[Union[str, OpenccConfig]]
@@ -192,7 +204,10 @@ class OpenCC:
         Normalize config to canonical lowercase OpenCC name.
 
         Returns:
-            str: Valid canonical config name. Falls back to "s2t" if invalid.
+            str: Valid canonical config name.
+
+        Raises:
+            ValueError: If the config is not a supported OpenCC conversion name.
         """
         if config is None:
             return "s2t"
@@ -208,10 +223,10 @@ class OpenCC:
                 return cfg
 
             self._last_error = "Invalid config: {}".format(config)
-            return "s2t"
+            raise ValueError(self._last_error)
 
         self._last_error = "Invalid config: {}".format(config)
-        return "s2t"
+        raise ValueError(self._last_error)
 
     def set_config(self, config: _ConfigLike) -> None:
         """
@@ -475,6 +490,26 @@ class OpenCC:
             result.append(punct_map.get(char, char))
         return ''.join(result)
 
+    def _apply_punctuation(self, text: str, config_key: str, punctuation: bool) -> str:
+        """
+        Apply punctuation conversion in the direction implied by the output config.
+        """
+        if not punctuation:
+            return text
+
+        if HAS_MAKETRANS:
+            if config_key in ("t2s", "tw2s", "tw2sp", "hk2s"):
+                translate_table = cast(_PunctuationTranslateTable, PUNCT_T2S_MAP)
+            else:
+                translate_table = cast(_PunctuationTranslateTable, PUNCT_S2T_MAP)
+            return text.translate(translate_table)
+
+        if config_key in ("t2s", "tw2s", "tw2sp", "hk2s"):
+            punct_map = PUNCT_T2S_MAP
+        else:
+            punct_map = PUNCT_S2T_MAP
+        return self._convert_punctuation_legacy(text, punct_map)
+
     def s2t(self, input_text, punctuation=False):
         """
         Convert Simplified Chinese to Traditional Chinese.
@@ -486,12 +521,7 @@ class OpenCC:
         refs = self._get_dict_refs("s2t")
         output = refs.apply_segment_replace(input_text, self.segment_replace)
 
-        if punctuation:
-            if HAS_MAKETRANS:
-                return output.translate(PUNCT_S2T_MAP)
-            else:
-                return self._convert_punctuation_legacy(output, PUNCT_S2T_MAP)
-        return output
+        return self._apply_punctuation(output, "s2t", punctuation)
 
     def t2s(self, input_text, punctuation=False):
         """
@@ -504,12 +534,7 @@ class OpenCC:
         refs = self._get_dict_refs("t2s")
         output = refs.apply_segment_replace(input_text, self.segment_replace)
 
-        if punctuation:
-            if HAS_MAKETRANS:
-                return output.translate(PUNCT_T2S_MAP)
-            else:
-                return self._convert_punctuation_legacy(output, PUNCT_T2S_MAP)
-        return output
+        return self._apply_punctuation(output, "t2s", punctuation)
 
     def s2tw(self, input_text, punctuation=False):
         """
@@ -522,12 +547,7 @@ class OpenCC:
         refs = self._get_dict_refs("s2tw")
         output = refs.apply_segment_replace(input_text, self.segment_replace)
 
-        if punctuation:
-            if HAS_MAKETRANS:
-                return output.translate(PUNCT_S2T_MAP)
-            else:
-                return self._convert_punctuation_legacy(output, PUNCT_S2T_MAP)
-        return output
+        return self._apply_punctuation(output, "s2tw", punctuation)
 
     def tw2s(self, input_text, punctuation=False):
         """
@@ -540,12 +560,7 @@ class OpenCC:
         refs = self._get_dict_refs("tw2s")
         output = refs.apply_segment_replace(input_text, self.segment_replace)
 
-        if punctuation:
-            if HAS_MAKETRANS:
-                return output.translate(PUNCT_T2S_MAP)
-            else:
-                return self._convert_punctuation_legacy(output, PUNCT_T2S_MAP)
-        return output
+        return self._apply_punctuation(output, "tw2s", punctuation)
 
     def s2twp(self, input_text, punctuation=False):
         """
@@ -558,12 +573,7 @@ class OpenCC:
         refs = self._get_dict_refs("s2twp")
         output = refs.apply_segment_replace(input_text, self.segment_replace)
 
-        if punctuation:
-            if HAS_MAKETRANS:
-                return output.translate(PUNCT_S2T_MAP)
-            else:
-                return self._convert_punctuation_legacy(output, PUNCT_S2T_MAP)
-        return output
+        return self._apply_punctuation(output, "s2twp", punctuation)
 
     def tw2sp(self, input_text, punctuation=False):
         """
@@ -576,12 +586,7 @@ class OpenCC:
         refs = self._get_dict_refs("tw2sp")
         output = refs.apply_segment_replace(input_text, self.segment_replace)
 
-        if punctuation:
-            if HAS_MAKETRANS:
-                return output.translate(PUNCT_T2S_MAP)
-            else:
-                return self._convert_punctuation_legacy(output, PUNCT_T2S_MAP)
-        return output
+        return self._apply_punctuation(output, "tw2sp", punctuation)
 
     def s2hk(self, input_text, punctuation=False):
         """
@@ -594,12 +599,7 @@ class OpenCC:
         refs = self._get_dict_refs("s2hk")
         output = refs.apply_segment_replace(input_text, self.segment_replace)
 
-        if punctuation:
-            if HAS_MAKETRANS:
-                return output.translate(PUNCT_S2T_MAP)
-            else:
-                return self._convert_punctuation_legacy(output, PUNCT_S2T_MAP)
-        return output
+        return self._apply_punctuation(output, "s2hk", punctuation)
 
     def hk2s(self, input_text, punctuation=False):
         """
@@ -612,68 +612,71 @@ class OpenCC:
         refs = self._get_dict_refs("hk2s")
         output = refs.apply_segment_replace(input_text, self.segment_replace)
 
-        if punctuation:
-            if HAS_MAKETRANS:
-                return output.translate(PUNCT_T2S_MAP)
-            else:
-                return self._convert_punctuation_legacy(output, PUNCT_T2S_MAP)
-        return output
+        return self._apply_punctuation(output, "hk2s", punctuation)
 
-    def t2tw(self, input_text: str) -> str:
+    def t2tw(self, input_text: str, punctuation: bool = False) -> str:
         """
         Convert Traditional Chinese to Taiwan Standard Traditional Chinese.
         """
         refs = self._get_dict_refs("t2tw")
-        return refs.apply_segment_replace(input_text, self.segment_replace)
+        output = refs.apply_segment_replace(input_text, self.segment_replace)
+        return self._apply_punctuation(output, "t2tw", punctuation)
 
-    def t2twp(self, input_text: str) -> str:
+    def t2twp(self, input_text: str, punctuation: bool = False) -> str:
         """
         Convert Traditional Chinese to Taiwan Standard using phrase and variant mappings.
         """
         refs = self._get_dict_refs("t2twp")
-        return refs.apply_segment_replace(input_text, self.segment_replace)
+        output = refs.apply_segment_replace(input_text, self.segment_replace)
+        return self._apply_punctuation(output, "t2twp", punctuation)
 
-    def tw2t(self, input_text: str) -> str:
+    def tw2t(self, input_text: str, punctuation: bool = False) -> str:
         """
         Convert Taiwan Traditional to general Traditional Chinese.
         """
         refs = self._get_dict_refs("tw2t")
-        return refs.apply_segment_replace(input_text, self.segment_replace)
+        output = refs.apply_segment_replace(input_text, self.segment_replace)
+        return self._apply_punctuation(output, "tw2t", punctuation)
 
-    def tw2tp(self, input_text: str) -> str:
+    def tw2tp(self, input_text: str, punctuation: bool = False) -> str:
         """
         Convert Taiwan Traditional to Traditional with phrase reversal.
         """
         refs = self._get_dict_refs("tw2tp")
-        return refs.apply_segment_replace(input_text, self.segment_replace)
+        output = refs.apply_segment_replace(input_text, self.segment_replace)
+        return self._apply_punctuation(output, "tw2tp", punctuation)
 
-    def t2hk(self, input_text: str) -> str:
+    def t2hk(self, input_text: str, punctuation: bool = False) -> str:
         """
         Convert Traditional Chinese to Hong Kong variant.
         """
         refs = self._get_dict_refs("t2hk")
-        return refs.apply_segment_replace(input_text, self.segment_replace)
+        output = refs.apply_segment_replace(input_text, self.segment_replace)
+        return self._apply_punctuation(output, "t2hk", punctuation)
 
-    def hk2t(self, input_text: str) -> str:
+    def hk2t(self, input_text: str, punctuation: bool = False) -> str:
         """
         Convert Hong Kong Traditional to standard Traditional Chinese.
         """
         refs = self._get_dict_refs("hk2t")
-        return refs.apply_segment_replace(input_text, self.segment_replace)
+        output = refs.apply_segment_replace(input_text, self.segment_replace)
+        return self._apply_punctuation(output, "hk2t", punctuation)
 
-    def t2jp(self, input_text: str) -> str:
+    def t2jp(self, input_text: str, punctuation: bool = False) -> str:
         """
         Convert Traditional Chinese to Japanese variants.
         """
         refs = self._get_dict_refs("t2jp")
-        return refs.apply_segment_replace(input_text, self.segment_replace)
+        output = refs.apply_segment_replace(input_text, self.segment_replace)
+        return self._apply_punctuation(output, "t2jp", punctuation)
 
-    def jp2t(self, input_text: str) -> str:
+    def jp2t(self, input_text: str, punctuation: bool = False) -> str:
         """
         Convert Japanese Shinjitai (modern Kanji) to Traditional Chinese.
         """
         refs = self._get_dict_refs("jp2t")
-        return refs.apply_segment_replace(input_text, self.segment_replace)
+        output = refs.apply_segment_replace(input_text, self.segment_replace)
+        return self._apply_punctuation(output, "jp2t", punctuation)
 
     def convert(self, input_text: str, punctuation: bool = False) -> str:
         """
@@ -700,27 +703,27 @@ class OpenCC:
             elif config == "t2s":
                 return self.t2s(input_text, punctuation)
             elif config == "t2tw":
-                return self.t2tw(input_text)
+                return self.t2tw(input_text, punctuation)
             elif config == "t2twp":
-                return self.t2twp(input_text)
+                return self.t2twp(input_text, punctuation)
             elif config == "t2hk":
-                return self.t2hk(input_text)
+                return self.t2hk(input_text, punctuation)
             elif config == "tw2s":
                 return self.tw2s(input_text, punctuation)
             elif config == "tw2sp":
                 return self.tw2sp(input_text, punctuation)
             elif config == "tw2t":
-                return self.tw2t(input_text)
+                return self.tw2t(input_text, punctuation)
             elif config == "tw2tp":
-                return self.tw2tp(input_text)
+                return self.tw2tp(input_text, punctuation)
             elif config == "hk2s":
                 return self.hk2s(input_text, punctuation)
             elif config == "hk2t":
-                return self.hk2t(input_text)
+                return self.hk2t(input_text, punctuation)
             elif config == "jp2t":
-                return self.jp2t(input_text)
+                return self.jp2t(input_text, punctuation)
             elif config == "t2jp":
-                return self.t2jp(input_text)
+                return self.t2jp(input_text, punctuation)
             else:
                 self._last_error = f"Invalid config: {config}"
                 return self._last_error

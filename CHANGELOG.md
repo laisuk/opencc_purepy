@@ -12,6 +12,16 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 ### Changed
 
 - Updated dictionary data.
+- Tightened public config validation so unsupported `OpenCC` configs raise `ValueError` instead of silently falling back
+  to `s2t`.
+- Updated CLI config and Office format parsing to reuse the public supported-config and supported-format lists.
+- Applied punctuation conversion consistently across all public conversion methods.
+- Refined punctuation translation typing with a public local translate-table alias for stricter type-checker
+  compatibility.
+
+### Fixed
+
+- Included the bundled OpenCC dictionary license file in packaged data.
 
 ### Notes
 
