@@ -23,6 +23,24 @@ def _get_version():
         return "unknown"
 
 
+def _config_arg(value):
+    from .core import OpenccConfig
+
+    try:
+        return OpenccConfig.parse(value).to_canonical_name()
+    except ValueError:
+        raise argparse.ArgumentTypeError("invalid conversion config: {}".format(value))
+
+
+def _format_arg(value):
+    from .office_helper import OFFICE_FORMATS
+
+    normalized = value.strip().lower()
+    if normalized in OFFICE_FORMATS:
+        return normalized
+    raise argparse.ArgumentTypeError("invalid office format: {}".format(value))
+
+
 def _run_convert(args):
     from . import convert_cmd
     return convert_cmd.main(args)
@@ -52,11 +70,6 @@ def main():
     Returns:
         int: Exit code from the invoked subcommand.
     """
-    from .core import OpenCC
-    from .office_helper import OFFICE_FORMATS
-
-    config_choices = OpenCC.supported_configs()
-
     parser = argparse.ArgumentParser(
         prog="opencc_purepy",
         description="Pure Python OpenCC CLI with multiple tools",
@@ -82,7 +95,7 @@ def main():
         "-c",
         "--config",
         metavar="<conversion>",
-        choices=config_choices,
+        type=_config_arg,
         help="Conversion configuration",
     )
     parser_convert.add_argument(
@@ -107,7 +120,7 @@ def main():
         "-c",
         "--config",
         metavar="<conversion>",
-        choices=config_choices,
+        type=_config_arg,
         help="Conversion configuration",
     )
     parser_office.add_argument(
@@ -120,7 +133,7 @@ def main():
     parser_office.add_argument(
         "--format",
         metavar="<format>",
-        choices=OFFICE_FORMATS,
+        type=_format_arg,
         help="Target Office format (e.g., docx, xlsx, pptx, odt, epub)",
     )
     parser_office.add_argument(

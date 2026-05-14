@@ -1,5 +1,6 @@
 import unittest
 from opencc_purepy.core import OpenCC, OpenccConfig
+from opencc_purepy.__main__ import _config_arg, _format_arg
 
 
 class TestOpenCC(unittest.TestCase):
@@ -39,6 +40,13 @@ class TestOpenCC(unittest.TestCase):
 
     def test_config_parse_normalizes_supported_names(self):
         self.assertEqual(OpenccConfig.parse(" S2T "), OpenccConfig.S2T)
+
+    def test_cli_config_arg_normalizes_supported_names(self):
+        self.assertEqual(_config_arg("s2TW"), "s2tw")
+        self.assertEqual(_config_arg("S2t"), "s2t")
+
+    def test_cli_format_arg_normalizes_supported_names(self):
+        self.assertEqual(_format_arg("DOCX"), "docx")
 
     def test_convert_with_punctuation(self):
         simplified = "“汉字转换测试”"

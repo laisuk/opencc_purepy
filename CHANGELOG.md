@@ -7,6 +7,18 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ---
 
+## [1.2.3] - Unreleased
+
+### Changed
+
+- Preserved public config normalization in CLI parsing so values such as `S2t` and `s2TW` are accepted and normalized
+  consistently with `OpenCC`.
+- Normalized Office CLI `--format` values case-insensitively while still rejecting unsupported formats.
+- Refined punctuation translation typing with a public local translate-table alias for stricter type-checker
+  compatibility.
+
+---
+
 ## [1.2.2] - 2026-05-14
 
 ### Changed
