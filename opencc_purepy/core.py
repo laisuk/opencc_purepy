@@ -31,7 +31,7 @@ try:
 except TypeError:
     _PunctuationTranslateTable = object
 
-from .dictionary_lib import DictionaryMaxlength
+from .dictionary_lib import DictionaryMaxlength, PathLike
 
 # Pre-compiled regex for better performance
 STRIP_REGEX = re.compile(r"[!-/:-@\[-`{-~\t\n\v\f\r 0-9A-Za-z_著]")
@@ -176,28 +176,151 @@ class OpenCC:
     A pure-Python implementation of OpenCC for text conversion between
     different Chinese language variants using segmentation and replacement.
     """
+
     CONFIG_LIST = [c.value for c in OpenccConfig]
 
-    def __init__(self, config: _ConfigLike = None):
+    def __init__(
+            self,
+            config: _ConfigLike = None,
+            dictionary: Optional[DictionaryMaxlength] = None,
+    ):
         """
-        Initialize OpenCC with a given config (default: s2t).
+        Initialize OpenCC with a given config.
 
-        :param config: Configuration name (optional)
+        By default, OpenCC loads the shared packaged dictionary provider via
+        ``DictionaryMaxlength.new()``.
+
+        A custom ``DictionaryMaxlength`` instance may be injected directly for
+        advanced use cases, testing, custom dictionary loading, or preloaded
+        dictionary reuse.
+
+        :param config:
+            OpenCC configuration name. Defaults to ``s2t`` when omitted.
+
+        :param dictionary:
+            Optional custom dictionary container. If omitted, the built-in
+            shared dictionary provider is used.
         """
         self._last_error = None
         self._config_cache: Dict[str, DictRefs] = {}
         self.config = self._normalize_config(config)
 
         try:
-            self.dictionary = DictionaryMaxlength.new()
+            self.dictionary = (
+                dictionary
+                if dictionary is not None
+                else DictionaryMaxlength.new()
+            )
         except Exception as e:
             self._last_error = str(e)
             self.dictionary = DictionaryMaxlength()
 
         self.delimiters = DELIMITERS
-        # Escape special regex characters in delimiters
+
         escaped_delimiters = ''.join(map(re.escape, self.delimiters))
         self.delimiter_regex = re.compile(f'[{escaped_delimiters}]')
+
+    @classmethod
+    def from_dicts(
+            cls,
+            config: _ConfigLike = None,
+            base_dir: Optional[PathLike] = None,
+            paths: Optional[Dict[str, str]] = None,
+            overrides: Optional[Dict[str, PathLike]] = None,
+            appends: Optional[Dict[str, PathLike]] = None,
+    ) -> "OpenCC":
+        """
+        Create an ``OpenCC`` instance using dictionaries loaded from text files.
+
+        This is a convenience constructor around
+        ``DictionaryMaxlength.from_dicts()``.
+
+        It supports both backward-compatible full directory loading and newer
+        flexible user dictionary modes.
+
+        Customization modes:
+
+        1. Legacy directory loading
+           ``base_dir`` and ``paths`` may be used to load dictionaries from a
+           custom directory.
+
+        2. Full dictionary replacement
+           ``overrides`` replaces selected dictionary slots with complete
+           custom dictionary files.
+
+        3. Dictionary append mode
+           ``appends`` loads extra user entries after the base dictionaries.
+           Duplicate keys are resolved by late-comer wins.
+
+        Precedence order:
+
+            built-in/base < override < append
+
+        Examples
+        --------
+        Load built-in TXT dictionaries:
+
+        >>> cc = OpenCC.from_dicts()
+
+        Load all dictionaries from a custom directory:
+
+        >>> cc = OpenCC.from_dicts(base_dir="./my_dicts")
+
+        Replace a whole dictionary slot:
+
+        >>> cc = OpenCC.from_dicts(
+        ...     overrides={
+        ...         "st_phrases": "./company/STPhrases.txt",
+        ...     }
+        ... )
+
+        Append custom user terms:
+
+        >>> cc = OpenCC.from_dicts(
+        ...     appends={
+        ...         "st_phrases": "./custom/custom_terms.txt",
+        ...     }
+        ... )
+
+        Use another OpenCC config:
+
+        >>> cc = OpenCC.from_dicts(
+        ...     config="s2tw",
+        ...     appends={
+        ...         "st_phrases": "./custom/custom_terms.txt",
+        ...     }
+        ... )
+
+        :param config:
+            OpenCC configuration name. Defaults to ``s2t`` when omitted.
+
+        :param base_dir:
+            Optional base directory for legacy dictionary loading.
+
+        :param paths:
+            Optional legacy dictionary slot -> filename mapping.
+
+        :param overrides:
+            Optional dictionary slot -> file path mapping for full replacement.
+
+        :param appends:
+            Optional dictionary slot -> file path mapping for appended custom
+            entries.
+
+        :return:
+            ``OpenCC`` instance using the loaded dictionary container.
+        """
+        dictionary = DictionaryMaxlength.from_dicts(
+            base_dir=base_dir,
+            paths=paths,
+            overrides=overrides,
+            appends=appends,
+        )
+
+        return cls(
+            config=config,
+            dictionary=dictionary,
+        )
 
     def _normalize_config(self, config: _ConfigLike) -> str:
         """

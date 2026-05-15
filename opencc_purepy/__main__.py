@@ -172,8 +172,21 @@ def main():
         "-o",
         "--output",
         metavar="<filename>",
-        help="Write generated dictionary to <filename>. If not specified, a default filename is used.",
+        help=(
+            "Write generated dictionary to <filename>. "
+            "If not specified, a default filename is used."
+        ),
     )
+    parser_dictgen.add_argument(
+        "-d",
+        "--dicts",
+        metavar="<directory>",
+        help=(
+            "Load dictionaries from a custom directory instead of "
+            "the built-in dicts folder."
+        ),
+    )
+
     parser_dictgen.set_defaults(func=_run_dictgen)
 
     args = parser.parse_args()

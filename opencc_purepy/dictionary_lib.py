@@ -1,6 +1,8 @@
 from pathlib import Path
 from threading import Lock
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Union, Optional
+
+PathLike = Union[str, Path]
 
 
 class DictionaryMaxlength:
@@ -57,35 +59,143 @@ class DictionaryMaxlength:
         return cls.get_provider()
 
     @classmethod
-    def from_json(cls):
+    def from_json(cls, path: Optional[PathLike] = None) -> "DictionaryMaxlength":
         """
-        Load dictionary data from a JSON file where each field is a list [dict, int].
-        :return: Populated DictionaryMaxlength instance
+        Load dictionary data from a JSON file.
+
+        The JSON file must use the serialized DictionaryMaxlength format:
+
+            {
+                "st_characters": [{...}, 1],
+                "st_phrases": [{...}, 4],
+                ...
+            }
+
+        If ``path`` is omitted, the built-in packaged
+        ``dicts/dictionary_maxlength.json`` file is used.
+
+        :param path:
+            Optional custom JSON dictionary path.
+
+        :return:
+            Populated DictionaryMaxlength instance.
         """
         import json
-        path = Path(__file__).parent / "dicts" / "dictionary_maxlength.json"
-        with open(path, "r", encoding="utf-8") as f:
+
+        json_path = (
+            Path(path)
+            if path is not None
+            else Path(__file__).parent / "dicts" / "dictionary_maxlength.json"
+        )
+
+        with json_path.open("r", encoding="utf-8") as f:
             raw_data = json.load(f)
 
         instance = cls()
 
+        valid_slots = set(instance.__dict__.keys())
+
         for key, value in raw_data.items():
-            if isinstance(value, list) and len(value) == 2 and isinstance(value[0], dict) and isinstance(value[1], int):
+            if key not in valid_slots:
+                raise ValueError("Unknown dictionary slot: {}".format(key))
+
+            if (
+                    isinstance(value, list)
+                    and len(value) == 2
+                    and isinstance(value[0], dict)
+                    and isinstance(value[1], int)
+            ):
                 setattr(instance, key, (value[0], value[1]))
             else:
                 raise ValueError("Invalid dictionary format for key: {}".format(key))
 
         return instance
 
+
     @classmethod
-    def from_dicts(cls):
+    def from_dicts(
+            cls,
+            base_dir: Optional[PathLike] = None,
+            paths: Optional[Dict[str, str]] = None,
+            overrides: Optional[Dict[str, PathLike]] = None,
+            appends: Optional[Dict[str, PathLike]] = None,
+    ) -> "DictionaryMaxlength":
         """
-        Load dictionaries directly from text files in the 'dicts' folder.
-        Each file should contain tab-separated mappings.
-        :return: Populated DictionaryMaxlength instance
+        Load OpenCC dictionaries directly from plain-text dictionary files.
+
+        By default, all dictionaries are loaded from the built-in ``dicts`` folder.
+
+        This method supports three customization modes:
+
+        1. Legacy custom directory loading (backward compatible)
+           Use ``base_dir`` and/or ``paths`` to load dictionaries from
+           another directory.
+
+        2. Dictionary replacement (overrides)
+           Replace specific dictionary slots with fully custom dictionary files.
+
+        3. Dictionary extension (appends)
+           Append additional custom entries on top of existing dictionaries.
+           When duplicate keys exist, later entries override earlier ones
+           ("late-comer wins").
+
+        Precedence order:
+
+            built-in < override < append
+
+        Examples
+        --------
+        Load built-in dictionaries:
+
+        >>> DictionaryMaxlength.from_dicts()
+
+        Load dictionaries from another directory (legacy behavior):
+
+        >>> DictionaryMaxlength.from_dicts("./my_dicts")
+
+        Replace an entire dictionary with a proprietary version:
+
+        >>> DictionaryMaxlength.from_dicts(
+        ...     overrides={
+        ...         "st_phrases": "./company/STPhrases.txt",
+        ...     }
+        ... )
+
+        Append additional custom terms:
+
+        >>> DictionaryMaxlength.from_dicts(
+        ...     appends={
+        ...         "st_phrases": "./custom/custom_terms.txt",
+        ...     }
+        ... )
+
+        Parameters
+        ----------
+        base_dir:
+            Optional base directory for legacy dictionary loading.
+            Defaults to the built-in ``dicts`` folder.
+
+        paths:
+            Optional legacy attribute -> filename mapping.
+            Maintained for backward compatibility.
+
+        overrides:
+            Optional attribute -> file path mapping used to fully replace
+            individual dictionaries.
+
+        appends:
+            Optional attribute -> file path mapping used to append additional
+            entries to existing dictionaries.
+
+        Returns
+        -------
+        DictionaryMaxlength
+            A populated dictionary container.
         """
+
         instance = cls()
-        paths = {
+
+        default_paths = {
             'st_characters': "STCharacters.txt",
             'st_phrases': "STPhrases.txt",
             'ts_characters': "TSCharacters.txt",
@@ -104,10 +214,86 @@ class DictionaryMaxlength:
             'jp_variants_rev': "JPVariantsRev.txt",
         }
 
-        base = Path(__file__).parent / "dicts"
-        for attr, filename in paths.items():
-            content = (base / filename).read_text(encoding="utf-8")
-            setattr(instance, attr, cls.load_dictionary_maxlength(content))
+        # ------------------------------------------------------------------
+        # Backward-compatible legacy behavior
+        # ------------------------------------------------------------------
+
+        mapping = default_paths.copy()
+
+        if paths:
+            mapping.update(paths)
+
+        base = (
+            Path(base_dir)
+            if base_dir is not None
+            else Path(__file__).parent / "dicts"
+        )
+
+        # ------------------------------------------------------------------
+        # Resolve initial dictionary file paths
+        # ------------------------------------------------------------------
+
+        file_map = {
+            attr: base / filename
+            for attr, filename in mapping.items()
+        }
+
+        # ------------------------------------------------------------------
+        # Apply full replacement overrides
+        # ------------------------------------------------------------------
+
+        if overrides:
+            for attr, path in overrides.items():
+                if attr not in file_map:
+                    raise ValueError(
+                        "Unknown dictionary slot: {}".format(attr)
+                    )
+
+                file_map[attr] = Path(path)
+
+        # ------------------------------------------------------------------
+        # Load base dictionaries
+        # ------------------------------------------------------------------
+
+        for attr, path in file_map.items():
+            content = path.read_text(encoding="utf-8")
+
+            setattr(
+                instance,
+                attr,
+                cls.load_dictionary_maxlength(content),
+            )
+
+        # ------------------------------------------------------------------
+        # Apply append dictionaries (late-comer wins)
+        # ------------------------------------------------------------------
+
+        if appends:
+            for attr, path in appends.items():
+                if not hasattr(instance, attr):
+                    raise ValueError(
+                        "Unknown dictionary slot: {}".format(attr)
+                    )
+
+                base_dict, base_max = getattr(instance, attr)
+
+                content = Path(path).read_text(encoding="utf-8")
+
+                append_dict, append_max = (
+                    cls.load_dictionary_maxlength(content)
+                )
+
+                # Late-comer wins
+                base_dict.update(append_dict)
+
+                setattr(
+                    instance,
+                    attr,
+                    (
+                        base_dict,
+                        max(base_max, append_max),
+                    ),
+                )
 
         return instance
 

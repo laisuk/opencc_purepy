@@ -4,6 +4,7 @@ from .dictionary_lib import DictionaryMaxlength
 BLUE = "\033[1;34m"
 RESET = "\033[0m"
 
+
 def main(args):
     """
     Main entry point for the dictionary generation command-line tool.
@@ -28,7 +29,9 @@ def main(args):
     output_file_path = os.path.abspath(output_file)  # Get full path
 
     # Generate dictionary data
-    dictionaries = DictionaryMaxlength.from_dicts()
+    dictionaries = DictionaryMaxlength.from_dicts(
+        base_dir=args.dicts,
+    )
 
     if args.format == "json":
         # Serialize dictionary to JSON file
