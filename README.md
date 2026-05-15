@@ -98,6 +98,120 @@ opencc-purepy office -i sheet.xlsx -o result.xlsx -c s2tw --format xlsx
 
 ---
 
+## 📚 Custom Dictionaries
+
+`opencc_purepy` follows the OpenCC lexicon structure. Custom entries are loaded through existing OpenCC dictionary
+slots, such as `st_phrases` or `ts_phrases`; do not use or document a generic `UserDict.txt` slot.
+
+This keeps `DictionaryMaxlength`, `DictRefs`, and future acceleration structures such as `UnionCache` stable and
+OpenCC-compatible.
+
+### Append mode
+
+Use `appends={...}` to load built-in dictionaries first, then custom entries. Duplicate keys use late-comer wins, so
+custom entries override built-in entries. This is recommended for most users.
+
+```python
+from opencc_purepy import OpenCC
+
+cc = OpenCC.from_dicts(
+    config="s2t",
+    appends={
+        "st_phrases": "./UserDict.txt",
+    },
+)
+
+print(cc.convert("帕兰蒂尔是一家公司"))
+```
+
+### Override mode
+
+Use `overrides={...}` to replace an entire dictionary slot with a custom file. This is intended for advanced users or
+proprietary full dictionary copies.
+
+```python
+from opencc_purepy import OpenCC
+
+cc = OpenCC.from_dicts(
+    config="s2t",
+    overrides={
+        "st_phrases": "./company/STPhrases.txt",
+    },
+)
+```
+
+### Direct dictionary injection
+
+```python
+from opencc_purepy import OpenCC
+from opencc_purepy.dictionary_lib import DictionaryMaxlength
+
+dictionary = DictionaryMaxlength.from_dicts(
+    appends={
+        "st_phrases": "./UserDict.txt",
+    },
+)
+
+cc = OpenCC(config="s2t", dictionary=dictionary)
+```
+
+### Dictionary text format
+
+Custom dictionary files are UTF-8 text files. Use one mapping per line in `phrase<TAB>translation` format. Blank lines
+are ignored, lines starting with `#` are comments, and duplicate keys are resolved by late-comer wins.
+
+```text
+# Custom company terms
+帕兰蒂尔	帕蘭蒂爾
+```
+
+### Supported slots
+
+| Slot name                 | Default file                |
+|---------------------------|-----------------------------|
+| `st_characters`           | `STCharacters.txt`          |
+| `st_phrases`              | `STPhrases.txt`             |
+| `ts_characters`           | `TSCharacters.txt`          |
+| `ts_phrases`              | `TSPhrases.txt`             |
+| `tw_phrases`              | `TWPhrases.txt`             |
+| `tw_phrases_rev`          | `TWPhrasesRev.txt`          |
+| `tw_variants`             | `TWVariants.txt`            |
+| `tw_variants_rev`         | `TWVariantsRev.txt`         |
+| `tw_variants_rev_phrases` | `TWVariantsRevPhrases.txt`  |
+| `hk_variants`             | `HKVariants.txt`            |
+| `hk_variants_rev`         | `HKVariantsRev.txt`         |
+| `hk_variants_rev_phrases` | `HKVariantsRevPhrases.txt`  |
+| `jps_characters`          | `JPShinjitaiCharacters.txt` |
+| `jps_phrases`             | `JPShinjitaiPhrases.txt`    |
+| `jp_variants`             | `JPVariants.txt`            |
+| `jp_variants_rev`         | `JPVariantsRev.txt`         |
+
+### Generate JSON with dictgen
+
+TXT dictionaries are human-editable source files. `dictionary_maxlength.json` is a generated/cache format, so prefer
+`dictgen` instead of manually editing JSON.
+
+```sh
+opencc-purepy dictgen -d ./my_dicts -o dictionary_maxlength.json
+```
+
+```python
+from opencc_purepy import OpenCC
+from opencc_purepy.dictionary_lib import DictionaryMaxlength
+
+dictionary = DictionaryMaxlength.from_json("./dictionary_maxlength.json")
+cc = OpenCC(config="s2t", dictionary=dictionary)
+```
+
+### Which mode should I use?
+
+- Use `appends` for a few user or company terms.
+- Use `overrides` when maintaining a full proprietary replacement of an OpenCC dictionary file.
+- Use `dictgen` when you want to bake TXT dictionaries into JSON for reuse or faster loading.
+- Use direct dictionary injection when sharing one loaded dictionary across many `OpenCC` instances.
+
+---
+
 ## 🧩 API Reference
 
 ### Exports

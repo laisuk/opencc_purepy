@@ -7,6 +7,26 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ---
 
+## [1.2.4] - 2026-05-15
+
+### Added
+
+- Added custom dictionary loading through OpenCC-compatible dictionary slots, including append mode for user/company
+  terms and override mode for full dictionary replacements.
+- Added `OpenCC.from_dicts(...)` for creating converters directly from TXT dictionaries with `appends` and
+  `overrides`.
+- Added direct `DictionaryMaxlength` customization support through `DictionaryMaxlength.from_dicts(...)`, allowing one
+  loaded dictionary container to be shared across many `OpenCC` instances.
+- Added the `dictgen` CLI subcommand for generating `dictionary_maxlength.json` from TXT dictionary files.
+
+### Notes
+
+- Custom dictionaries follow the OpenCC lexicon structure and attach to existing slots such as `st_phrases` or
+  `ts_phrases`; this release does not introduce a generic `UserDict.txt` slot.
+- No breaking public API changes.
+
+---
+
 ## [1.2.3] - 2026-05-14
 
 ### Changed
