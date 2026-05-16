@@ -101,10 +101,17 @@ opencc-purepy office -i sheet.xlsx -o result.xlsx -c s2tw --format xlsx
 ## 📚 Custom Dictionaries
 
 `opencc_purepy` follows the OpenCC lexicon structure. Custom entries are loaded through existing OpenCC dictionary
-slots, such as `st_phrases` or `ts_phrases`; do not use or document a generic `UserDict.txt` slot.
+slots, such as `DictSlot.ST_PHRASES` or `DictSlot.TS_PHRASES`; do not use or document a generic `UserDict.txt` slot.
 
 This keeps `DictionaryMaxlength`, `DictRefs`, and future acceleration structures such as `UnionCache` stable and
 OpenCC-compatible.
+
+Dictionary slot mappings support both:
+
+- `DictSlot` (recommended)
+- legacy `str` keys (backward compatible)
+
+---
 
 ### Append mode
 
@@ -112,6 +119,21 @@ Use `appends={...}` to load built-in dictionaries first, then custom entries. Du
 custom entries override built-in entries. This is recommended for most users.
 
 ```python
+from opencc_purepy import DictSlot, OpenCC
+
+cc = OpenCC.from_dicts(
+    config="s2t",
+    appends={
+        DictSlot.ST_PHRASES: "./UserDict.txt",
+    },
+)
+
+print(cc.convert("帕兰蒂尔是一家公司"))
+```
+
+Legacy string keys remain supported:
+
+```python
 from opencc_purepy import OpenCC
 
 cc = OpenCC.from_dicts(
@@ -120,9 +142,9 @@ cc = OpenCC.from_dicts(
         "st_phrases": "./UserDict.txt",
     },
 )
-
-print(cc.convert("帕兰蒂尔是一家公司"))
 ```
+
+---
 
 ### Override mode
 
@@ -130,30 +152,34 @@ Use `overrides={...}` to replace an entire dictionary slot with a custom file. T
 proprietary full dictionary copies.
 
 ```python
-from opencc_purepy import OpenCC
+from opencc_purepy import DictSlot, OpenCC
 
 cc = OpenCC.from_dicts(
     config="s2t",
     overrides={
-        "st_phrases": "./company/STPhrases.txt",
+        DictSlot.ST_PHRASES: "./company/STPhrases.txt",
     },
 )
 ```
 
+---
+
 ### Direct dictionary injection
 
 ```python
-from opencc_purepy import OpenCC
+from opencc_purepy import DictSlot, OpenCC
 from opencc_purepy.dictionary_lib import DictionaryMaxlength
 
 dictionary = DictionaryMaxlength.from_dicts(
     appends={
-        "st_phrases": "./UserDict.txt",
+        DictSlot.ST_PHRASES: "./UserDict.txt",
     },
 )
 
 cc = OpenCC(config="s2t", dictionary=dictionary)
 ```
+
+---
 
 ### Dictionary text format
 
@@ -165,26 +191,30 @@ are ignored, lines starting with `#` are comments, and duplicate keys are resolv
 帕兰蒂尔	帕蘭蒂爾
 ```
 
+---
+
 ### Supported slots
 
-| Slot name                 | Default file                |
-|---------------------------|-----------------------------|
-| `st_characters`           | `STCharacters.txt`          |
-| `st_phrases`              | `STPhrases.txt`             |
-| `ts_characters`           | `TSCharacters.txt`          |
-| `ts_phrases`              | `TSPhrases.txt`             |
-| `tw_phrases`              | `TWPhrases.txt`             |
-| `tw_phrases_rev`          | `TWPhrasesRev.txt`          |
-| `tw_variants`             | `TWVariants.txt`            |
-| `tw_variants_rev`         | `TWVariantsRev.txt`         |
-| `tw_variants_rev_phrases` | `TWVariantsRevPhrases.txt`  |
-| `hk_variants`             | `HKVariants.txt`            |
-| `hk_variants_rev`         | `HKVariantsRev.txt`         |
-| `hk_variants_rev_phrases` | `HKVariantsRevPhrases.txt`  |
-| `jps_characters`          | `JPShinjitaiCharacters.txt` |
-| `jps_phrases`             | `JPShinjitaiPhrases.txt`    |
-| `jp_variants`             | `JPVariants.txt`            |
-| `jp_variants_rev`         | `JPVariantsRev.txt`         |
+| `DictSlot`                         | Legacy key                | Default file                |
+|------------------------------------|---------------------------|-----------------------------|
+| `DictSlot.ST_CHARACTERS`           | `st_characters`           | `STCharacters.txt`          |
+| `DictSlot.ST_PHRASES`              | `st_phrases`              | `STPhrases.txt`             |
+| `DictSlot.TS_CHARACTERS`           | `ts_characters`           | `TSCharacters.txt`          |
+| `DictSlot.TS_PHRASES`              | `ts_phrases`              | `TSPhrases.txt`             |
+| `DictSlot.TW_PHRASES`              | `tw_phrases`              | `TWPhrases.txt`             |
+| `DictSlot.TW_PHRASES_REV`          | `tw_phrases_rev`          | `TWPhrasesRev.txt`          |
+| `DictSlot.TW_VARIANTS`             | `tw_variants`             | `TWVariants.txt`            |
+| `DictSlot.TW_VARIANTS_REV`         | `tw_variants_rev`         | `TWVariantsRev.txt`         |
+| `DictSlot.TW_VARIANTS_REV_PHRASES` | `tw_variants_rev_phrases` | `TWVariantsRevPhrases.txt`  |
+| `DictSlot.HK_VARIANTS`             | `hk_variants`             | `HKVariants.txt`            |
+| `DictSlot.HK_VARIANTS_REV`         | `hk_variants_rev`         | `HKVariantsRev.txt`         |
+| `DictSlot.HK_VARIANTS_REV_PHRASES` | `hk_variants_rev_phrases` | `HKVariantsRevPhrases.txt`  |
+| `DictSlot.JPS_CHARACTERS`          | `jps_characters`          | `JPShinjitaiCharacters.txt` |
+| `DictSlot.JPS_PHRASES`             | `jps_phrases`             | `JPShinjitaiPhrases.txt`    |
+| `DictSlot.JP_VARIANTS`             | `jp_variants`             | `JPVariants.txt`            |
+| `DictSlot.JP_VARIANTS_REV`         | `jp_variants_rev`         | `JPVariantsRev.txt`         |
+
+---
 
 ### Generate JSON with dictgen
 
@@ -200,8 +230,14 @@ from opencc_purepy import OpenCC
 from opencc_purepy.dictionary_lib import DictionaryMaxlength
 
 dictionary = DictionaryMaxlength.from_json("./dictionary_maxlength.json")
-cc = OpenCC(config="s2t", dictionary=dictionary)
+
+cc = OpenCC(
+    config="s2t",
+    dictionary=dictionary,
+)
 ```
+
+---
 
 ### Which mode should I use?
 
@@ -209,6 +245,8 @@ cc = OpenCC(config="s2t", dictionary=dictionary)
 - Use `overrides` when maintaining a full proprietary replacement of an OpenCC dictionary file.
 - Use `dictgen` when you want to bake TXT dictionaries into JSON for reuse or faster loading.
 - Use direct dictionary injection when sharing one loaded dictionary across many `OpenCC` instances.
+- Prefer `DictSlot` for new code and IDE-friendly type checking.
+- Legacy `str` slot keys remain fully supported for backward compatibility.
 
 ---
 

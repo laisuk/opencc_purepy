@@ -7,6 +7,22 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ---
 
+## [1.2.5-beta1] - 2026-05-16
+
+### Changed
+
+- Added `DictSlot` enum for strongly-typed OpenCC dictionary slot selection.
+- Added `DictSlotLike` compatibility type for accepting both `DictSlot` and legacy `str` slot keys.
+- Refactored `DictionaryMaxlength.from_dicts()` to support typed dictionary slot mappings.
+- Improved dictionary slot validation with centralized slot normalization helpers.
+- Added support for both enum-name (`"ST_PHRASES"`) and legacy attribute-style (`"st_phrases"`) slot resolution.
+- Preserved backward compatibility for existing `str`-based dictionary slot APIs.
+- Refactored public API typing hints for improved IDE completion and static analysis support.
+- Improved `from_dicts()` documentation and examples to include `DictSlot` usage.
+- Moved dictionary slot definitions into dedicated `dict_slot.py` module for cleaner public API organization.
+
+---
+
 ## [1.2.4] - 2026-05-15
 
 ### Added

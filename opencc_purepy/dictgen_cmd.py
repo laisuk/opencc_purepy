@@ -1,4 +1,5 @@
 import os
+
 from .dictionary_lib import DictionaryMaxlength
 
 BLUE = "\033[1;34m"
@@ -15,27 +16,53 @@ def main(args):
         args: Parsed command-line arguments with attributes:
             - format (str): Output format, currently supports 'json'.
             - output (str): Output file path or None for default.
+            - dicts (str): Optional custom dictionary directory.
 
     Returns:
         int: Exit code (0 for success).
     """
-    # Set default output file name based on format
+
+    # ------------------------------------------------------------------
+    # Validate custom dictionary directory
+    # ------------------------------------------------------------------
+
+    try:
+        if args.dicts is not None:
+            DictionaryMaxlength.validate_dicts_dir(args.dicts)
+
+    except FileNotFoundError as e:
+        print("Error: {}".format(e))
+        return 1
+
+    # ------------------------------------------------------------------
+    # Set default output file name
+    # ------------------------------------------------------------------
+
     default_output = {
         "json": "dictionary_maxlength.json"
     }[args.format]
 
-    # Use user-specified output file or default
     output_file = args.output or default_output
-    output_file_path = os.path.abspath(output_file)  # Get full path
+    output_file_path = os.path.abspath(output_file)
 
+    # ------------------------------------------------------------------
     # Generate dictionary data
+    # ------------------------------------------------------------------
+
     dictionaries = DictionaryMaxlength.from_dicts(
         base_dir=args.dicts,
     )
 
+    # ------------------------------------------------------------------
+    # Serialize output
+    # ------------------------------------------------------------------
+
     if args.format == "json":
-        # Serialize dictionary to JSON file
         dictionaries.serialize_to_json(output_file_path)
-        print(f"{BLUE}Dictionary saved in JSON format at: {output_file_path}{RESET}")
+
+        print(
+            f"{BLUE}Dictionary saved in JSON format at: "
+            f"{output_file_path}{RESET}"
+        )
 
     return 0

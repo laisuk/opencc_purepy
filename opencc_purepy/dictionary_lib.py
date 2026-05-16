@@ -1,8 +1,11 @@
 from pathlib import Path
 from threading import Lock
-from typing import Dict, Tuple, Union, Optional
+from typing import Dict, Tuple, Union, Optional, Mapping
+
+from .dict_slot import DictSlot, DictSlotLike
 
 PathLike = Union[str, Path]
+SlotPathMap = Mapping[DictSlotLike, PathLike]
 
 
 class DictionaryMaxlength:
@@ -111,14 +114,13 @@ class DictionaryMaxlength:
 
         return instance
 
-
     @classmethod
     def from_dicts(
             cls,
             base_dir: Optional[PathLike] = None,
-            paths: Optional[Dict[str, str]] = None,
-            overrides: Optional[Dict[str, PathLike]] = None,
-            appends: Optional[Dict[str, PathLike]] = None,
+            paths: Optional[SlotPathMap] = None,
+            overrides: Optional[SlotPathMap] = None,
+            appends: Optional[SlotPathMap] = None,
     ) -> "DictionaryMaxlength":
         """
         Load OpenCC dictionaries directly from plain-text dictionary files.
@@ -143,6 +145,18 @@ class DictionaryMaxlength:
 
             built-in < override < append
 
+        Slot Keys
+        ---------
+        Dictionary slot mappings accept either:
+
+        - :class:`DictSlot` (recommended)
+        - legacy ``str`` keys (backward compatible)
+
+        Examples of valid slot keys:
+
+        >>> DictSlot.ST_PHRASES
+        >>> "st_phrases"
+
         Examples
         --------
         Load built-in dictionaries:
@@ -153,15 +167,25 @@ class DictionaryMaxlength:
 
         >>> DictionaryMaxlength.from_dicts("./my_dicts")
 
-        Replace an entire dictionary with a proprietary version:
+        Replace an entire dictionary using ``DictSlot``:
 
+        >>> from opencc_purepy import DictSlot
+        >>>
         >>> DictionaryMaxlength.from_dicts(
         ...     overrides={
-        ...         "st_phrases": "./company/STPhrases.txt",
+        ...         DictSlot.ST_PHRASES: "./company/STPhrases.txt",
         ...     }
         ... )
 
         Append additional custom terms:
+
+        >>> DictionaryMaxlength.from_dicts(
+        ...     appends={
+        ...         DictSlot.ST_PHRASES: "./custom/custom_terms.txt",
+        ...     }
+        ... )
+
+        Legacy ``str`` keys remain supported:
 
         >>> DictionaryMaxlength.from_dicts(
         ...     appends={
@@ -176,22 +200,33 @@ class DictionaryMaxlength:
             Defaults to the built-in ``dicts`` folder.
 
         paths:
-            Optional legacy attribute -> filename mapping.
-            Maintained for backward compatibility.
+            Optional dictionary slot -> filename mapping.
+
+            Supports both :class:`DictSlot` and legacy ``str`` keys.
 
         overrides:
-            Optional attribute -> file path mapping used to fully replace
-            individual dictionaries.
+            Optional dictionary slot -> file path mapping used to fully
+            replace individual dictionaries.
+
+            Supports both :class:`DictSlot` and legacy ``str`` keys.
 
         appends:
-            Optional attribute -> file path mapping used to append additional
-            entries to existing dictionaries.
+            Optional dictionary slot -> file path mapping used to append
+            additional entries to existing dictionaries.
+
+            Supports both :class:`DictSlot` and legacy ``str`` keys.
 
         Returns
         -------
         DictionaryMaxlength
             A populated dictionary container.
         """
+        paths = cls._normalize_slot_path_map(paths)
+        overrides = cls._normalize_slot_path_map(overrides)
+        appends = cls._normalize_slot_path_map(appends)
+
+        if base_dir is not None:
+            cls.validate_dicts_dir(base_dir)
 
         instance = cls()
 
@@ -323,6 +358,87 @@ class DictionaryMaxlength:
                 warnings.warn("Ignoring malformed dictionary line: {}".format(line))
 
         return dictionary, max_length
+
+    @staticmethod
+    def _normalize_slot(slot: DictSlotLike) -> str:
+        if isinstance(slot, DictSlot):
+            return slot.value
+
+        if slot in DictSlot._value2member_map_:
+            return slot
+
+        try:
+            return DictSlot.__members__[slot].value
+        except KeyError:
+            raise ValueError("Unknown dictionary slot: {}".format(slot)) from None
+
+    @classmethod
+    def _normalize_slot_path_map(
+            cls,
+            mapping: Optional[SlotPathMap],
+    ) -> Optional[Dict[str, PathLike]]:
+        if mapping is None:
+            return None
+
+        return {
+            cls._normalize_slot(slot): path
+            for slot, path in mapping.items()
+        }
+
+    @staticmethod
+    def validate_dicts_dir(path: PathLike) -> None:
+        """
+        Validate an OpenCC dictionary directory.
+
+        Ensures the directory exists and contains all required
+        OpenCC dictionary files.
+
+        :param path:
+            Dictionary directory path.
+
+        :raises FileNotFoundError:
+            If the directory or required dictionary files are missing.
+        """
+
+        base = Path(path)
+
+        if not base.is_dir():
+            raise FileNotFoundError(
+                "Dictionary directory does not exist: {}".format(base)
+            )
+
+        required_files = [
+            "STCharacters.txt",
+            "STPhrases.txt",
+            "TSCharacters.txt",
+            "TSPhrases.txt",
+            "TWPhrases.txt",
+            "TWPhrasesRev.txt",
+            "TWVariants.txt",
+            "TWVariantsRev.txt",
+            "TWVariantsRevPhrases.txt",
+            "HKVariants.txt",
+            "HKVariantsRev.txt",
+            "HKVariantsRevPhrases.txt",
+            "JPShinjitaiCharacters.txt",
+            "JPShinjitaiPhrases.txt",
+            "JPVariants.txt",
+            "JPVariantsRev.txt",
+        ]
+
+        missing = [
+            name for name in required_files
+            if not (base / name).is_file()
+        ]
+
+        if missing:
+            raise FileNotFoundError(
+                "Dictionary directory is missing required files:\n"
+                + "\n".join(
+                    "  - {}".format(name)
+                    for name in missing
+                )
+            )
 
     def serialize_to_json(self, path: str):
         """
