@@ -31,7 +31,7 @@ try:
 except TypeError:
     _PunctuationTranslateTable = object
 
-from .dictionary_lib import DictionaryMaxlength, PathLike
+from .dictionary_lib import DictionaryMaxlength, PathLike, SlotPathMap
 
 # Pre-compiled regex for better performance
 STRIP_REGEX = re.compile(r"[!-/:-@\[-`{-~\t\n\v\f\r 0-9A-Za-z_著]")
@@ -226,8 +226,8 @@ class OpenCC:
             config: _ConfigLike = None,
             base_dir: Optional[PathLike] = None,
             paths: Optional[Dict[str, str]] = None,
-            overrides: Optional[Dict[str, PathLike]] = None,
-            appends: Optional[Dict[str, PathLike]] = None,
+            overrides: Optional[SlotPathMap] = None,
+            appends: Optional[SlotPathMap] = None,
     ) -> "OpenCC":
         """
         Create an ``OpenCC`` instance using dictionaries loaded from text files.
