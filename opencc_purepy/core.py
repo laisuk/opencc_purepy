@@ -1054,6 +1054,7 @@ class OpenCC:
     def zho_check(self, input_text: str) -> int:
         """
         Heuristically determine whether input text is Simplified or Traditional Chinese.
+        Only a small prefix of the input is inspected for performance reasons.
 
         :param input_text: Input string
         :return: 0 = unknown, 1 = traditional, 2 = simplified
@@ -1061,8 +1062,8 @@ class OpenCC:
         if not input_text:
             return 0
 
-        stripped = STRIP_REGEX.sub("", input_text)
-        strip_text = stripped[:100]
+        sample = input_text[:1000]
+        strip_text = STRIP_REGEX.sub("", sample)[:100]
 
         if strip_text != self.ts(strip_text):
             return 1
