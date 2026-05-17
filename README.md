@@ -368,11 +368,11 @@ hardware and background system load.*
 
 ### Notes
 
-> Despite being implemented in pure Python, `opencc_purepy` achieves surprisingly competitive conversion throughput
-> through aggressive caching and starter-index optimizations.
+> Despite being implemented in pure Python, `opencc_purepy` achieves competitive conversion throughput through
+> aggressive caching and starter-index optimizations.
+>
 > The warm conversion path is practical for large-text workloads such as document conversion, GUI applications, and
-> batch
-> processing.
+> batch processing.
 
 ---
 
