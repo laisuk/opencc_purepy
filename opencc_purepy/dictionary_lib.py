@@ -16,8 +16,8 @@ class DictionaryMaxlength:
 
     # Immutable, subclass-overridable
     DICT_FIELDS: Tuple[str, ...] = (
-        "st_characters", "st_phrases",
-        "ts_characters", "ts_phrases",
+        "st_characters", "st_phrases", "st_punctuations",
+        "ts_characters", "ts_phrases", "ts_punctuations",
         "tw_phrases", "tw_phrases_rev",
         "tw_variants", "tw_variants_rev", "tw_variants_rev_phrases",
         "hk_variants", "hk_variants_rev", "hk_variants_rev_phrases",
@@ -34,8 +34,10 @@ class DictionaryMaxlength:
         """
         self.st_characters: Tuple[Dict[str, str], int] = ({}, 0)
         self.st_phrases: Tuple[Dict[str, str], int] = ({}, 0)
+        self.st_punctuations: Tuple[Dict[str, str], int] = ({}, 0)
         self.ts_characters: Tuple[Dict[str, str], int] = ({}, 0)
         self.ts_phrases: Tuple[Dict[str, str], int] = ({}, 0)
+        self.ts_punctuations: Tuple[Dict[str, str], int] = ({}, 0)
         self.tw_phrases: Tuple[Dict[str, str], int] = ({}, 0)
         self.tw_phrases_rev: Tuple[Dict[str, str], int] = ({}, 0)
         self.tw_variants: Tuple[Dict[str, str], int] = ({}, 0)
@@ -74,6 +76,26 @@ class DictionaryMaxlength:
         return cls.get_provider()
 
     @classmethod
+    def _as_tuple(cls, value: object) -> Tuple[Dict[str, str], int]:
+        if (
+                isinstance(value, list)
+                and len(value) == 2
+                and isinstance(value[0], dict)
+                and isinstance(value[1], int)
+        ):
+            return value[0], value[1]
+
+        if isinstance(value, tuple) and len(value) == 2 and isinstance(value[0], dict):
+            return value[0], int(value[1])
+
+        if isinstance(value, dict) and "map" in value and "maxlength" in value:
+            raw_map = value["map"]
+            if isinstance(raw_map, dict):
+                return raw_map, int(value["maxlength"])
+
+        raise ValueError("Invalid dictionary slot format")
+
+    @classmethod
     def from_json(cls, path: Optional[PathLike] = None) -> "DictionaryMaxlength":
         """
         Load dictionary data from a JSON file.
@@ -108,20 +130,19 @@ class DictionaryMaxlength:
 
         instance = cls()
 
-        valid_slots = set(instance.__dict__.keys())
+        valid_slots = set(cls.DICT_FIELDS)
 
-        for key, value in raw_data.items():
+        for key in raw_data:
             if key not in valid_slots:
                 raise ValueError("Unknown dictionary slot: {}".format(key))
 
-            if (
-                    isinstance(value, list)
-                    and len(value) == 2
-                    and isinstance(value[0], dict)
-                    and isinstance(value[1], int)
-            ):
-                setattr(instance, key, (value[0], value[1]))
-            else:
+        for key in cls.DICT_FIELDS:
+            if key not in raw_data:
+                continue
+
+            try:
+                setattr(instance, key, cls._as_tuple(raw_data[key]))
+            except (TypeError, ValueError):
                 raise ValueError("Invalid dictionary format for key: {}".format(key))
 
         return instance
@@ -245,8 +266,10 @@ class DictionaryMaxlength:
         default_paths = {
             'st_characters': "STCharacters.txt",
             'st_phrases': "STPhrases.txt",
+            'st_punctuations': "STPunctuations.txt",
             'ts_characters': "TSCharacters.txt",
             'ts_phrases': "TSPhrases.txt",
+            'ts_punctuations': "TSPunctuations.txt",
             'tw_phrases': "TWPhrases.txt",
             'tw_phrases_rev': "TWPhrasesRev.txt",
             'tw_variants': "TWVariants.txt",
@@ -302,7 +325,13 @@ class DictionaryMaxlength:
         # Load base dictionaries
         # ------------------------------------------------------------------
 
+        optional_slots = {"st_punctuations", "ts_punctuations"}
+
         for attr, path in file_map.items():
+            if attr in optional_slots and not path.is_file():
+                setattr(instance, attr, ({}, 0))
+                continue
+
             content = path.read_text(encoding="utf-8")
 
             setattr(
@@ -452,7 +481,7 @@ class DictionaryMaxlength:
                 )
             )
 
-    def serialize_to_json(self, path: str, pretty: bool = False) -> None:
+    def serialize_to_json(self, path: str, pretty: bool = True) -> None:
         """
         Serialize the current dictionary set to a stable JSON format.
 
@@ -463,6 +492,7 @@ class DictionaryMaxlength:
         Fields are written in a fixed order:
             st_characters, st_phrases,
             ts_characters, ts_phrases,
+            st_punctuations, ts_punctuations,
             tw_phrases, tw_phrases_rev,
             tw_variants, tw_variants_rev, tw_variants_rev_phrases,
             hk_variants, hk_variants_rev, hk_variants_rev_phrases,
@@ -473,7 +503,8 @@ class DictionaryMaxlength:
         -----
         - `max_length` values are plain integers.
         - Output is UTF-8 with non-ASCII preserved.
-        - By default output is compact; set `pretty=True` for human-readable formatting.
+        - By default output is pretty-printed for human-readable diffs and review.
+        - Set `pretty=False` for compact/minified JSON output.
         """
         import json
         from pathlib import Path

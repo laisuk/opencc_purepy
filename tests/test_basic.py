@@ -1,5 +1,9 @@
 import unittest
+import json
+import os
 from opencc_purepy.core import OpenCC, OpenccConfig
+from opencc_purepy.dictionary_lib import DictionaryMaxlength
+from opencc_purepy.union_cache import UnionKey
 from opencc_purepy.__main__ import _config_arg, _format_arg
 
 
@@ -51,8 +55,12 @@ class TestOpenCC(unittest.TestCase):
     def test_convert_with_punctuation(self):
         simplified = "“汉字转换测试”"
         result = self.converter.s2t(simplified, punctuation=True)
-        self.assertIn("「", result)
-        self.assertIn("」", result)
+        self.assertEqual(result, "「漢字轉換測試」")
+
+    def test_t2s_convert_with_punctuation(self):
+        traditional = "「漢字轉換測試」"
+        result = OpenCC("t2s").convert(traditional, punctuation=True)
+        self.assertEqual(result, "“汉字转换测试”")
 
     def test_punctuation_applies_to_variant_configs(self):
         converter = OpenCC("t2tw")
@@ -62,11 +70,43 @@ class TestOpenCC(unittest.TestCase):
 
     def test_segment_replace_matches_direct_conversion_for_short_punctuated_text(self):
         refs = self.converter._get_dict_refs("s2t")
+        slots, cap = refs._normalize()[0]
         text = "汉字转换测试，意大利的罗马城不是一天里就能建成的。" * 20
-        expected = OpenCC.convert_segment(text, refs.round_1, refs._get_max_lengths()[0])
+        expected = OpenCC.convert_segment(text, slots, cap)
 
-        result = self.converter.segment_replace(text, refs.round_1, refs._get_max_lengths()[0])
+        result = self.converter.segment_replace(text, slots, cap)
         self.assertEqual(expected, result)
+
+    def test_backward_compatible_old_json_without_punctuation_slots(self):
+        old_json = {
+            "st_characters": [{"汉": "漢"}, 1],
+            "st_phrases": [{"汉字": "漢字"}, 2],
+            "ts_characters": [{"漢": "汉"}, 1],
+            "ts_phrases": [{"漢字": "汉字"}, 2],
+        }
+
+        from tempfile import NamedTemporaryFile
+
+        with NamedTemporaryFile("w", encoding="utf-8", suffix=".json", delete=False) as handle:
+            json.dump(old_json, handle, ensure_ascii=False)
+            path = handle.name
+
+        try:
+            dictionary = DictionaryMaxlength.from_json(path)
+        finally:
+            os.unlink(path)
+        self.assertEqual(dictionary.st_punctuations, ({}, 0))
+        self.assertEqual(dictionary.ts_punctuations, ({}, 0))
+
+    def test_union_cache_warm_path_reuses_indexed_union(self):
+        cc = OpenCC("s2t")
+        first = cc.convert("汉字转换测试")
+        union = cc.union_cache.get_union(UnionKey.S2T)
+        second = cc.convert("汉字转换测试")
+
+        self.assertEqual(first, "漢字轉換測試")
+        self.assertEqual(second, first)
+        self.assertTrue(union.indexed)
 
     def test_zho_check(self):
         mixed = "這是一個測試test123"  # Should be treated as Traditional

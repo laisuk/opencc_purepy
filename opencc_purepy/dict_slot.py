@@ -7,8 +7,10 @@ from typing import Union
 class DictSlot(str, Enum):
     ST_CHARACTERS = "st_characters"
     ST_PHRASES = "st_phrases"
+    ST_PUNCTUATIONS = "st_punctuations"
     TS_CHARACTERS = "ts_characters"
     TS_PHRASES = "ts_phrases"
+    TS_PUNCTUATIONS = "ts_punctuations"
     TW_PHRASES = "tw_phrases"
     TW_PHRASES_REV = "tw_phrases_rev"
     TW_VARIANTS = "tw_variants"

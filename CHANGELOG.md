@@ -11,11 +11,12 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ### Added
 
-- Added union-cache conversion pipeline for faster warm conversions.
+- Added `StarterUnion` / `UnionCache` conversion pipeline for faster warm conversions.
 - Added `DictSlot` enum for strongly-typed OpenCC dictionary slot selection.
 - Added `DictSlotLike` compatibility type for accepting both `DictSlot` and legacy `str` slot keys.
 - Added `st_punctuations` and `ts_punctuations` dictionary slots.
-- Added DictSlot support for punctuation dictionaries.
+- Added `DictSlot.ST_PUNCTUATIONS` and `DictSlot.TS_PUNCTUATIONS` for punctuation dictionary customization.
+- Added bundled `STPunctuations.txt` and `TSPunctuations.txt` dictionaries.
 - Added enhanced benchmark scenarios:
     - `cold_total`
     - `post_init_cold`
@@ -23,21 +24,35 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ### Changed
 
-- Refactored internal dictionary union handling.
+- Refactored the main `OpenCC` conversion path to use cached starter-union dictionaries while preserving the legacy
+  public conversion methods and config validation behavior.
 - Refactored `DictionaryMaxlength.from_dicts()` to support typed dictionary slot mappings.
 - Improved dictionary slot validation with centralized slot normalization helpers.
 - Added support for both enum-name (`"ST_PHRASES"`) and legacy attribute-style (`"st_phrases"`) slot resolution.
 - Preserved backward compatibility for existing `str`-based dictionary slot APIs.
+- Preserved custom dictionary append and override semantics:
+    - append mode remains late-comer-wins for duplicate keys.
+    - override mode still replaces the entire target slot before appends are applied.
 - Refactored public API typing hints for improved IDE completion and static analysis support.
 - Improved `from_dicts()` documentation and examples to include `DictSlot` usage.
 - Moved dictionary slot definitions into dedicated `dict_slot.py` module for cleaner public API organization.
 - Updated dictionary JSON schema for punctuation slot support.
+- Kept older JSON dictionaries without `st_punctuations` or `ts_punctuations` loadable by defaulting missing
+  punctuation slots to empty dictionaries.
+- Kept legacy custom dictionary directories loadable when punctuation text files are absent.
 - Improved large-text steady-state conversion performance.
 
 ### Performance
 
-- Warm conversion throughput improved by roughly 30%+ compared with the legacy implementation on large inputs.
-- First conversion may include union-cache initialization cost.
+- Warm conversions reuse cached starter indexes after the first conversion for a given dictionary/config path.
+- First conversion may include union-cache initialization cost, so benchmark output now separates total cold startup,
+  post-init cold conversion, and warm conversion timings.
+
+### Tests
+
+- Added coverage for basic `s2t` / `t2s` conversion, punctuation conversion through the new punctuation slots,
+  append mode, override mode, `DictSlot` punctuation enum usage, old JSON compatibility, legacy dictionary directories
+  without punctuation files, and the warm union-cache path.
 
 ---
 

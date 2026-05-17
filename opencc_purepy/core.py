@@ -31,7 +31,9 @@ try:
 except TypeError:
     _PunctuationTranslateTable = object
 
+from .dict_refs import DictRefs as UnionDictRefs, StarterUnionLike
 from .dictionary_lib import DictionaryMaxlength, PathLike, SlotPathMap
+from .union_cache import UnionCache, UnionKey
 
 # Pre-compiled regex for better performance
 STRIP_REGEX = re.compile(r"[!-/:-@\[-`{-~\t\n\v\f\r 0-9A-Za-z_著]")
@@ -71,6 +73,23 @@ except (AttributeError, TypeError):
         '『': '‘',
         '』': '’',
     }
+
+# Punctuation conversion architecture during the 1.3.x union-cache transition:
+#
+# Dedicated union punctuation paths:
+#   s2t, t2s, s2tw, tw2s, s2twp, tw2sp, s2hk, hk2s
+# These route punctuation=True through explicit *_punct union configs.
+#
+# Legacy punctuation fallback paths:
+#   t2tw, t2twp, tw2t, tw2tp, t2hk, hk2t, t2jp, jp2t
+# These still run the post-processing helper below to preserve 1.3.x beta
+# behavior until punctuation handling is fully unified.
+UNION_PUNCTUATION_CONFIGS = (
+    "s2t", "t2s", "s2tw", "tw2s", "s2twp", "tw2sp", "s2hk", "hk2s",
+)
+LEGACY_PUNCTUATION_FALLBACK_CONFIGS = (
+    "t2tw", "t2twp", "tw2t", "tw2tp", "t2hk", "hk2t", "t2jp", "jp2t",
+)
 
 
 class OpenccConfig(Enum):
@@ -202,7 +221,7 @@ class OpenCC:
             shared dictionary provider is used.
         """
         self._last_error = None
-        self._config_cache: Dict[str, DictRefs] = {}
+        self._config_cache: Dict[str, UnionDictRefs] = {}
         self.config = self._normalize_config(config)
 
         try:
@@ -216,6 +235,7 @@ class OpenCC:
             self.dictionary = DictionaryMaxlength()
 
         self.delimiters = DELIMITERS
+        self.union_cache = UnionCache(self.dictionary)
 
         escaped_delimiters = ''.join(map(re.escape, self.delimiters))
         self.delimiter_regex = re.compile(f'[{escaped_delimiters}]')
@@ -527,71 +547,222 @@ class OpenCC:
 
         return ''.join(result)
 
-    def _get_dict_refs(self, config_key: str) -> DictRefs:
+    def union_replace(self, text: str, union: StarterUnionLike) -> str:
+        """
+        Greedy replacement on segmented text using a cached StarterUnion.
+        """
+        if not text:
+            return text
+
+        if not getattr(union, "_indexed", False):
+            union.build_starter_index()
+
+        total_length = len(text)
+        if total_length < 10_000:
+            return OpenCC.convert_union_indexed(text, union)
+
+        ranges = self.get_split_ranges(text, inclusive=True)
+        if len(ranges) == 1 and ranges[0] == (0, len(text)):
+            return OpenCC.convert_union_indexed(text, union)
+
+        use_parallel = len(ranges) > 1_000 and total_length >= 1_000_000
+
+        if use_parallel:
+            group_count = min(4, max(1, cpu_count()))
+            groups = chunk_ranges(ranges, group_count)
+            with Pool(processes=group_count) as pool:
+                results = pool.map(
+                    convert_range_group_union,
+                    [(text, group, union) for group in groups],
+                )
+            return "".join(results)
+
+        return "".join(
+            OpenCC.convert_union_indexed(text[s:e], union)
+            for (s, e) in ranges
+        )
+
+    @staticmethod
+    def convert_union(segment: str, union: StarterUnionLike) -> str:
+        if not segment:
+            return segment
+        if not getattr(union, "_indexed", False):
+            union.build_starter_index()
+        return OpenCC.convert_union_indexed(segment, union)
+
+    @staticmethod
+    def convert_union_indexed(segment: str, union: StarterUnionLike) -> str:
+        if not segment:
+            return segment
+
+        n = len(segment)
+        i = 0
+        merged_map = union.merged_map
+        get = merged_map.get
+        out = []
+        append = out.append
+
+        bmp_mask = union.bmp_mask
+        bmp_cap = union.bmp_cap
+        astral_mask = union.astral_mask
+        astral_cap = union.astral_cap
+        global_cap = int(union.cap) if union.cap else 0
+
+        while i < n:
+            starter = segment[i]
+            code = ord(starter)
+            remaining = n - i
+
+            if code <= 0xFFFF:
+                mask = bmp_mask[code]
+                cap_here = bmp_cap[code]
+            else:
+                mask = astral_mask.get(starter, 0)
+                cap_here = astral_cap.get(starter, 0)
+
+            if not mask or not cap_here:
+                append(starter)
+                i += 1
+                continue
+
+            cap_eff = min(cap_here, remaining)
+            if global_cap:
+                cap_eff = min(cap_eff, global_cap)
+
+            matched = False
+
+            if cap_eff > 63:
+                length = cap_eff
+                while length >= 64:
+                    replacement = get(segment[i:i + length])
+                    if replacement is not None:
+                        append(replacement)
+                        i += length
+                        matched = True
+                        break
+                    length -= 1
+
+            if not matched:
+                if cap_eff < 64:
+                    mask &= (1 << cap_eff) - 1
+                else:
+                    mask &= (1 << 63) - 1
+
+                while mask:
+                    bit_index = mask.bit_length()
+                    length = bit_index
+                    replacement = get(segment[i:i + length])
+                    if replacement is not None:
+                        append(replacement)
+                        i += length
+                        matched = True
+                        break
+                    mask ^= 1 << (bit_index - 1)
+
+            if not matched:
+                append(starter)
+                i += 1
+
+        return "".join(out)
+
+    def _get_dict_refs(self, config_key: str) -> UnionDictRefs:
         """Get cached DictRefs for a config to avoid recreation."""
         cached = self._config_cache.get(config_key)
         if cached is not None:
             return cached
 
-        d = self.dictionary
-
         if config_key == "s2t":
-            refs = DictRefs([d.st_phrases, d.st_characters])
+            refs = UnionDictRefs(self.union_cache.ensure_indexed(UnionKey.S2T))
+        elif config_key == "s2t_punct":
+            refs = UnionDictRefs(self.union_cache.ensure_indexed(UnionKey.S2T_PUNCT))
         elif config_key == "t2s":
-            refs = DictRefs([d.ts_phrases, d.ts_characters])
+            refs = UnionDictRefs(self.union_cache.ensure_indexed(UnionKey.T2S))
+        elif config_key == "t2s_punct":
+            refs = UnionDictRefs(self.union_cache.ensure_indexed(UnionKey.T2S_PUNCT))
         elif config_key == "s2tw":
             refs = (
-                DictRefs([d.st_phrases, d.st_characters])
-                .with_round_2([d.tw_variants])
+                UnionDictRefs(self.union_cache.ensure_indexed(UnionKey.S2T))
+                .with_round_2(self.union_cache.ensure_indexed(UnionKey.TwVariantsOnly))
+            )
+        elif config_key == "s2tw_punct":
+            refs = (
+                UnionDictRefs(self.union_cache.ensure_indexed(UnionKey.S2T_PUNCT))
+                .with_round_2(self.union_cache.ensure_indexed(UnionKey.TwVariantsOnly))
             )
         elif config_key == "tw2s":
             refs = (
-                DictRefs([d.tw_variants_rev_phrases, d.tw_variants_rev])
-                .with_round_2([d.ts_phrases, d.ts_characters])
+                UnionDictRefs(self.union_cache.ensure_indexed(UnionKey.TwRevPair))
+                .with_round_2(self.union_cache.ensure_indexed(UnionKey.T2S))
+            )
+        elif config_key == "tw2s_punct":
+            refs = (
+                UnionDictRefs(self.union_cache.ensure_indexed(UnionKey.TwRevPair))
+                .with_round_2(self.union_cache.ensure_indexed(UnionKey.T2S_PUNCT))
             )
         elif config_key == "s2twp":
             refs = (
-                DictRefs([d.st_phrases, d.st_characters])
-                .with_round_2([d.tw_phrases])
-                .with_round_3([d.tw_variants])
+                UnionDictRefs(self.union_cache.ensure_indexed(UnionKey.S2T))
+                .with_round_2(self.union_cache.ensure_indexed(UnionKey.TwPhrasesOnly))
+                .with_round_3(self.union_cache.ensure_indexed(UnionKey.TwVariantsOnly))
+            )
+        elif config_key == "s2twp_punct":
+            refs = (
+                UnionDictRefs(self.union_cache.ensure_indexed(UnionKey.S2T_PUNCT))
+                .with_round_2(self.union_cache.ensure_indexed(UnionKey.TwPhrasesOnly))
+                .with_round_3(self.union_cache.ensure_indexed(UnionKey.TwVariantsOnly))
             )
         elif config_key == "tw2sp":
             refs = (
-                DictRefs([d.tw_phrases_rev, d.tw_variants_rev_phrases, d.tw_variants_rev])
-                .with_round_2([d.ts_phrases, d.ts_characters])
+                UnionDictRefs(self.union_cache.ensure_indexed(UnionKey.Tw2SpR1TwRevTriple))
+                .with_round_2(self.union_cache.ensure_indexed(UnionKey.T2S))
+            )
+        elif config_key == "tw2sp_punct":
+            refs = (
+                UnionDictRefs(self.union_cache.ensure_indexed(UnionKey.Tw2SpR1TwRevTriple))
+                .with_round_2(self.union_cache.ensure_indexed(UnionKey.T2S_PUNCT))
             )
         elif config_key == "s2hk":
             refs = (
-                DictRefs([d.st_phrases, d.st_characters])
-                .with_round_2([d.hk_variants])
+                UnionDictRefs(self.union_cache.ensure_indexed(UnionKey.S2T))
+                .with_round_2(self.union_cache.ensure_indexed(UnionKey.HkVariantsOnly))
+            )
+        elif config_key == "s2hk_punct":
+            refs = (
+                UnionDictRefs(self.union_cache.ensure_indexed(UnionKey.S2T_PUNCT))
+                .with_round_2(self.union_cache.ensure_indexed(UnionKey.HkVariantsOnly))
             )
         elif config_key == "hk2s":
             refs = (
-                DictRefs([d.hk_variants_rev_phrases, d.hk_variants_rev])
-                .with_round_2([d.ts_phrases, d.ts_characters])
+                UnionDictRefs(self.union_cache.ensure_indexed(UnionKey.HkRevPair))
+                .with_round_2(self.union_cache.ensure_indexed(UnionKey.T2S))
+            )
+        elif config_key == "hk2s_punct":
+            refs = (
+                UnionDictRefs(self.union_cache.ensure_indexed(UnionKey.HkRevPair))
+                .with_round_2(self.union_cache.ensure_indexed(UnionKey.T2S_PUNCT))
             )
         elif config_key == "t2tw":
-            refs = DictRefs([d.tw_variants])
+            refs = UnionDictRefs(self.union_cache.ensure_indexed(UnionKey.TwVariantsOnly))
         elif config_key == "t2twp":
             refs = (
-                DictRefs([d.tw_phrases])
-                .with_round_2([d.tw_variants])
+                UnionDictRefs(self.union_cache.ensure_indexed(UnionKey.TwPhrasesOnly))
+                .with_round_2(self.union_cache.ensure_indexed(UnionKey.TwVariantsOnly))
             )
         elif config_key == "tw2t":
-            refs = DictRefs([d.tw_variants_rev_phrases, d.tw_variants_rev])
+            refs = UnionDictRefs(self.union_cache.ensure_indexed(UnionKey.TwRevPair))
         elif config_key == "tw2tp":
             refs = (
-                DictRefs([d.tw_variants_rev_phrases, d.tw_variants_rev])
-                .with_round_2([d.tw_phrases_rev])
+                UnionDictRefs(self.union_cache.ensure_indexed(UnionKey.TwRevPair))
+                .with_round_2(self.union_cache.ensure_indexed(UnionKey.TwPhrasesRevOnly))
             )
         elif config_key == "t2hk":
-            refs = DictRefs([d.hk_variants])
+            refs = UnionDictRefs(self.union_cache.ensure_indexed(UnionKey.HkVariantsOnly))
         elif config_key == "hk2t":
-            refs = DictRefs([d.hk_variants_rev_phrases, d.hk_variants_rev])
+            refs = UnionDictRefs(self.union_cache.ensure_indexed(UnionKey.HkRevPair))
         elif config_key == "t2jp":
-            refs = DictRefs([d.jp_variants])
+            refs = UnionDictRefs(self.union_cache.ensure_indexed(UnionKey.JpVariantsOnly))
         elif config_key == "jp2t":
-            refs = DictRefs([d.jps_phrases, d.jps_characters, d.jp_variants_rev])
+            refs = UnionDictRefs(self.union_cache.ensure_indexed(UnionKey.JpRevTriple))
         else:
             raise ValueError(f"Unsupported config: {config_key}")
 
@@ -601,8 +772,16 @@ class OpenCC:
     @staticmethod
     def _convert_punctuation_legacy(text, punct_map):
         """
-        (Fallback punctuation conversion for older Python versions)
-        Convert between Simplified and Traditional punctuation styles.
+        Deprecated compatibility helper for post-processing punctuation maps.
+
+        The preferred architecture is now union-based punctuation conversion
+        through explicit ``*_punct`` union configs. This helper remains
+        functional for 1.3.x beta compatibility and for conversion configs
+        that still use the legacy post-processing punctuation path.
+
+        TODO:
+            Remove or reduce this helper in a future cleanup release after the
+            union-cache punctuation transition has stabilized.
 
         :param text: Input text
         :param punct_map: Conversion punctuation map
@@ -615,7 +794,21 @@ class OpenCC:
 
     def _apply_punctuation(self, text: str, config_key: str, punctuation: bool) -> str:
         """
-        Apply punctuation conversion in the direction implied by the output config.
+        Deprecated compatibility layer for legacy punctuation post-processing.
+
+        Dedicated union punctuation paths currently exist for:
+            s2t, t2s, s2tw, tw2s, s2twp, tw2sp, s2hk, hk2s
+
+        Legacy fallback paths that still call this helper:
+            t2tw, t2twp, tw2t, tw2tp, t2hk, hk2t, t2jp, jp2t
+
+        Runtime behavior is intentionally preserved for 1.3.x beta users. Do
+        not emit runtime deprecation warnings here; this is an internal
+        migration note only.
+
+        TODO:
+            Revisit this helper once all supported punctuation conversions are
+            represented by explicit union-cache punctuation paths.
         """
         if not punctuation:
             return text
@@ -641,10 +834,8 @@ class OpenCC:
         :param punctuation: Whether to convert punctuation
         :return: Transformed string in Traditional Chinese
         """
-        refs = self._get_dict_refs("s2t")
-        output = refs.apply_segment_replace(input_text, self.segment_replace)
-
-        return self._apply_punctuation(output, "s2t", punctuation)
+        refs = self._get_dict_refs("s2t_punct" if punctuation else "s2t")
+        return refs.apply_segment_replace(input_text, union_replace=self.union_replace, validate_delegates=False)
 
     def t2s(self, input_text, punctuation=False):
         """
@@ -654,10 +845,8 @@ class OpenCC:
         :param punctuation: Whether to convert punctuation
         :return: Transformed string in Simplified Chinese
         """
-        refs = self._get_dict_refs("t2s")
-        output = refs.apply_segment_replace(input_text, self.segment_replace)
-
-        return self._apply_punctuation(output, "t2s", punctuation)
+        refs = self._get_dict_refs("t2s_punct" if punctuation else "t2s")
+        return refs.apply_segment_replace(input_text, union_replace=self.union_replace, validate_delegates=False)
 
     def s2tw(self, input_text, punctuation=False):
         """
@@ -667,10 +856,8 @@ class OpenCC:
         :param punctuation: Whether to convert punctuation
         :return: Transformed string in Taiwan Traditional Chinese
         """
-        refs = self._get_dict_refs("s2tw")
-        output = refs.apply_segment_replace(input_text, self.segment_replace)
-
-        return self._apply_punctuation(output, "s2tw", punctuation)
+        refs = self._get_dict_refs("s2tw_punct" if punctuation else "s2tw")
+        return refs.apply_segment_replace(input_text, union_replace=self.union_replace, validate_delegates=False)
 
     def tw2s(self, input_text, punctuation=False):
         """
@@ -680,10 +867,8 @@ class OpenCC:
         :param punctuation: Whether to convert punctuation
         :return: Transformed string in Simplified Chinese
         """
-        refs = self._get_dict_refs("tw2s")
-        output = refs.apply_segment_replace(input_text, self.segment_replace)
-
-        return self._apply_punctuation(output, "tw2s", punctuation)
+        refs = self._get_dict_refs("tw2s_punct" if punctuation else "tw2s")
+        return refs.apply_segment_replace(input_text, union_replace=self.union_replace, validate_delegates=False)
 
     def s2twp(self, input_text, punctuation=False):
         """
@@ -693,10 +878,8 @@ class OpenCC:
         :param punctuation: Whether to convert punctuation
         :return: Transformed string
         """
-        refs = self._get_dict_refs("s2twp")
-        output = refs.apply_segment_replace(input_text, self.segment_replace)
-
-        return self._apply_punctuation(output, "s2twp", punctuation)
+        refs = self._get_dict_refs("s2twp_punct" if punctuation else "s2twp")
+        return refs.apply_segment_replace(input_text, union_replace=self.union_replace, validate_delegates=False)
 
     def tw2sp(self, input_text, punctuation=False):
         """
@@ -706,10 +889,8 @@ class OpenCC:
         :param punctuation: Whether to convert punctuation
         :return: Transformed string
         """
-        refs = self._get_dict_refs("tw2sp")
-        output = refs.apply_segment_replace(input_text, self.segment_replace)
-
-        return self._apply_punctuation(output, "tw2sp", punctuation)
+        refs = self._get_dict_refs("tw2sp_punct" if punctuation else "tw2sp")
+        return refs.apply_segment_replace(input_text, union_replace=self.union_replace, validate_delegates=False)
 
     def s2hk(self, input_text, punctuation=False):
         """
@@ -719,10 +900,8 @@ class OpenCC:
         :param punctuation: Whether to convert punctuation
         :return: Transformed string
         """
-        refs = self._get_dict_refs("s2hk")
-        output = refs.apply_segment_replace(input_text, self.segment_replace)
-
-        return self._apply_punctuation(output, "s2hk", punctuation)
+        refs = self._get_dict_refs("s2hk_punct" if punctuation else "s2hk")
+        return refs.apply_segment_replace(input_text, union_replace=self.union_replace, validate_delegates=False)
 
     def hk2s(self, input_text, punctuation=False):
         """
@@ -732,17 +911,15 @@ class OpenCC:
         :param punctuation: Whether to convert punctuation
         :return: Simplified Chinese output
         """
-        refs = self._get_dict_refs("hk2s")
-        output = refs.apply_segment_replace(input_text, self.segment_replace)
-
-        return self._apply_punctuation(output, "hk2s", punctuation)
+        refs = self._get_dict_refs("hk2s_punct" if punctuation else "hk2s")
+        return refs.apply_segment_replace(input_text, union_replace=self.union_replace, validate_delegates=False)
 
     def t2tw(self, input_text: str, punctuation: bool = False) -> str:
         """
         Convert Traditional Chinese to Taiwan Standard Traditional Chinese.
         """
         refs = self._get_dict_refs("t2tw")
-        output = refs.apply_segment_replace(input_text, self.segment_replace)
+        output = refs.apply_segment_replace(input_text, union_replace=self.union_replace, validate_delegates=False)
         return self._apply_punctuation(output, "t2tw", punctuation)
 
     def t2twp(self, input_text: str, punctuation: bool = False) -> str:
@@ -750,7 +927,7 @@ class OpenCC:
         Convert Traditional Chinese to Taiwan Standard using phrase and variant mappings.
         """
         refs = self._get_dict_refs("t2twp")
-        output = refs.apply_segment_replace(input_text, self.segment_replace)
+        output = refs.apply_segment_replace(input_text, union_replace=self.union_replace, validate_delegates=False)
         return self._apply_punctuation(output, "t2twp", punctuation)
 
     def tw2t(self, input_text: str, punctuation: bool = False) -> str:
@@ -758,7 +935,7 @@ class OpenCC:
         Convert Taiwan Traditional to general Traditional Chinese.
         """
         refs = self._get_dict_refs("tw2t")
-        output = refs.apply_segment_replace(input_text, self.segment_replace)
+        output = refs.apply_segment_replace(input_text, union_replace=self.union_replace, validate_delegates=False)
         return self._apply_punctuation(output, "tw2t", punctuation)
 
     def tw2tp(self, input_text: str, punctuation: bool = False) -> str:
@@ -766,7 +943,7 @@ class OpenCC:
         Convert Taiwan Traditional to Traditional with phrase reversal.
         """
         refs = self._get_dict_refs("tw2tp")
-        output = refs.apply_segment_replace(input_text, self.segment_replace)
+        output = refs.apply_segment_replace(input_text, union_replace=self.union_replace, validate_delegates=False)
         return self._apply_punctuation(output, "tw2tp", punctuation)
 
     def t2hk(self, input_text: str, punctuation: bool = False) -> str:
@@ -774,7 +951,7 @@ class OpenCC:
         Convert Traditional Chinese to Hong Kong variant.
         """
         refs = self._get_dict_refs("t2hk")
-        output = refs.apply_segment_replace(input_text, self.segment_replace)
+        output = refs.apply_segment_replace(input_text, union_replace=self.union_replace, validate_delegates=False)
         return self._apply_punctuation(output, "t2hk", punctuation)
 
     def hk2t(self, input_text: str, punctuation: bool = False) -> str:
@@ -782,7 +959,7 @@ class OpenCC:
         Convert Hong Kong Traditional to standard Traditional Chinese.
         """
         refs = self._get_dict_refs("hk2t")
-        output = refs.apply_segment_replace(input_text, self.segment_replace)
+        output = refs.apply_segment_replace(input_text, union_replace=self.union_replace, validate_delegates=False)
         return self._apply_punctuation(output, "hk2t", punctuation)
 
     def t2jp(self, input_text: str, punctuation: bool = False) -> str:
@@ -790,7 +967,7 @@ class OpenCC:
         Convert Traditional Chinese to Japanese variants.
         """
         refs = self._get_dict_refs("t2jp")
-        output = refs.apply_segment_replace(input_text, self.segment_replace)
+        output = refs.apply_segment_replace(input_text, union_replace=self.union_replace, validate_delegates=False)
         return self._apply_punctuation(output, "t2jp", punctuation)
 
     def jp2t(self, input_text: str, punctuation: bool = False) -> str:
@@ -798,7 +975,7 @@ class OpenCC:
         Convert Japanese Shinjitai (modern Kanji) to Traditional Chinese.
         """
         refs = self._get_dict_refs("jp2t")
-        output = refs.apply_segment_replace(input_text, self.segment_replace)
+        output = refs.apply_segment_replace(input_text, union_replace=self.union_replace, validate_delegates=False)
         return self._apply_punctuation(output, "jp2t", punctuation)
 
     def convert(self, input_text: str, punctuation: bool = False) -> str:
@@ -930,5 +1107,14 @@ def convert_range_group(args):
     conv = convert_segment_fn  # local bind
     return ''.join(
         conv(text[start:end], dictionaries, max_word_length)
+        for start, end in group_ranges
+    )
+
+
+def convert_range_group_union(args: Tuple[str, List[Tuple[int, int]], StarterUnionLike]) -> str:
+    text, group_ranges, union = args
+    conv = OpenCC.convert_union_indexed
+    return ''.join(
+        conv(text[start:end], union)
         for start, end in group_ranges
     )
