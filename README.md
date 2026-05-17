@@ -337,32 +337,32 @@ cc = OpenCC(
 ## ⚡ Benchmark
 
 > Measured on GitHub Actions `ubuntu-latest` using the default `s2t` configuration.  
-> Each test averaged over 20 runs with the shared dictionary cache reused across runs.
+> Benchmark separates cold startup, first post-init conversion, and warm cached conversion.
 
 ### Runner Platform
 
 | Field     | Value                                                                                                                      |
 |-----------|----------------------------------------------------------------------------------------------------------------------------|
 | Runner    | Linux X64                                                                                                                  |
-| Image     | ubuntu24 20260413.86.1                                                                                                     |
-| Kernel    | `Linux runnervmeorf1 6.17.0-1010-azure #10~24.04.1-Ubuntu SMP Fri Mar  6 22:00:57 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux` |
-| CPU       | Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz                                                                              |
+| Image     | ubuntu24 20260513.135.3                                                                                                    |
+| Kernel    | `Linux runnervmrw5os 6.17.0-1013-azure #13~24.04.1-Ubuntu SMP Wed Apr 15 16:52:17 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux` |
+| CPU       | AMD EPYC 9V74 80-Core Processor                                                                                            |
 | CPU Cores | 4                                                                                                                          |
-| Memory    | Not reported                                                                                                               |
+| Memory    |                                                                                                                            |
 | Python    | Python 3.10.20                                                                                                             |
 
 ### Results
 
-| Input Size        | Avg. Time (ms) |
-|-------------------|---------------:|
-| **100 chars**     |       0.221 ms |
-| **1,000 chars**   |       1.769 ms |
-| **10,000 chars**  |      17.584 ms |
-| **100,000 chars** |     173.838 ms |
+| Input Size        | Cold Total (ms) | Post-init Cold (ms) |  Warm (ms) |
+|-------------------|----------------:|--------------------:|-----------:|
+| **100 chars**     |       21.849 ms |           19.419 ms |   0.171 ms |
+| **1,000 chars**   |       21.572 ms |           21.409 ms |   1.643 ms |
+| **10,000 chars**  |       34.063 ms |           32.584 ms |  13.480 ms |
+| **100,000 chars** |      158.355 ms |          156.202 ms | 136.870 ms |
 
-*Timings reuse the shared dictionary cache, but still include per-run `OpenCC` instance setup; results depend on runner
+*`cold_total` includes `OpenCC(config)` setup plus conversion. `post_init_cold` measures the first conversion after
+initialization. `warm` measures conversion after the union cache has already been built. Results depend on runner
 hardware and background system load.*
-
 
 ---
 
