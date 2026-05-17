@@ -199,8 +199,10 @@ are ignored, lines starting with `#` are comments, and duplicate keys are resolv
 |------------------------------------|---------------------------|-----------------------------|
 | `DictSlot.ST_CHARACTERS`           | `st_characters`           | `STCharacters.txt`          |
 | `DictSlot.ST_PHRASES`              | `st_phrases`              | `STPhrases.txt`             |
+| `DictSlot.ST_PUNCTUATIONS`         | `st_punctuations`         | `STPunctuations.txt`        |
 | `DictSlot.TS_CHARACTERS`           | `ts_characters`           | `TSCharacters.txt`          |
 | `DictSlot.TS_PHRASES`              | `ts_phrases`              | `TSPhrases.txt`             |
+| `DictSlot.TS_PUNCTUATIONS`         | `ts_punctuations`         | `TSPunctuations.txt`        |
 | `DictSlot.TW_PHRASES`              | `tw_phrases`              | `TWPhrases.txt`             |
 | `DictSlot.TW_PHRASES_REV`          | `tw_phrases_rev`          | `TWPhrasesRev.txt`          |
 | `DictSlot.TW_VARIANTS`             | `tw_variants`             | `TWVariants.txt`            |
