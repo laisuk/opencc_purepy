@@ -38,7 +38,7 @@ where = ["."]
 include = ["opencc_purepy", "opencc_purepy.dicts"]
 
 [tool.setuptools.package-data]
-opencc_purepy = ["dicts/*.*", "dicts/LICENSE"]
+opencc_purepy = ["py.typed", "dicts/*.*", "dicts/LICENSE"]
 
 [project.scripts]
 opencc-purepy = "opencc_purepy.__main__:main"
