@@ -13,6 +13,18 @@ class DictionaryMaxlength:
     A container for OpenCC-compatible dictionaries with each represented
     as a (dict, max_length) tuple to optimize the longest match lookup.
     """
+
+    # Immutable, subclass-overridable
+    DICT_FIELDS: Tuple[str, ...] = (
+        "st_characters", "st_phrases",
+        "ts_characters", "ts_phrases",
+        "tw_phrases", "tw_phrases_rev",
+        "tw_variants", "tw_variants_rev", "tw_variants_rev_phrases",
+        "hk_variants", "hk_variants_rev", "hk_variants_rev_phrases",
+        "jps_characters", "jps_phrases",
+        "jp_variants", "jp_variants_rev",
+    )
+
     _provider = None
     _provider_lock = Lock()
 
@@ -440,12 +452,47 @@ class DictionaryMaxlength:
                 )
             )
 
-    def serialize_to_json(self, path: str):
+    def serialize_to_json(self, path: str, pretty: bool = False) -> None:
         """
-        Serialize the current dictionary data to a JSON file.
+        Serialize the current dictionary set to a stable JSON format.
 
-        :param path: Output file path
+        Shape:
+          - Each dictionary field is serialized as: [ { <mapping> }, <max_length:int> ]
+            where the mapping is sorted by (key length ASC, then key ASC).
+
+        Fields are written in a fixed order:
+            st_characters, st_phrases,
+            ts_characters, ts_phrases,
+            tw_phrases, tw_phrases_rev,
+            tw_variants, tw_variants_rev, tw_variants_rev_phrases,
+            hk_variants, hk_variants_rev, hk_variants_rev_phrases,
+            jps_characters, jps_phrases,
+            jp_variants, jp_variants_rev
+
+        Notes
+        -----
+        - `max_length` values are plain integers.
+        - Output is UTF-8 with non-ASCII preserved.
+        - By default output is compact; set `pretty=True` for human-readable formatting.
         """
         import json
-        with open(path, "w", encoding="utf-8") as f:
-            json.dump(self.__dict__, f, ensure_ascii=False, indent=2)
+        from pathlib import Path
+
+        def as_array(tup):
+            m, L = tup
+            # Deterministic inner-map order: by key length, then key
+            ordered = {k: m[k] for k in sorted(m, key=lambda k: (len(k), k))}
+            return [ordered, int(L)]
+
+        out = {name: as_array(getattr(self, name)) for name in type(self).DICT_FIELDS}
+
+        # Ensure parent folder exists
+        p = Path(path)
+        if p.parent and not p.parent.exists():
+            p.parent.mkdir(parents=True, exist_ok=True)
+
+        with p.open("w", encoding="utf-8") as f:
+            if pretty:
+                json.dump(out, f, ensure_ascii=False, indent=2)
+            else:
+                json.dump(out, f, ensure_ascii=False, separators=(",", ":"))

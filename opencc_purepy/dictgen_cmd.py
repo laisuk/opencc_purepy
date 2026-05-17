@@ -58,7 +58,7 @@ def main(args):
     # ------------------------------------------------------------------
 
     if args.format == "json":
-        dictionaries.serialize_to_json(output_file_path)
+        dictionaries.serialize_to_json(output_file_path, pretty=not args.compact)
 
         print(
             f"{BLUE}Dictionary saved in JSON format at: "

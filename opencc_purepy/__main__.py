@@ -178,6 +178,11 @@ def main():
         ),
     )
     parser_dictgen.add_argument(
+        '-c',
+        '--compact',
+        action='store_true', default=False,
+        help='Enable non-indented JSON compact output')
+    parser_dictgen.add_argument(
         "-d",
         "--dicts",
         metavar="<directory>",
