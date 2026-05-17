@@ -351,7 +351,7 @@ cc = OpenCC(
 | Memory    |                                                                                                                            |
 | Python    | Python 3.10.20                                                                                                             |
 
-### Results
+### Results (opencc-purepy 1.3.0)
 
 | Input Size        | Cold Total (ms) | Post-init Cold (ms) |  Warm (ms) |
 |-------------------|----------------:|--------------------:|-----------:|
