@@ -31,7 +31,7 @@ try:
 except TypeError:
     _PunctuationTranslateTable = object
 
-from .dict_refs import DictRefs as UnionDictRefs, StarterUnionLike
+from .dict_refs import DictRefs, StarterUnionLike
 from .dictionary_lib import DictionaryMaxlength, PathLike, SlotPathMap
 from .union_cache import UnionCache, UnionKey
 
@@ -157,7 +157,7 @@ class OpenCC:
             shared dictionary provider is used.
         """
         self._last_error = None
-        self._config_cache: Dict[str, UnionDictRefs] = {}
+        self._config_cache: Dict[str, DictRefs] = {}
         self.config = self._normalize_config(config)
 
         try:
@@ -601,104 +601,104 @@ class OpenCC:
 
         return "".join(out)
 
-    def _get_dict_refs(self, config_key: str) -> UnionDictRefs:
+    def _get_dict_refs(self, config_key: str) -> DictRefs:
         """Get cached DictRefs for a config to avoid recreation."""
         cached = self._config_cache.get(config_key)
         if cached is not None:
             return cached
 
         if config_key == "s2t":
-            refs = UnionDictRefs(self.union_cache.ensure_indexed(UnionKey.S2T))
+            refs = DictRefs(self.union_cache.ensure_indexed(UnionKey.S2T))
         elif config_key == "s2t_punct":
-            refs = UnionDictRefs(self.union_cache.ensure_indexed(UnionKey.S2T_PUNCT))
+            refs = DictRefs(self.union_cache.ensure_indexed(UnionKey.S2T_PUNCT))
         elif config_key == "t2s":
-            refs = UnionDictRefs(self.union_cache.ensure_indexed(UnionKey.T2S))
+            refs = DictRefs(self.union_cache.ensure_indexed(UnionKey.T2S))
         elif config_key == "t2s_punct":
-            refs = UnionDictRefs(self.union_cache.ensure_indexed(UnionKey.T2S_PUNCT))
+            refs = DictRefs(self.union_cache.ensure_indexed(UnionKey.T2S_PUNCT))
         elif config_key == "s2tw":
             refs = (
-                UnionDictRefs(self.union_cache.ensure_indexed(UnionKey.S2T))
+                DictRefs(self.union_cache.ensure_indexed(UnionKey.S2T))
                 .with_round_2(self.union_cache.ensure_indexed(UnionKey.TwVariantsOnly))
             )
         elif config_key == "s2tw_punct":
             refs = (
-                UnionDictRefs(self.union_cache.ensure_indexed(UnionKey.S2T_PUNCT))
+                DictRefs(self.union_cache.ensure_indexed(UnionKey.S2T_PUNCT))
                 .with_round_2(self.union_cache.ensure_indexed(UnionKey.TwVariantsOnly))
             )
         elif config_key == "tw2s":
             refs = (
-                UnionDictRefs(self.union_cache.ensure_indexed(UnionKey.TwRevPair))
+                DictRefs(self.union_cache.ensure_indexed(UnionKey.TwRevPair))
                 .with_round_2(self.union_cache.ensure_indexed(UnionKey.T2S))
             )
         elif config_key == "tw2s_punct":
             refs = (
-                UnionDictRefs(self.union_cache.ensure_indexed(UnionKey.TwRevPair))
+                DictRefs(self.union_cache.ensure_indexed(UnionKey.TwRevPair))
                 .with_round_2(self.union_cache.ensure_indexed(UnionKey.T2S_PUNCT))
             )
         elif config_key == "s2twp":
             refs = (
-                UnionDictRefs(self.union_cache.ensure_indexed(UnionKey.S2T))
+                DictRefs(self.union_cache.ensure_indexed(UnionKey.S2T))
                 .with_round_2(self.union_cache.ensure_indexed(UnionKey.TwPhrasesOnly))
                 .with_round_3(self.union_cache.ensure_indexed(UnionKey.TwVariantsOnly))
             )
         elif config_key == "s2twp_punct":
             refs = (
-                UnionDictRefs(self.union_cache.ensure_indexed(UnionKey.S2T_PUNCT))
+                DictRefs(self.union_cache.ensure_indexed(UnionKey.S2T_PUNCT))
                 .with_round_2(self.union_cache.ensure_indexed(UnionKey.TwPhrasesOnly))
                 .with_round_3(self.union_cache.ensure_indexed(UnionKey.TwVariantsOnly))
             )
         elif config_key == "tw2sp":
             refs = (
-                UnionDictRefs(self.union_cache.ensure_indexed(UnionKey.Tw2SpR1TwRevTriple))
+                DictRefs(self.union_cache.ensure_indexed(UnionKey.Tw2SpR1TwRevTriple))
                 .with_round_2(self.union_cache.ensure_indexed(UnionKey.T2S))
             )
         elif config_key == "tw2sp_punct":
             refs = (
-                UnionDictRefs(self.union_cache.ensure_indexed(UnionKey.Tw2SpR1TwRevTriple))
+                DictRefs(self.union_cache.ensure_indexed(UnionKey.Tw2SpR1TwRevTriple))
                 .with_round_2(self.union_cache.ensure_indexed(UnionKey.T2S_PUNCT))
             )
         elif config_key == "s2hk":
             refs = (
-                UnionDictRefs(self.union_cache.ensure_indexed(UnionKey.S2T))
+                DictRefs(self.union_cache.ensure_indexed(UnionKey.S2T))
                 .with_round_2(self.union_cache.ensure_indexed(UnionKey.HkVariantsOnly))
             )
         elif config_key == "s2hk_punct":
             refs = (
-                UnionDictRefs(self.union_cache.ensure_indexed(UnionKey.S2T_PUNCT))
+                DictRefs(self.union_cache.ensure_indexed(UnionKey.S2T_PUNCT))
                 .with_round_2(self.union_cache.ensure_indexed(UnionKey.HkVariantsOnly))
             )
         elif config_key == "hk2s":
             refs = (
-                UnionDictRefs(self.union_cache.ensure_indexed(UnionKey.HkRevPair))
+                DictRefs(self.union_cache.ensure_indexed(UnionKey.HkRevPair))
                 .with_round_2(self.union_cache.ensure_indexed(UnionKey.T2S))
             )
         elif config_key == "hk2s_punct":
             refs = (
-                UnionDictRefs(self.union_cache.ensure_indexed(UnionKey.HkRevPair))
+                DictRefs(self.union_cache.ensure_indexed(UnionKey.HkRevPair))
                 .with_round_2(self.union_cache.ensure_indexed(UnionKey.T2S_PUNCT))
             )
         elif config_key == "t2tw":
-            refs = UnionDictRefs(self.union_cache.ensure_indexed(UnionKey.TwVariantsOnly))
+            refs = DictRefs(self.union_cache.ensure_indexed(UnionKey.TwVariantsOnly))
         elif config_key == "t2twp":
             refs = (
-                UnionDictRefs(self.union_cache.ensure_indexed(UnionKey.TwPhrasesOnly))
+                DictRefs(self.union_cache.ensure_indexed(UnionKey.TwPhrasesOnly))
                 .with_round_2(self.union_cache.ensure_indexed(UnionKey.TwVariantsOnly))
             )
         elif config_key == "tw2t":
-            refs = UnionDictRefs(self.union_cache.ensure_indexed(UnionKey.TwRevPair))
+            refs = DictRefs(self.union_cache.ensure_indexed(UnionKey.TwRevPair))
         elif config_key == "tw2tp":
             refs = (
-                UnionDictRefs(self.union_cache.ensure_indexed(UnionKey.TwRevPair))
+                DictRefs(self.union_cache.ensure_indexed(UnionKey.TwRevPair))
                 .with_round_2(self.union_cache.ensure_indexed(UnionKey.TwPhrasesRevOnly))
             )
         elif config_key == "t2hk":
-            refs = UnionDictRefs(self.union_cache.ensure_indexed(UnionKey.HkVariantsOnly))
+            refs = DictRefs(self.union_cache.ensure_indexed(UnionKey.HkVariantsOnly))
         elif config_key == "hk2t":
-            refs = UnionDictRefs(self.union_cache.ensure_indexed(UnionKey.HkRevPair))
+            refs = DictRefs(self.union_cache.ensure_indexed(UnionKey.HkRevPair))
         elif config_key == "t2jp":
-            refs = UnionDictRefs(self.union_cache.ensure_indexed(UnionKey.JpVariantsOnly))
+            refs = DictRefs(self.union_cache.ensure_indexed(UnionKey.JpVariantsOnly))
         elif config_key == "jp2t":
-            refs = UnionDictRefs(self.union_cache.ensure_indexed(UnionKey.JpRevTriple))
+            refs = DictRefs(self.union_cache.ensure_indexed(UnionKey.JpRevTriple))
         else:
             raise ValueError(f"Unsupported config: {config_key}")
 
