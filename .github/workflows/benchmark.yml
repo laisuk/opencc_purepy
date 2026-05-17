@@ -54,13 +54,21 @@ jobs:
                   platform_info[key] = value
 
           rows = []
-          pattern = re.compile(r"Input size:\s*([0-9]+)\s+chars\s+\|\s+Avg time:\s*([0-9.]+)\s+ms")
+          pattern = re.compile(
+              r"Input size:\s*([0-9]+)\s+chars\s+\|"
+              r"\s+cold_total:\s*([0-9.]+)\s+ms\s+\|"
+              r"\s+post_init_cold:\s*([0-9.]+)\s+ms\s+\|"
+              r"\s+warm:\s*([0-9.]+)\s+ms"
+          )
+
           for line in Path("benchmark-output.txt").read_text(encoding="utf-8").splitlines():
               match = pattern.search(line)
               if match:
                   size = int(match.group(1))
-                  avg_ms = float(match.group(2))
-                  rows.append((size, avg_ms))
+                  cold_total = float(match.group(2))
+                  post_init_cold = float(match.group(3))
+                  warm = float(match.group(4))
+                  rows.append((size, cold_total, post_init_cold, warm))
 
           if not rows:
               raise RuntimeError("No benchmark rows were parsed from benchmark-output.txt")
@@ -71,7 +79,7 @@ jobs:
           with Path(os.environ["GITHUB_STEP_SUMMARY"]).open("a", encoding="utf-8") as summary:
               summary.write("## ⚡ Benchmark\n\n")
               summary.write("> Measured on GitHub Actions `ubuntu-latest` using the default `s2t` configuration.  \n")
-              summary.write("> Each test averaged over 20 runs with the shared dictionary cache reused across runs.\n\n")
+              summary.write("> Benchmark separates cold startup, first post-init conversion, and warm cached conversion.\n\n")
 
               summary.write("### Runner Platform\n\n")
               summary.write("| Field | Value |\n")
@@ -85,13 +93,18 @@ jobs:
               summary.write(f"| Python | {platform_info.get('PYTHON_VERSION', '')} |\n\n")
 
               summary.write("### Results\n\n")
-              summary.write("| Input Size | Avg. Time (ms) |\n")
-              summary.write("|---|---:|\n")
-              for size, avg_ms in rows:
-                  summary.write(f"| **{input_label(size)}** | {avg_ms:.3f} ms |\n")
+              summary.write("| Input Size | Cold Total (ms) | Post-init Cold (ms) | Warm (ms) |\n")
+              summary.write("|---|---:|---:|---:|\n")
+              for size, cold_total, post_init_cold, warm in rows:
+                  summary.write(
+                      f"| **{input_label(size)}** | "
+                      f"{cold_total:.3f} ms | "
+                      f"{post_init_cold:.3f} ms | "
+                      f"{warm:.3f} ms |\n"
+                  )
 
               summary.write("\n")
-              summary.write("*Timings reuse the shared dictionary cache, but still include per-run `OpenCC` instance setup; results depend on runner hardware and background system load.*\n")
+              summary.write("*`cold_total` includes `OpenCC(config)` setup plus conversion. `post_init_cold` measures the first conversion after initialization. `warm` measures conversion after the union cache has already been built. Results depend on runner hardware and background system load.*\n")
           PY
 
       - name: Upload benchmark artifacts
