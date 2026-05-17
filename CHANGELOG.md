@@ -7,12 +7,23 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ---
 
-## [1.2.5-beta1] - 2026-05-16
+## [1.3.0-beta1] - unreleased
+
+### Added
+
+- Added union-cache conversion pipeline for faster warm conversions.
+- Added `DictSlot` enum for strongly-typed OpenCC dictionary slot selection.
+- Added `DictSlotLike` compatibility type for accepting both `DictSlot` and legacy `str` slot keys.
+- Added `st_punctuations` and `ts_punctuations` dictionary slots.
+- Added DictSlot support for punctuation dictionaries.
+- Added enhanced benchmark scenarios:
+    - `cold_total`
+    - `post_init_cold`
+    - `warm`
 
 ### Changed
 
-- Added `DictSlot` enum for strongly-typed OpenCC dictionary slot selection.
-- Added `DictSlotLike` compatibility type for accepting both `DictSlot` and legacy `str` slot keys.
+- Refactored internal dictionary union handling.
 - Refactored `DictionaryMaxlength.from_dicts()` to support typed dictionary slot mappings.
 - Improved dictionary slot validation with centralized slot normalization helpers.
 - Added support for both enum-name (`"ST_PHRASES"`) and legacy attribute-style (`"st_phrases"`) slot resolution.
@@ -20,6 +31,13 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 - Refactored public API typing hints for improved IDE completion and static analysis support.
 - Improved `from_dicts()` documentation and examples to include `DictSlot` usage.
 - Moved dictionary slot definitions into dedicated `dict_slot.py` module for cleaner public API organization.
+- Updated dictionary JSON schema for punctuation slot support.
+- Improved large-text steady-state conversion performance.
+
+### Performance
+
+- Warm conversion throughput improved by roughly 30%+ compared with the legacy implementation on large inputs.
+- First conversion may include union-cache initialization cost.
 
 ---
 
