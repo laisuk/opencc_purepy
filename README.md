@@ -351,7 +351,9 @@ cc = OpenCC(
 | Memory    |                                                                                                                            |
 | Python    | Python 3.10.20                                                                                                             |
 
-### Results (opencc-purepy 1.3.0)
+### Results
+
+#### opencc-purepy v1.3.0
 
 | Input Size        | Cold Total (ms) | Post-init Cold (ms) |  Warm (ms) |
 |-------------------|----------------:|--------------------:|-----------:|
@@ -363,6 +365,14 @@ cc = OpenCC(
 *`cold_total` includes `OpenCC(config)` setup plus conversion. `post_init_cold` measures the first conversion after
 initialization. `warm` measures conversion after the union cache has already been built. Results depend on runner
 hardware and background system load.*
+
+### Notes
+
+> Despite being implemented in pure Python, `opencc_purepy` achieves surprisingly competitive conversion throughput
+> through aggressive caching and starter-index optimizations.
+> The warm conversion path is practical for large-text workloads such as document conversion, GUI applications, and
+> batch
+> processing.
 
 ---
 
