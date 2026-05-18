@@ -101,19 +101,17 @@ opencc-purepy office -i sheet.xlsx -o result.xlsx -c s2tw --format xlsx
 ## 📚 Custom Dictionaries
 
 `opencc_purepy` follows the OpenCC lexicon structure. Custom entries are loaded through existing OpenCC dictionary
-slots, such as `DictSlot.ST_PHRASES` or `DictSlot.TS_PHRASES`; do not use or document a generic `UserDict.txt` slot.
-
-This keeps `DictionaryMaxlength`, `DictRefs`, and future acceleration structures such as `UnionCache` stable and
-OpenCC-compatible.
+slots, such as `DictSlot.ST_PHRASES`, `DictSlot.TS_PHRASES`, `DictSlot.ST_PUNCTUATIONS`, and other OpenCC slots.
+There is no generic `UserDict` slot.
 
 Dictionary slot mappings support both:
 
 - `DictSlot` (recommended)
-- legacy `str` keys (backward compatible)
+- string slot names such as `"st_phrases"` (backward compatible)
 
 ---
 
-### Append mode
+### Recommended: load-time append mode
 
 Use `appends={...}` to load built-in dictionaries first, then custom entries. Duplicate keys use late-comer wins, so
 custom entries override built-in entries. This is recommended for most users.
@@ -131,7 +129,7 @@ cc = OpenCC.from_dicts(
 print(cc.convert("帕兰蒂尔是一家公司"))
 ```
 
-Legacy string keys remain supported:
+String slot names remain supported for compatibility:
 
 ```python
 from opencc_purepy import OpenCC
@@ -144,12 +142,87 @@ cc = OpenCC.from_dicts(
 )
 ```
 
+The same `appends={...}` and `overrides={...}` arguments are also supported by `DictionaryMaxlength.from_dicts()` when
+you want to create and reuse a dictionary instance yourself.
+
+---
+
+### Post-load file customization
+
+Use `DictionaryMaxlength.with_custom_dict_files()` when you already have a dictionary instance and want to apply
+OpenCC-compatible text dictionary files after loading it. Post-load customization supports both `appends={...}` and
+`overrides={...}`.
+
+```python
+from opencc_purepy import DictSlot, OpenCC
+from opencc_purepy.dictionary_lib import DictionaryMaxlength
+
+dictionary = DictionaryMaxlength.from_json().with_custom_dict_files(
+    appends={
+        DictSlot.ST_PHRASES: "./UserDict.txt",
+    },
+)
+
+cc = OpenCC(config="s2t", dictionary=dictionary)
+
+print(cc.convert("帕兰蒂尔是一家公司"))
+```
+
+Create a private dictionary instance first with `DictionaryMaxlength.from_json()` or `DictionaryMaxlength.from_dicts()`.
+Do not mutate the shared global provider returned by `DictionaryMaxlength.get_provider()` or
+`DictionaryMaxlength.new()`; the post-load customization APIs are intended for private dictionary instances.
+
+---
+
+### Exact in-memory pairs
+
+Use `DictionaryMaxlength.with_custom_dicts()` for exact in-memory custom pairs. This preserves keys exactly, including
+leading spaces and embedded spaces.
+
+```python
+from opencc_purepy import DictSlot, OpenCC
+from opencc_purepy.dictionary_lib import DictionaryMaxlength
+
+dictionary = DictionaryMaxlength.from_json().with_custom_dicts(
+    appends={
+        DictSlot.ST_PHRASES: {
+            " 著": " 著",
+            "AI 模型": "AI 模型",
+            "帕兰蒂尔": "帕蘭蒂爾",
+        },
+    },
+)
+
+cc = OpenCC(config="s2t", dictionary=dictionary)
+
+print(cc.convert("馬斯克 著"))
+print(cc.convert("AI 模型"))
+```
+
+---
+
+### Dictionary text format
+
+Custom dictionary files are UTF-8 text files in OpenCC lexicon format. Use one mapping per line:
+
+```text
+# Custom company terms
+帕兰蒂尔	帕蘭蒂爾
+AI模型 AI模型
+```
+
+Each entry is parsed as `key<TAB>value` or `key whitespace value`. Blank lines are ignored, comments are allowed with
+`#`, and duplicate keys use late-comer wins.
+
+Because file parsing follows OpenCC dictionary rules, leading spaces and embedded spaces in keys are not preserved. Use
+`with_custom_dicts()` when the custom key itself contains spaces.
+
 ---
 
 ### Override mode
 
-Use `overrides={...}` to replace an entire dictionary slot with a custom file. This is intended for advanced users or
-proprietary full dictionary copies.
+Use `overrides={...}` to replace an entire dictionary slot. This is for advanced users who maintain a full replacement
+for a selected OpenCC dictionary slot.
 
 ```python
 from opencc_purepy import DictSlot, OpenCC
@@ -162,33 +235,17 @@ cc = OpenCC.from_dicts(
 )
 ```
 
----
-
-### Direct dictionary injection
+Post-load override mode works the same way:
 
 ```python
-from opencc_purepy import DictSlot, OpenCC
+from opencc_purepy import DictSlot
 from opencc_purepy.dictionary_lib import DictionaryMaxlength
 
-dictionary = DictionaryMaxlength.from_dicts(
-    appends={
-        DictSlot.ST_PHRASES: "./UserDict.txt",
+dictionary = DictionaryMaxlength.from_json().with_custom_dict_files(
+    overrides={
+        DictSlot.ST_PHRASES: "./CompanyOnlySTPhrases.txt",
     },
 )
-
-cc = OpenCC(config="s2t", dictionary=dictionary)
-```
-
----
-
-### Dictionary text format
-
-Custom dictionary files are UTF-8 text files. Use one mapping per line in `phrase<TAB>translation` format. Blank lines
-are ignored, lines starting with `#` are comments, and duplicate keys are resolved by late-comer wins.
-
-```text
-# Custom company terms
-帕兰蒂尔	帕蘭蒂爾
 ```
 
 ---
@@ -245,6 +302,8 @@ cc = OpenCC(
 
 - Use `appends` for a few user or company terms.
 - Use `overrides` when maintaining a full proprietary replacement of an OpenCC dictionary file.
+- Use `with_custom_dict_files()` to apply OpenCC-compatible text files to a private dictionary after loading it.
+- Use `with_custom_dicts()` for exact in-memory pairs, especially keys with leading or embedded spaces.
 - Use `dictgen` when you want to bake TXT dictionaries into JSON for reuse or faster loading.
 - Use direct dictionary injection when sharing one loaded dictionary across many `OpenCC` instances.
 - Prefer `DictSlot` for new code and IDE-friendly type checking.
