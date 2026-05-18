@@ -222,7 +222,17 @@ class OpenCC:
 
         >>> cc = OpenCC.from_dicts(base_dir="./my_dicts")
 
-        Replace a whole dictionary slot:
+        Replace a whole dictionary slot using ``DictSlot``:
+
+        >>> from opencc_purepy import DictSlot
+        >>>
+        >>> cc = OpenCC.from_dicts(
+        ...     overrides={
+        ...         DictSlot.ST_PHRASES: "./company/STPhrases.txt",
+        ...     }
+        ... )
+
+        Legacy string slot names are also supported:
 
         >>> cc = OpenCC.from_dicts(
         ...     overrides={
@@ -254,14 +264,20 @@ class OpenCC:
             Optional base directory for legacy dictionary loading.
 
         :param paths:
-            Optional legacy dictionary slot -> filename mapping.
+            Optional dictionary slot -> filename mapping.
+
+            Supports both ``DictSlot`` and legacy ``str`` keys.
 
         :param overrides:
             Optional dictionary slot -> file path mapping for full replacement.
 
+            Supports both ``DictSlot`` and legacy ``str`` keys.
+
         :param appends:
             Optional dictionary slot -> file path mapping for appended custom
             entries.
+
+            Supports both ``DictSlot`` and legacy ``str`` keys.
 
         :return:
             ``OpenCC`` instance using the loaded dictionary container.

@@ -17,6 +17,12 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 - Added `st_punctuations` and `ts_punctuations` dictionary slots.
 - Added `DictSlot.ST_PUNCTUATIONS` and `DictSlot.TS_PUNCTUATIONS` for punctuation dictionary customization.
 - Added bundled `STPunctuations.txt` and `TSPunctuations.txt` dictionaries.
+- Added post-load custom dictionary APIs:
+    - `DictionaryMaxlength.with_custom_dicts()`
+    - `DictionaryMaxlength.with_custom_dict_files()`
+- Added support for exact in-memory custom dictionary keys, including keys containing spaces.
+- Added protection against mutating the shared global `DictionaryMaxlength` provider through post-load custom dictionary
+  APIs.
 - Added enhanced benchmark scenarios:
     - `cold_total`
     - `post_init_cold`
@@ -40,6 +46,7 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 - Kept older JSON dictionaries without `st_punctuations` or `ts_punctuations` loadable by defaulting missing
   punctuation slots to empty dictionaries.
 - Kept legacy custom dictionary directories loadable when punctuation text files are absent.
+- Clarified the distinction between OpenCC-compatible text dictionary files and exact in-memory custom dictionary pairs.
 - Improved large-text steady-state conversion performance.
 
 ### Performance
@@ -51,8 +58,9 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 ### Tests
 
 - Added coverage for basic `s2t` / `t2s` conversion, punctuation conversion through the new punctuation slots,
-  append mode, override mode, `DictSlot` punctuation enum usage, old JSON compatibility, legacy dictionary directories
-  without punctuation files, and the warm union-cache path.
+  append mode, override mode, post-load custom dictionary APIs, exact-key custom dictionary pairs,
+  shared-provider mutation protection, `DictSlot` punctuation enum usage, old JSON compatibility,
+  legacy dictionary directories without punctuation files, and the warm union-cache path.
 
 ---
 
