@@ -57,10 +57,18 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ### Tests
 
-- Added coverage for basic `s2t` / `t2s` conversion, punctuation conversion through the new punctuation slots,
-  append mode, override mode, post-load custom dictionary APIs, exact-key custom dictionary pairs,
-  shared-provider mutation protection, `DictSlot` punctuation enum usage, old JSON compatibility,
-  legacy dictionary directories without punctuation files, and the warm union-cache path.
+- Added coverage for:
+    - basic `s2t` / `t2s` conversion
+    - punctuation conversion through the new punctuation slots
+    - append mode
+    - override mode
+    - post-load custom dictionary APIs
+    - exact-key custom dictionary pairs
+    - shared-provider mutation protection
+    - `DictSlot` punctuation enum usage
+    - old JSON compatibility
+    - legacy dictionary directories without punctuation files
+    - the warm union-cache path
 
 ---
 
