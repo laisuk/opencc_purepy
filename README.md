@@ -101,7 +101,7 @@ opencc-purepy office -i sheet.xlsx -o result.xlsx -c s2tw --format xlsx
 ## 📚 Custom Dictionaries
 
 `opencc_purepy` follows the OpenCC lexicon structure. Custom entries are loaded through existing OpenCC dictionary
-slots, such as `DictSlot.ST_PHRASES`, `DictSlot.TS_PHRASES`, `DictSlot.ST_PUNCTUATIONS`, and other OpenCC slots.
+slots, such as `DictSlot.STPhrases`, `DictSlot.TSPhrases`, `DictSlot.STPunctuations`, and other OpenCC slots.
 There is no generic `UserDict` slot.
 
 Dictionary slot mappings support both:
@@ -122,7 +122,7 @@ from opencc_purepy import DictSlot, OpenCC
 cc = OpenCC.from_dicts(
     config="s2t",
     appends={
-        DictSlot.ST_PHRASES: "./UserDict.txt",
+        DictSlot.STPhrases: "./UserDict.txt",
     },
 )
 
@@ -159,7 +159,7 @@ from opencc_purepy.dictionary_lib import DictionaryMaxlength
 
 dictionary = DictionaryMaxlength.from_json().with_custom_dict_files(
     appends={
-        DictSlot.ST_PHRASES: "./UserDict.txt",
+        DictSlot.STPhrases: "./UserDict.txt",
     },
 )
 
@@ -185,7 +185,7 @@ from opencc_purepy.dictionary_lib import DictionaryMaxlength
 
 dictionary = DictionaryMaxlength.from_json().with_custom_dicts(
     appends={
-        DictSlot.ST_PHRASES: {
+        DictSlot.STPhrases: {
             " 著": " 著",
             "AI 模型": "AI 模型",
             "帕兰蒂尔": "帕蘭蒂爾",
@@ -230,7 +230,7 @@ from opencc_purepy import DictSlot, OpenCC
 cc = OpenCC.from_dicts(
     config="s2t",
     overrides={
-        DictSlot.ST_PHRASES: "./company/STPhrases.txt",
+        DictSlot.STPhrases: "./company/STPhrases.txt",
     },
 )
 ```
@@ -243,7 +243,7 @@ from opencc_purepy.dictionary_lib import DictionaryMaxlength
 
 dictionary = DictionaryMaxlength.from_json().with_custom_dict_files(
     overrides={
-        DictSlot.ST_PHRASES: "./CompanyOnlySTPhrases.txt",
+        DictSlot.STPhrases: "./CompanyOnlySTPhrases.txt",
     },
 )
 ```
@@ -252,26 +252,26 @@ dictionary = DictionaryMaxlength.from_json().with_custom_dict_files(
 
 ### Supported slots
 
-| `DictSlot`                         | Legacy key                | Default file                |
-|------------------------------------|---------------------------|-----------------------------|
-| `DictSlot.ST_CHARACTERS`           | `st_characters`           | `STCharacters.txt`          |
-| `DictSlot.ST_PHRASES`              | `st_phrases`              | `STPhrases.txt`             |
-| `DictSlot.ST_PUNCTUATIONS`         | `st_punctuations`         | `STPunctuations.txt`        |
-| `DictSlot.TS_CHARACTERS`           | `ts_characters`           | `TSCharacters.txt`          |
-| `DictSlot.TS_PHRASES`              | `ts_phrases`              | `TSPhrases.txt`             |
-| `DictSlot.TS_PUNCTUATIONS`         | `ts_punctuations`         | `TSPunctuations.txt`        |
-| `DictSlot.TW_PHRASES`              | `tw_phrases`              | `TWPhrases.txt`             |
-| `DictSlot.TW_PHRASES_REV`          | `tw_phrases_rev`          | `TWPhrasesRev.txt`          |
-| `DictSlot.TW_VARIANTS`             | `tw_variants`             | `TWVariants.txt`            |
-| `DictSlot.TW_VARIANTS_REV`         | `tw_variants_rev`         | `TWVariantsRev.txt`         |
-| `DictSlot.TW_VARIANTS_REV_PHRASES` | `tw_variants_rev_phrases` | `TWVariantsRevPhrases.txt`  |
-| `DictSlot.HK_VARIANTS`             | `hk_variants`             | `HKVariants.txt`            |
-| `DictSlot.HK_VARIANTS_REV`         | `hk_variants_rev`         | `HKVariantsRev.txt`         |
-| `DictSlot.HK_VARIANTS_REV_PHRASES` | `hk_variants_rev_phrases` | `HKVariantsRevPhrases.txt`  |
-| `DictSlot.JPS_CHARACTERS`          | `jps_characters`          | `JPShinjitaiCharacters.txt` |
-| `DictSlot.JPS_PHRASES`             | `jps_phrases`             | `JPShinjitaiPhrases.txt`    |
-| `DictSlot.JP_VARIANTS`             | `jp_variants`             | `JPVariants.txt`            |
-| `DictSlot.JP_VARIANTS_REV`         | `jp_variants_rev`         | `JPVariantsRev.txt`         |
+| `DictSlot`                      | Legacy key                | Default file                |
+|---------------------------------|---------------------------|-----------------------------|
+| `DictSlot.STCharacters`         | `st_characters`           | `STCharacters.txt`          |
+| `DictSlot.STPhrases`            | `st_phrases`              | `STPhrases.txt`             |
+| `DictSlot.STPunctuations`       | `st_punctuations`         | `STPunctuations.txt`        |
+| `DictSlot.TSCharacters`         | `ts_characters`           | `TSCharacters.txt`          |
+| `DictSlot.TSPhrases`            | `ts_phrases`              | `TSPhrases.txt`             |
+| `DictSlot.TSPunctuations`       | `ts_punctuations`         | `TSPunctuations.txt`        |
+| `DictSlot.TWPhrases`            | `tw_phrases`              | `TWPhrases.txt`             |
+| `DictSlot.TWPhrasesRev`         | `tw_phrases_rev`          | `TWPhrasesRev.txt`          |
+| `DictSlot.TWVariants`           | `tw_variants`             | `TWVariants.txt`            |
+| `DictSlot.TWVariantsRev`        | `tw_variants_rev`         | `TWVariantsRev.txt`         |
+| `DictSlot.TWVariantsRevPhrases` | `tw_variants_rev_phrases` | `TWVariantsRevPhrases.txt`  |
+| `DictSlot.HKVariants`           | `hk_variants`             | `HKVariants.txt`            |
+| `DictSlot.HKVariantsRev`        | `hk_variants_rev`         | `HKVariantsRev.txt`         |
+| `DictSlot.HKVariantsRevPhrases` | `hk_variants_rev_phrases` | `HKVariantsRevPhrases.txt`  |
+| `DictSlot.JPSCharacters`        | `jps_characters`          | `JPShinjitaiCharacters.txt` |
+| `DictSlot.JPSPhrases`           | `jps_phrases`             | `JPShinjitaiPhrases.txt`    |
+| `DictSlot.JPVariants`           | `jp_variants`             | `JPVariants.txt`            |
+| `DictSlot.JPVariantsRev`        | `jp_variants_rev`         | `JPVariantsRev.txt`         |
 
 ---
 

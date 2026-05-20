@@ -50,7 +50,7 @@ def test_dictionary_from_dicts_appends_late_comer_wins():
     try:
         dictionary = DictionaryMaxlength.from_dicts(
             appends={
-                DictSlot.ST_PHRASES: custom_dict,
+                DictSlot.STPhrases: custom_dict,
             },
         )
 
@@ -72,7 +72,7 @@ def test_opencc_from_dicts_append_late_comer_wins_existing_key():
         cc = OpenCC.from_dicts(
             config="s2t",
             appends={
-                DictSlot.ST_PHRASES: _CUSTOM_DICT,
+                DictSlot.STPhrases: _CUSTOM_DICT,
             },
         )
 
@@ -91,7 +91,7 @@ def test_opencc_from_dicts_override_replaces_entire_slot():
         cc = OpenCC.from_dicts(
             config="s2t",
             overrides={
-                DictSlot.ST_PHRASES: _CUSTOM_OVERRIDE_DICT,
+                DictSlot.STPhrases: _CUSTOM_OVERRIDE_DICT,
             },
         )
 
@@ -113,7 +113,7 @@ def test_dictslot_punctuation_append_is_used_by_punctuation_conversion():
         cc = OpenCC.from_dicts(
             config="s2t",
             appends={
-                DictSlot.ST_PUNCTUATIONS: _CUSTOM_PUNCT_DICT,
+                DictSlot.STPunctuations: _CUSTOM_PUNCT_DICT,
             },
         )
 
@@ -123,8 +123,8 @@ def test_dictslot_punctuation_append_is_used_by_punctuation_conversion():
 
 
 def test_dictslot_punctuation_enum_members_exist():
-    assert DictSlot.ST_PUNCTUATIONS.value == "st_punctuations"
-    assert DictSlot.TS_PUNCTUATIONS.value == "ts_punctuations"
+    assert DictSlot.STPunctuations.value == "st_punctuations"
+    assert DictSlot.TSPunctuations.value == "ts_punctuations"
 
 
 def test_legacy_custom_dict_dir_without_punctuation_files_loads():
@@ -169,7 +169,7 @@ def test_legacy_custom_dict_dir_without_punctuation_files_loads():
 def test_dictionary_with_custom_dicts_appends_exact_pairs_with_spaces():
     dictionary = DictionaryMaxlength.from_json().with_custom_dicts(
         appends={
-            DictSlot.ST_PHRASES: {
+            DictSlot.STPhrases: {
                 " 著": " 著",
             },
         },
@@ -182,7 +182,7 @@ def test_dictionary_with_custom_dicts_appends_exact_pairs_with_spaces():
 def test_dictionary_with_custom_dicts_append_late_comer_wins_existing_key():
     dictionary = DictionaryMaxlength.from_json().with_custom_dicts(
         appends={
-            DictSlot.ST_PHRASES: {
+            DictSlot.STPhrases: {
                 "汉字": "測字",
             },
         },
@@ -195,7 +195,7 @@ def test_dictionary_with_custom_dicts_append_late_comer_wins_existing_key():
 def test_dictionary_with_custom_dicts_override_replaces_entire_slot():
     dictionary = DictionaryMaxlength.from_json().with_custom_dicts(
         overrides={
-            DictSlot.ST_PHRASES: {
+            DictSlot.STPhrases: {
                 "帕兰蒂尔": "柏蘭蒂爾",
             },
         },
@@ -217,7 +217,7 @@ def test_dictionary_with_custom_dict_files_appends_custom_st_phrase():
     try:
         dictionary = DictionaryMaxlength.from_json().with_custom_dict_files(
             appends={
-                DictSlot.ST_PHRASES: custom_dict,
+                DictSlot.STPhrases: custom_dict,
             },
         )
 
@@ -236,7 +236,7 @@ def test_dictionary_with_custom_dict_files_override_replaces_entire_slot():
     try:
         dictionary = DictionaryMaxlength.from_json().with_custom_dict_files(
             overrides={
-                DictSlot.ST_PHRASES: _CUSTOM_OVERRIDE_DICT,
+                DictSlot.STPhrases: _CUSTOM_OVERRIDE_DICT,
             },
         )
 
@@ -245,7 +245,7 @@ def test_dictionary_with_custom_dict_files_override_replaces_entire_slot():
         assert st_phrases == {"帕兰蒂尔": "柏蘭蒂爾"}
         assert max_len == len("帕兰蒂尔")
 
-        cc = OpenCC(config="s2t", dictionary=dictionary)
+        cc = OpenCC(config="s2tw", dictionary=dictionary)
 
         assert cc.convert("帕兰蒂尔") == "柏蘭蒂爾"
         assert cc.convert("汉字") == "漢字"
@@ -261,7 +261,7 @@ def test_dictionary_with_custom_dict_files_uses_opencc_file_contract_not_exact_s
     try:
         dictionary = DictionaryMaxlength.from_json().with_custom_dict_files(
             appends={
-                DictSlot.ST_PHRASES: _CUSTOM_DICT,
+                DictSlot.STPhrases: _CUSTOM_DICT,
             },
         )
 
@@ -307,7 +307,7 @@ def test_shared_provider_rejects_post_load_custom_dicts():
     try:
         provider.with_custom_dicts(
             appends={
-                DictSlot.ST_PHRASES: {
+                DictSlot.STPhrases: {
                     "帕兰蒂尔": "柏蘭蒂爾",
                 },
             },
@@ -324,7 +324,7 @@ def test_shared_provider_rejects_post_load_custom_dict_files():
         try:
             provider.with_custom_dict_files(
                 appends={
-                    DictSlot.ST_PHRASES: custom_dict,
+                    DictSlot.STPhrases: custom_dict,
                 },
             )
             raise AssertionError("Expected RuntimeError")
