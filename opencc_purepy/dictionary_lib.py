@@ -199,7 +199,7 @@ class DictionaryMaxlength:
 
         Examples of valid slot keys:
 
-        >>> DictSlot.ST_PHRASES
+        >>> DictSlot.STPhrases
         >>> "st_phrases"
 
         Examples
@@ -218,7 +218,7 @@ class DictionaryMaxlength:
         >>>
         >>> DictionaryMaxlength.from_dicts(
         ...     overrides={
-        ...         DictSlot.ST_PHRASES: "./company/STPhrases.txt",
+        ...         DictSlot.STPhrases: "./company/STPhrases.txt",
         ...     }
         ... )
 
@@ -226,7 +226,7 @@ class DictionaryMaxlength:
 
         >>> DictionaryMaxlength.from_dicts(
         ...     appends={
-        ...         DictSlot.ST_PHRASES: "./custom/custom_terms.txt",
+        ...         DictSlot.STPhrases: "./custom/custom_terms.txt",
         ...     }
         ... )
 

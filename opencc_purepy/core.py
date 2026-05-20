@@ -228,7 +228,7 @@ class OpenCC:
         >>>
         >>> cc = OpenCC.from_dicts(
         ...     overrides={
-        ...         DictSlot.ST_PHRASES: "./company/STPhrases.txt",
+        ...         DictSlot.STPhrases: "./company/STPhrases.txt",
         ...     }
         ... )
 
