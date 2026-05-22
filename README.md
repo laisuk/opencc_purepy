@@ -174,10 +174,13 @@ Do not mutate the shared global provider returned by `DictionaryMaxlength.get_pr
 
 ---
 
-### Exact in-memory pairs
+### Tofu-risk / Extension Unicode fallback pairs
 
-Use `DictionaryMaxlength.with_custom_dicts()` for exact in-memory custom pairs. This preserves keys exactly, including
-leading spaces and embedded spaces.
+Use `DictionaryMaxlength.with_custom_dicts()` for exact in-memory custom pairs when you need to patch
+tofu-risk characters or Extension Unicode mappings without restructuring the built-in OpenCC dictionaries.
+
+This is useful for platforms where some CJK Extension characters may render as tofu boxes, or where you want
+to provide a temporary project-local fallback before the upstream dictionary data is updated.
 
 ```python
 from opencc_purepy import DictSlot, OpenCC
@@ -186,8 +189,13 @@ from opencc_purepy.dictionary_lib import DictionaryMaxlength
 dictionary = DictionaryMaxlength.from_json().with_custom_dicts(
     appends={
         DictSlot.STPhrases: {
-            " 著": " 著",
-            "AI 模型": "AI 模型",
+            # Project-local fallback pairs for tofu-risk / Extension Unicode cases.
+            # Keep these patches small, explicit, and easy to remove later.
+            "骖𬴂": "驂騑",
+            "𫜩合": "齧合",
+            "𫜩蘗吞针": "齧蘗吞針",
+
+            # Normal custom phrase pairs may be mixed in as well.
             "帕兰蒂尔": "帕蘭蒂爾",
         },
     },
@@ -195,9 +203,13 @@ dictionary = DictionaryMaxlength.from_json().with_custom_dicts(
 
 cc = OpenCC(config="s2t", dictionary=dictionary)
 
-print(cc.convert("馬斯克 著"))
-print(cc.convert("AI 模型"))
+print(cc.convert("骖𬴂"))
+print(cc.convert("𫜩合"))
+print(cc.convert("帕兰蒂尔"))
 ```
+
+This keeps the core dictionary structure unchanged while still allowing applications to patch specific
+high-risk entries at load time.
 
 ---
 
