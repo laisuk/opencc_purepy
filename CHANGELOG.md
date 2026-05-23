@@ -7,6 +7,18 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ---
 
+## [1.3.1] - 2026-05-24
+
+### Changed
+
+- Update and optimize dictionary data.
+
+### Fixed
+
+- Fixed invalid dictionary entry in dictionary data.
+
+---
+
 ## [1.3.0] - 2026-05-23
 
 ### Added
