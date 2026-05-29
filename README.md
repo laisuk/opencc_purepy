@@ -300,7 +300,7 @@ opencc-purepy dictgen -d ./my_dicts -o dictionary_maxlength.json
 from opencc_purepy import OpenCC
 from opencc_purepy.dictionary_lib import DictionaryMaxlength
 
-dictionary = DictionaryMaxlength.from_json("./dictionary_maxlength.json")
+dictionary = DictionaryMaxlength.from_json("opencc_purepy/dicts/dictionary_maxlength.json")
 
 cc = OpenCC(
     config="s2t",
