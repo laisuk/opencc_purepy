@@ -10,11 +10,11 @@ class UnionKey(Enum):
     T2S = auto()
     T2S_PUNCT = auto()
     TwPhrasesOnly = auto()
-    TwVariantsOnly = auto()
+    TwVariantsPair = auto()
     TwPhrasesRevOnly = auto()
     TwRevPair = auto()
     Tw2SpR1TwRevTriple = auto()
-    HkVariantsOnly = auto()
+    HkVariantsPair = auto()
     HkRevPair = auto()
     JpVariantsOnly = auto()
     JpRevTriple = auto()
@@ -64,16 +64,16 @@ class UnionCache:
             return [get_slot("ts_phrases"), get_slot("ts_characters"), get_slot("ts_punctuations")]
         if key is UnionKey.TwPhrasesOnly:
             return [get_slot("tw_phrases")]
-        if key is UnionKey.TwVariantsOnly:
-            return [get_slot("tw_variants")]
+        if key is UnionKey.TwVariantsPair:
+            return [get_slot("tw_variants_phrases"), get_slot("tw_variants")]
         if key is UnionKey.TwPhrasesRevOnly:
             return [get_slot("tw_phrases_rev")]
         if key is UnionKey.TwRevPair:
             return [get_slot("tw_variants_rev_phrases"), get_slot("tw_variants_rev")]
         if key is UnionKey.Tw2SpR1TwRevTriple:
             return [get_slot("tw_phrases_rev"), get_slot("tw_variants_rev_phrases"), get_slot("tw_variants_rev")]
-        if key is UnionKey.HkVariantsOnly:
-            return [get_slot("hk_variants")]
+        if key is UnionKey.HkVariantsPair:
+            return [get_slot("hk_variants_phrases"), get_slot("hk_variants")]
         if key is UnionKey.HkRevPair:
             return [get_slot("hk_variants_rev_phrases"), get_slot("hk_variants_rev")]
         if key is UnionKey.JpVariantsOnly:

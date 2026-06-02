@@ -2,6 +2,7 @@
 
 from pathlib import Path
 import shutil
+import tempfile
 
 from opencc_purepy import OpenCC, DictSlot
 from opencc_purepy.dictionary_lib import DictionaryMaxlength
@@ -127,6 +128,95 @@ def test_dictslot_punctuation_enum_members_exist():
     assert DictSlot.TSPunctuations.value == "ts_punctuations"
 
 
+def test_dictslot_forward_variant_phrase_enum_members_exist():
+    assert DictSlot.TWVariantsPhrases.value == "tw_variants_phrases"
+    assert DictSlot.HKVariantsPhrases.value == "hk_variants_phrases"
+
+
+def test_dictionary_from_dicts_loads_forward_variant_phrase_slots():
+    dictionary = DictionaryMaxlength.from_dicts()
+
+    tw_variants_phrases, tw_max_len = dictionary.tw_variants_phrases
+    hk_variants_phrases, hk_max_len = dictionary.hk_variants_phrases
+
+    assert tw_variants_phrases["喫茶小舖"] == "喫茶小舖"
+    assert hk_variants_phrases["喫茶小舖"] == "喫茶小舖"
+    assert tw_max_len >= len("喫茶小舖")
+    assert hk_max_len >= len("喫茶小舖")
+
+
+def test_dictionary_json_preserves_forward_variant_phrase_slots():
+    dictionary = DictionaryMaxlength.from_dicts().with_custom_dicts(
+        appends={
+            DictSlot.TWVariantsPhrases: {
+                "喫茶測試": "喫茶測試",
+            },
+            DictSlot.HKVariantsPhrases: {
+                "喫茶測試": "喫茶測試",
+            },
+        },
+    )
+
+    with tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=".json", delete=False) as handle:
+        path = Path(handle.name)
+
+    try:
+        dictionary.serialize_to_json(str(path))
+        loaded = DictionaryMaxlength.from_json(path)
+    finally:
+        path.unlink()
+
+    assert loaded.tw_variants_phrases[0]["喫茶測試"] == "喫茶測試"
+    assert loaded.hk_variants_phrases[0]["喫茶測試"] == "喫茶測試"
+
+
+def test_dictionary_with_custom_dicts_appends_forward_variant_phrase_slots():
+    dictionary = DictionaryMaxlength.from_json().with_custom_dicts(
+        appends={
+            DictSlot.TWVariantsPhrases: {
+                "喫茶測試": "喫茶測試",
+            },
+            DictSlot.HKVariantsPhrases: {
+                "喫茶測試": "喫茶測試",
+            },
+        },
+    )
+
+    assert OpenCC(config="t2tw", dictionary=dictionary).convert("喫茶測試") == "喫茶測試"
+    assert OpenCC(config="t2hk", dictionary=dictionary).convert("喫茶測試") == "喫茶測試"
+
+
+def test_dictionary_with_custom_dicts_overrides_forward_variant_phrase_slots():
+    dictionary = DictionaryMaxlength.from_json().with_custom_dicts(
+        overrides={
+            DictSlot.TWVariantsPhrases: {
+                "喫茶小舖": "喫茶小舖",
+            },
+            DictSlot.HKVariantsPhrases: {
+                "喫茶小舖": "喫茶小舖",
+            },
+        },
+    )
+
+    assert dictionary.tw_variants_phrases == ({"喫茶小舖": "喫茶小舖"}, len("喫茶小舖"))
+    assert dictionary.hk_variants_phrases == ({"喫茶小舖": "喫茶小舖"}, len("喫茶小舖"))
+
+
+def test_forward_tw_variant_phrase_slot_precedes_character_slot():
+    assert OpenCC("t2tw").convert("喫茶小舖") == "喫茶小舖"
+    assert OpenCC("s2tw").convert("喫茶小舖") == "喫茶小舖"
+
+
+def test_forward_hk_variant_phrase_slot_precedes_character_slot():
+    assert OpenCC("t2hk").convert("喫茶小舖") == "喫茶小舖"
+    assert OpenCC("s2hk").convert("喫茶小舖") == "喫茶小舖"
+
+
+def test_reverse_tw_hk_variant_behavior_remains_unchanged():
+    assert OpenCC("tw2t").convert("吃口飯") == "喫口飯"
+    assert OpenCC("hk2t").convert("吃口飯") == "喫口飯"
+
+
 def test_legacy_custom_dict_dir_without_punctuation_files_loads():
     legacy_dir = _TEST_DIR / "_legacy_dicts_without_punctuation"
     if legacy_dir.exists():
@@ -140,9 +230,11 @@ def test_legacy_custom_dict_dir_without_punctuation_files_loads():
         "TSPhrases.txt",
         "TWPhrases.txt",
         "TWPhrasesRev.txt",
+        "TWVariantsPhrases.txt",
         "TWVariants.txt",
         "TWVariantsRev.txt",
         "TWVariantsRevPhrases.txt",
+        "HKVariantsPhrases.txt",
         "HKVariants.txt",
         "HKVariantsRev.txt",
         "HKVariantsRevPhrases.txt",

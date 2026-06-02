@@ -254,6 +254,7 @@ class OpenCC:
         ...     config="s2tw",
         ...     appends={
         ...         "st_phrases": "./custom/custom_terms.txt",
+        ...         DictSlot.TWVariantsPhrases: "./custom/TWVariantsPhrases.txt",
         ...     }
         ... )
 
@@ -634,12 +635,12 @@ class OpenCC:
         elif config_key == "s2tw":
             refs = (
                 DictRefs(self.union_cache.ensure_indexed(UnionKey.S2T))
-                .with_round_2(self.union_cache.ensure_indexed(UnionKey.TwVariantsOnly))
+                .with_round_2(self.union_cache.ensure_indexed(UnionKey.TwVariantsPair))
             )
         elif config_key == "s2tw_punct":
             refs = (
                 DictRefs(self.union_cache.ensure_indexed(UnionKey.S2T_PUNCT))
-                .with_round_2(self.union_cache.ensure_indexed(UnionKey.TwVariantsOnly))
+                .with_round_2(self.union_cache.ensure_indexed(UnionKey.TwVariantsPair))
             )
         elif config_key == "tw2s":
             refs = (
@@ -655,13 +656,13 @@ class OpenCC:
             refs = (
                 DictRefs(self.union_cache.ensure_indexed(UnionKey.S2T))
                 .with_round_2(self.union_cache.ensure_indexed(UnionKey.TwPhrasesOnly))
-                .with_round_3(self.union_cache.ensure_indexed(UnionKey.TwVariantsOnly))
+                .with_round_3(self.union_cache.ensure_indexed(UnionKey.TwVariantsPair))
             )
         elif config_key == "s2twp_punct":
             refs = (
                 DictRefs(self.union_cache.ensure_indexed(UnionKey.S2T_PUNCT))
                 .with_round_2(self.union_cache.ensure_indexed(UnionKey.TwPhrasesOnly))
-                .with_round_3(self.union_cache.ensure_indexed(UnionKey.TwVariantsOnly))
+                .with_round_3(self.union_cache.ensure_indexed(UnionKey.TwVariantsPair))
             )
         elif config_key == "tw2sp":
             refs = (
@@ -676,12 +677,12 @@ class OpenCC:
         elif config_key == "s2hk":
             refs = (
                 DictRefs(self.union_cache.ensure_indexed(UnionKey.S2T))
-                .with_round_2(self.union_cache.ensure_indexed(UnionKey.HkVariantsOnly))
+                .with_round_2(self.union_cache.ensure_indexed(UnionKey.HkVariantsPair))
             )
         elif config_key == "s2hk_punct":
             refs = (
                 DictRefs(self.union_cache.ensure_indexed(UnionKey.S2T_PUNCT))
-                .with_round_2(self.union_cache.ensure_indexed(UnionKey.HkVariantsOnly))
+                .with_round_2(self.union_cache.ensure_indexed(UnionKey.HkVariantsPair))
             )
         elif config_key == "hk2s":
             refs = (
@@ -694,11 +695,11 @@ class OpenCC:
                 .with_round_2(self.union_cache.ensure_indexed(UnionKey.T2S_PUNCT))
             )
         elif config_key == "t2tw":
-            refs = DictRefs(self.union_cache.ensure_indexed(UnionKey.TwVariantsOnly))
+            refs = DictRefs(self.union_cache.ensure_indexed(UnionKey.TwVariantsPair))
         elif config_key == "t2twp":
             refs = (
                 DictRefs(self.union_cache.ensure_indexed(UnionKey.TwPhrasesOnly))
-                .with_round_2(self.union_cache.ensure_indexed(UnionKey.TwVariantsOnly))
+                .with_round_2(self.union_cache.ensure_indexed(UnionKey.TwVariantsPair))
             )
         elif config_key == "tw2t":
             refs = DictRefs(self.union_cache.ensure_indexed(UnionKey.TwRevPair))
@@ -708,7 +709,7 @@ class OpenCC:
                 .with_round_2(self.union_cache.ensure_indexed(UnionKey.TwPhrasesRevOnly))
             )
         elif config_key == "t2hk":
-            refs = DictRefs(self.union_cache.ensure_indexed(UnionKey.HkVariantsOnly))
+            refs = DictRefs(self.union_cache.ensure_indexed(UnionKey.HkVariantsPair))
         elif config_key == "hk2t":
             refs = DictRefs(self.union_cache.ensure_indexed(UnionKey.HkRevPair))
         elif config_key == "t2jp":

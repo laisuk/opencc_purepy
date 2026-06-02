@@ -123,6 +123,8 @@ cc = OpenCC.from_dicts(
     config="s2t",
     appends={
         DictSlot.STPhrases: "./UserDict.txt",
+        DictSlot.TWVariantsPhrases: "./custom/TWVariantsPhrases.txt",
+        DictSlot.HKVariantsPhrases: "./custom/HKVariantsPhrases.txt",
     },
 )
 
@@ -160,6 +162,8 @@ from opencc_purepy.dictionary_lib import DictionaryMaxlength
 dictionary = DictionaryMaxlength.from_json().with_custom_dict_files(
     appends={
         DictSlot.STPhrases: "./UserDict.txt",
+        DictSlot.TWVariantsPhrases: "./custom/TWVariantsPhrases.txt",
+        DictSlot.HKVariantsPhrases: "./custom/HKVariantsPhrases.txt",
     },
 )
 
@@ -197,6 +201,12 @@ dictionary = DictionaryMaxlength.from_json().with_custom_dicts(
 
             # Normal custom phrase pairs may be mixed in as well.
             "帕兰蒂尔": "帕蘭蒂爾",
+        },
+        DictSlot.TWVariantsPhrases: {
+            "喫茶小舖": "喫茶小舖",
+        },
+        DictSlot.HKVariantsPhrases: {
+            "喫茶小舖": "喫茶小舖",
         },
     },
 )
@@ -274,9 +284,11 @@ dictionary = DictionaryMaxlength.from_json().with_custom_dict_files(
 | `DictSlot.TSPunctuations`       | `ts_punctuations`         | `TSPunctuations.txt`        |
 | `DictSlot.TWPhrases`            | `tw_phrases`              | `TWPhrases.txt`             |
 | `DictSlot.TWPhrasesRev`         | `tw_phrases_rev`          | `TWPhrasesRev.txt`          |
+| `DictSlot.TWVariantsPhrases`    | `tw_variants_phrases`     | `TWVariantsPhrases.txt`     |
 | `DictSlot.TWVariants`           | `tw_variants`             | `TWVariants.txt`            |
 | `DictSlot.TWVariantsRev`        | `tw_variants_rev`         | `TWVariantsRev.txt`         |
 | `DictSlot.TWVariantsRevPhrases` | `tw_variants_rev_phrases` | `TWVariantsRevPhrases.txt`  |
+| `DictSlot.HKVariantsPhrases`    | `hk_variants_phrases`     | `HKVariantsPhrases.txt`     |
 | `DictSlot.HKVariants`           | `hk_variants`             | `HKVariants.txt`            |
 | `DictSlot.HKVariantsRev`        | `hk_variants_rev`         | `HKVariantsRev.txt`         |
 | `DictSlot.HKVariantsRevPhrases` | `hk_variants_rev_phrases` | `HKVariantsRevPhrases.txt`  |
@@ -284,6 +296,13 @@ dictionary = DictionaryMaxlength.from_json().with_custom_dict_files(
 | `DictSlot.JPSPhrases`           | `jps_phrases`             | `JPShinjitaiPhrases.txt`    |
 | `DictSlot.JPVariants`           | `jp_variants`             | `JPVariants.txt`            |
 | `DictSlot.JPVariantsRev`        | `jp_variants_rev`         | `JPVariantsRev.txt`         |
+
+Forward regional variant phrase slots are applied before their character-level variant slots:
+
+| Slot                         | File                    | Direction                    | Purpose                                                          |
+|------------------------------|-------------------------|------------------------------|------------------------------------------------------------------|
+| `DictSlot.TWVariantsPhrases` | `TWVariantsPhrases.txt` | Forward TW regional variants | Phrase-level TW variant mappings applied before `TWVariants.txt` |
+| `DictSlot.HKVariantsPhrases` | `HKVariantsPhrases.txt` | Forward HK regional variants | Phrase-level HK variant mappings applied before `HKVariants.txt` |
 
 ---
 

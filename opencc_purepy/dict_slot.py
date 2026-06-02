@@ -16,10 +16,12 @@ class DictSlot(str, Enum):
     TWPhrases = "tw_phrases"
     TWPhrasesRev = "tw_phrases_rev"
 
+    TWVariantsPhrases = "tw_variants_phrases"
     TWVariants = "tw_variants"
     TWVariantsRev = "tw_variants_rev"
     TWVariantsRevPhrases = "tw_variants_rev_phrases"
 
+    HKVariantsPhrases = "hk_variants_phrases"
     HKVariants = "hk_variants"
     HKVariantsRev = "hk_variants_rev"
     HKVariantsRevPhrases = "hk_variants_rev_phrases"
