@@ -7,7 +7,26 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ---
 
-## [1.3.2] - Unreleased
+## [1.3.3] - Unreleased
+
+### Changed
+
+- Added forward TW/HK regional variant phrase dictionary slots:
+    - `DictSlot.TWVariantsPhrases` / `tw_variants_phrases` backed by `TWVariantsPhrases.txt`
+    - `DictSlot.HKVariantsPhrases` / `hk_variants_phrases` backed by `HKVariantsPhrases.txt`
+- Refactored forward TW/HK variant conversion to apply phrase-level regional variant mappings before character-level
+  mappings:
+    - `tw_variants_phrases` before `tw_variants`
+    - `hk_variants_phrases` before `hk_variants`
+- Renamed internal union cache keys:
+    - `TwVariantsOnly` -> `TwVariantsPair`
+    - `HkVariantsOnly` -> `HkVariantsPair`
+- Regenerated bundled `dictionary_maxlength.json` to include the new forward regional variant phrase slots.
+- Preserved existing reverse TW/HK regional variant behavior.
+
+---
+
+## [1.3.2] - 2026-05-31
 
 ### Changed
 
