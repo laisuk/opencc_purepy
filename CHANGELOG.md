@@ -7,7 +7,7 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ---
 
-## [1.3.3] - Unreleased
+## [1.3.3] - 2026-06-07
 
 ### Changed
 
@@ -23,6 +23,7 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
     - `HkVariantsOnly` -> `HkVariantsPair`
 - Regenerated bundled `dictionary_maxlength.json` to include the new forward regional variant phrase slots.
 - Preserved existing reverse TW/HK regional variant behavior.
+- Update and optimize dictionary data to reduce ambiguity.
 
 ---
 
