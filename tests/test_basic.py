@@ -31,6 +31,16 @@ class TestOpenCC(unittest.TestCase):
         self.assertIsInstance(result, str)
         self.assertEqual(result, "漢字轉換測試：義大利的羅馬城不是一天裡就能建成的")  # Expect some output
 
+    def test_s2twp_applies_taiwan_phrase_and_variant_normalization(self):
+        self.assertEqual(self.converter.s2twp("软件为"), "軟體為")
+        self.assertEqual(self.converter.s2twp("软件众"), "軟體眾")
+
+    def test_s2twp_uses_two_round_plan(self):
+        refs = self.converter._get_dict_refs("s2twp")
+
+        self.assertIsNotNone(refs.round_2)
+        self.assertIsNone(refs.round_3)
+
     def test_tw2sp_conversion(self):
         traditional = "漢字轉換測試：義大利的羅馬城不是一天裡就能建成的"
         self.converter.config = "tw2sp"

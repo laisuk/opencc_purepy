@@ -655,14 +655,12 @@ class OpenCC:
         elif config_key == "s2twp":
             refs = (
                 DictRefs(self.union_cache.ensure_indexed(UnionKey.S2T))
-                .with_round_2(self.union_cache.ensure_indexed(UnionKey.TwPhrasesOnly))
-                .with_round_3(self.union_cache.ensure_indexed(UnionKey.TwVariantsPair))
+                .with_round_2(self.union_cache.ensure_indexed(UnionKey.S2TwpR2TwTriple))
             )
         elif config_key == "s2twp_punct":
             refs = (
                 DictRefs(self.union_cache.ensure_indexed(UnionKey.S2T_PUNCT))
-                .with_round_2(self.union_cache.ensure_indexed(UnionKey.TwPhrasesOnly))
-                .with_round_3(self.union_cache.ensure_indexed(UnionKey.TwVariantsPair))
+                .with_round_2(self.union_cache.ensure_indexed(UnionKey.S2TwpR2TwTriple))
             )
         elif config_key == "tw2sp":
             refs = (
@@ -825,7 +823,10 @@ class OpenCC:
 
     def s2twp(self, input_text, punctuation=False):
         """
-        Convert Simplified Chinese to Traditional (Taiwan) using phrases + variants.
+        Convert Simplified Chinese to Traditional (Taiwan) with phrase and variant normalization.
+
+        Round 1: Simplified Chinese -> Traditional Chinese.
+        Round 2: Taiwan phrase and variant normalization.
 
         :param input_text: The source string
         :param punctuation: Whether to convert punctuation

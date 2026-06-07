@@ -11,6 +11,7 @@ class UnionKey(Enum):
     T2S_PUNCT = auto()
     TwPhrasesOnly = auto()
     TwVariantsPair = auto()
+    S2TwpR2TwTriple = auto()
     TwPhrasesRevOnly = auto()
     TwRevPair = auto()
     Tw2SpR1TwRevTriple = auto()
@@ -66,6 +67,8 @@ class UnionCache:
             return [get_slot("tw_phrases")]
         if key is UnionKey.TwVariantsPair:
             return [get_slot("tw_variants_phrases"), get_slot("tw_variants")]
+        if key is UnionKey.S2TwpR2TwTriple:
+            return [get_slot("tw_phrases"), get_slot("tw_variants_phrases"), get_slot("tw_variants")]
         if key is UnionKey.TwPhrasesRevOnly:
             return [get_slot("tw_phrases_rev")]
         if key is UnionKey.TwRevPair:

@@ -32,7 +32,7 @@ It uses dictionary-based segmentation and mapping logic inspired by the original
 | `t2s`   | Traditional → Simplified                       |
 | `s2tw`  | Simplified → Traditional (Taiwan)              |
 | `tw2s`  | Traditional (Taiwan) → Simplified              |
-| `s2twp` | Simplified → Traditional (Taiwan) with idioms  |
+| `s2twp` | Simplified → Traditional (Taiwan) with phrase and variant normalization |
 | `tw2sp` | Traditional (Taiwan) → Simplified with idioms  |
 | `s2hk`  | Simplified → Traditional (Hong Kong)           |
 | `hk2s`  | Traditional (Hong Kong) → Simplified           |
@@ -373,7 +373,7 @@ cc = OpenCC(
 - `tw2s(input: str, punctuation: bool = False) -> str`  
   Taiwan Traditional to Simplified Chinese.
 - `s2twp(input: str, punctuation: bool = False) -> str`  
-  Simplified Chinese to Taiwan Traditional with idiom and phrase conversion.
+  Simplified Chinese to Taiwan Traditional with phrase and variant normalization.
 - `tw2sp(input: str, punctuation: bool = False) -> str`  
   Taiwan Traditional with idioms to Simplified Chinese.
 - `s2hk(input: str, punctuation: bool = False) -> str`  
