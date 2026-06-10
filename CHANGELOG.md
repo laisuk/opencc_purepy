@@ -7,25 +7,55 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ---
 
-## [1.3.3] - 2026-06-07 [Unreleased]
+## [1.3.3] - Unreleased
+
+### Added
+
+* Added DeTofu display-compatibility fallback support for rare non-BMP CJK extension characters.
+* Added `DeTofuLevel` threshold-based extension filtering:
+
+    * `ExtB`
+    * `ExtC`
+    * `ExtD`
+    * `ExtE`
+    * `ExtF`
+    * `ExtG`
+    * `ExtH`
+    * `ExtI`
+* Added `DeTofuMap` for built-in and custom fallback mappings.
+* Added built-in fallback mappings loaded from `TSCharactersTofu.txt`.
+* Added support for custom DeTofu fallback files.
+* Added support for custom in-memory DeTofu fallback pairs.
+* Added OpenCC convenience APIs:
+
+    * `OpenCC.detofu(...)`
+    * `OpenCC.detofu_with_custom_file(...)`
+    * `OpenCC.detofu_with_custom_pairs(...)`
+* Added DeTofu unit test coverage.
 
 ### Changed
 
-- Added forward TW/HK regional variant phrase dictionary slots:
-    - `DictSlot.TWVariantsPhrases` / `tw_variants_phrases` backed by `TWVariantsPhrases.txt`
-    - `DictSlot.HKVariantsPhrases` / `hk_variants_phrases` backed by `HKVariantsPhrases.txt`
-- Refactored forward TW/HK variant conversion to apply phrase-level regional variant mappings before character-level
+* Added forward TW/HK regional variant phrase dictionary slots:
+
+    * `DictSlot.TWVariantsPhrases` / `tw_variants_phrases` backed by `TWVariantsPhrases.txt`
+    * `DictSlot.HKVariantsPhrases` / `hk_variants_phrases` backed by `HKVariantsPhrases.txt`
+* Refactored forward TW/HK variant conversion to apply phrase-level regional variant mappings before character-level
   mappings:
-    - `tw_variants_phrases` before `tw_variants`
-    - `hk_variants_phrases` before `hk_variants`
-- Renamed internal union cache keys:
-    - `TwVariantsOnly` -> `TwVariantsPair`
-    - `HkVariantsOnly` -> `HkVariantsPair`
-- Regenerated bundled `dictionary_maxlength.json` to include the new forward regional variant phrase slots.
-- Preserved existing reverse TW/HK regional variant behavior.
-- Update and optimize dictionary data to reduce ambiguity.
-- Refactored `s2twp` from three conversion rounds to two rounds by combining Taiwan phrase and variant normalization
-  into one round, matching upstream OpenCC behavior and improving conversion efficiency.
+
+    * `tw_variants_phrases` before `tw_variants`
+    * `hk_variants_phrases` before `hk_variants`
+* Renamed internal union cache keys:
+
+    * `TwVariantsOnly` → `TwVariantsPair`
+    * `HkVariantsOnly` → `HkVariantsPair`
+* Regenerated bundled `dictionary_maxlength.json` to include the new forward regional variant phrase slots.
+* Preserved existing reverse TW/HK regional variant behavior.
+* Updated and optimized dictionary data to reduce ambiguity.
+* Refactored `s2twp` from three conversion rounds to two rounds by combining Taiwan phrase and variant normalization
+  into a single round, matching upstream OpenCC behavior and improving conversion efficiency.
+* Removed obsolete Python 2.x and Python < 3.5 compatibility code paths.
+* Simplified typing imports and removed legacy typing fallback shims.
+* Removed obsolete punctuation conversion fallback logic for unsupported Python versions.
 
 ---
 

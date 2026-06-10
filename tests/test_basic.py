@@ -123,6 +123,79 @@ class TestOpenCC(unittest.TestCase):
         result = self.converter.zho_check(mixed)
         self.assertEqual(result, 1)  # Assert this is detected as Traditional
 
+    def test_detofu_builtin(self):
+        from opencc_purepy import OpenCC
+        from opencc_purepy.detofu import DeTofuLevel
+
+        cc = OpenCC("t2s")
+
+        text = "儼驂騑於上路，訪風景於崇阿，𱁬"
+        converted = cc.convert(text)
+
+        result = cc.detofu(converted, DeTofuLevel.ExtB)
+
+        self.assertEqual(result, "俨骖騑于上路，访风景于崇阿，𱁬")
+
+    def test_detofu_with_custom_pairs(self):
+        from opencc_purepy import OpenCC
+        from opencc_purepy.detofu import DeTofuLevel
+
+        cc = OpenCC("t2s")
+
+        result = cc.detofu_with_custom_pairs(
+            "𱁬",
+            DeTofuLevel.ExtB,
+            {"𱁬": "?"}
+        )
+
+        self.assertEqual(result, "?")
+
+    def test_detofu_level_string(self):
+        from opencc_purepy import OpenCC
+
+        cc = OpenCC("t2s")
+
+        result = cc.detofu_with_custom_pairs(
+            "𱁬",
+            "all",
+            {"𱁬": "?"}
+        )
+
+        self.assertEqual(result, "?")
+
+    def test_detofu_with_custom_file(self):
+        import os
+        import tempfile
+
+        from opencc_purepy import OpenCC
+        from opencc_purepy.detofu import DeTofuLevel
+
+        cc = OpenCC("t2s")
+
+        fd, path = tempfile.mkstemp(suffix=".txt", text=True)
+
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as f:
+                f.write("𱁬\t?\tExtB\n")
+
+            result = cc.detofu_with_custom_file(
+                "𱁬",
+                DeTofuLevel.ExtB,
+                path
+            )
+
+            self.assertEqual(result, "?")
+        finally:
+            if os.path.exists(path):
+                os.remove(path)
+
+    def test_detofu_preserves_unknown_characters(self):
+        from opencc_purepy import OpenCC
+
+        cc = OpenCC("t2s")
+
+        self.assertEqual(cc.detofu("abc𱁬xyz", "all"), "abc𱁬xyz")
+
 
 if __name__ == "__main__":
     unittest.main()

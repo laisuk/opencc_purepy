@@ -2,38 +2,13 @@ import re
 from enum import Enum
 from multiprocessing import Pool, cpu_count
 
-try:
-    from typing import List, Dict, Tuple, Optional, Union, Mapping, cast
-except ImportError:
-    # Fallback for Python < 3.5
-    # Very old Python fallback:
-    # these names only need to exist so runtime does not fail.
-    List = list
-    Dict = dict
-    Tuple = tuple
-    Mapping = dict
-
-
-    def cast(_typ, value):
-        return value
-
-
-    class _TypingStub(object):
-        def __getitem__(self, item):
-            return object
-
-
-    Optional = _TypingStub()
-    Union = _TypingStub()
-
-try:
-    _PunctuationTranslateTable = Mapping[int, Union[int, str, None]]
-except TypeError:
-    _PunctuationTranslateTable = object
-
+from typing import Dict, Iterable, List, Mapping, Optional, Tuple, Union, cast
+from .detofu import DeTofuLevel, DeTofuMap, parse_level, detofu
 from .dict_refs import DictRefs, StarterUnionLike
 from .dictionary_lib import DictionaryMaxlength, PathLike, SlotPathMap
 from .union_cache import UnionCache, UnionKey
+
+_PunctuationTranslateTable = Mapping[int, Union[int, str, None]]
 
 # Pre-compiled regex for better performance
 STRIP_REGEX = re.compile(r"[!-/:-@\[-`{-~\t\n\v\f\r 0-9A-Za-z_著]")
@@ -41,38 +16,20 @@ STRIP_REGEX = re.compile(r"[!-/:-@\[-`{-~\t\n\v\f\r 0-9A-Za-z_著]")
 DELIMITERS = frozenset(
     " \t\n\r!\"#$%&'()*+,-./:;<=>?@[\\]^_{}|~＝、。“”‘’『』「」﹁﹂—－（）《》〈〉？！…／＼︒︑︔︓︿﹀︹︺︙︐［﹇］﹈︕︖︰︳︴︽︾︵︶｛︷｝︸﹃﹄【︻】︼　～．，；：")
 
-# Pre-computed punctuation mappings - fallback for older Python versions
-try:
-    PUNCT_S2T_MAP = str.maketrans({
-        '“': '「',
-        '”': '」',
-        '‘': '『',
-        '’': '』',
-    })
+# Pre-computed punctuation mappings
+PUNCT_S2T_MAP = str.maketrans({
+    '“': '「',
+    '”': '」',
+    '‘': '『',
+    '’': '』',
+})
 
-    PUNCT_T2S_MAP = str.maketrans({
-        '「': '“',
-        '」': '”',
-        '『': '‘',
-        '』': '’',
-    })
-    HAS_MAKETRANS = True
-except (AttributeError, TypeError):
-    # Fallback for Python < 3.0
-    HAS_MAKETRANS = False
-    PUNCT_S2T_MAP = {
-        '“': '「',
-        '”': '」',
-        '‘': '『',
-        '’': '』',
-    }
-
-    PUNCT_T2S_MAP = {
-        '「': '“',
-        '」': '”',
-        '『': '‘',
-        '』': '’',
-    }
+PUNCT_T2S_MAP = str.maketrans({
+    '「': '“',
+    '」': '”',
+    '『': '‘',
+    '』': '’',
+})
 
 # Punctuation conversion architecture during the 1.3.x union-cache transition:
 #
@@ -721,29 +678,7 @@ class OpenCC:
         return refs
 
     @staticmethod
-    def _convert_punctuation_legacy(text, punct_map):
-        """
-        Deprecated compatibility helper for post-processing punctuation maps.
-
-        The preferred architecture is now union-based punctuation conversion
-        through explicit ``*_punct`` union configs. This helper remains
-        functional for 1.3.x beta compatibility and for conversion configs
-        that still use the legacy post-processing punctuation path.
-
-        TODO:
-            Remove or reduce this helper in a future cleanup release after the
-            union-cache punctuation transition has stabilized.
-
-        :param text: Input text
-        :param punct_map: Conversion punctuation map
-        :return: Text with punctuation converted
-        """
-        result = []
-        for char in text:
-            result.append(punct_map.get(char, char))
-        return ''.join(result)
-
-    def _apply_punctuation(self, text: str, config_key: str, punctuation: bool) -> str:
+    def _apply_punctuation(text: str, config_key: str, punctuation: bool) -> str:
         """
         Deprecated compatibility layer for legacy punctuation post-processing.
 
@@ -764,18 +699,11 @@ class OpenCC:
         if not punctuation:
             return text
 
-        if HAS_MAKETRANS:
-            if config_key in ("t2s", "tw2s", "tw2sp", "hk2s"):
-                translate_table = cast(_PunctuationTranslateTable, PUNCT_T2S_MAP)
-            else:
-                translate_table = cast(_PunctuationTranslateTable, PUNCT_S2T_MAP)
-            return text.translate(translate_table)
-
         if config_key in ("t2s", "tw2s", "tw2sp", "hk2s"):
-            punct_map = PUNCT_T2S_MAP
+            translate_table = cast(_PunctuationTranslateTable, PUNCT_T2S_MAP)
         else:
-            punct_map = PUNCT_S2T_MAP
-        return self._convert_punctuation_legacy(text, punct_map)
+            translate_table = cast(_PunctuationTranslateTable, PUNCT_S2T_MAP)
+        return text.translate(translate_table)
 
     def s2t(self, input_text, punctuation=False):
         """
@@ -874,7 +802,7 @@ class OpenCC:
         """
         refs = self._get_dict_refs("t2tw")
         output = refs.apply_segment_replace(input_text, union_replace=self.union_replace, validate_delegates=False)
-        return self._apply_punctuation(output, "t2tw", punctuation)
+        return OpenCC._apply_punctuation(output, "t2tw", punctuation)
 
     def t2twp(self, input_text: str, punctuation: bool = False) -> str:
         """
@@ -882,7 +810,7 @@ class OpenCC:
         """
         refs = self._get_dict_refs("t2twp")
         output = refs.apply_segment_replace(input_text, union_replace=self.union_replace, validate_delegates=False)
-        return self._apply_punctuation(output, "t2twp", punctuation)
+        return OpenCC._apply_punctuation(output, "t2twp", punctuation)
 
     def tw2t(self, input_text: str, punctuation: bool = False) -> str:
         """
@@ -890,7 +818,7 @@ class OpenCC:
         """
         refs = self._get_dict_refs("tw2t")
         output = refs.apply_segment_replace(input_text, union_replace=self.union_replace, validate_delegates=False)
-        return self._apply_punctuation(output, "tw2t", punctuation)
+        return OpenCC._apply_punctuation(output, "tw2t", punctuation)
 
     def tw2tp(self, input_text: str, punctuation: bool = False) -> str:
         """
@@ -898,7 +826,7 @@ class OpenCC:
         """
         refs = self._get_dict_refs("tw2tp")
         output = refs.apply_segment_replace(input_text, union_replace=self.union_replace, validate_delegates=False)
-        return self._apply_punctuation(output, "tw2tp", punctuation)
+        return OpenCC._apply_punctuation(output, "tw2tp", punctuation)
 
     def t2hk(self, input_text: str, punctuation: bool = False) -> str:
         """
@@ -906,7 +834,7 @@ class OpenCC:
         """
         refs = self._get_dict_refs("t2hk")
         output = refs.apply_segment_replace(input_text, union_replace=self.union_replace, validate_delegates=False)
-        return self._apply_punctuation(output, "t2hk", punctuation)
+        return OpenCC._apply_punctuation(output, "t2hk", punctuation)
 
     def hk2t(self, input_text: str, punctuation: bool = False) -> str:
         """
@@ -914,7 +842,7 @@ class OpenCC:
         """
         refs = self._get_dict_refs("hk2t")
         output = refs.apply_segment_replace(input_text, union_replace=self.union_replace, validate_delegates=False)
-        return self._apply_punctuation(output, "hk2t", punctuation)
+        return OpenCC._apply_punctuation(output, "hk2t", punctuation)
 
     def t2jp(self, input_text: str, punctuation: bool = False) -> str:
         """
@@ -922,7 +850,7 @@ class OpenCC:
         """
         refs = self._get_dict_refs("t2jp")
         output = refs.apply_segment_replace(input_text, union_replace=self.union_replace, validate_delegates=False)
-        return self._apply_punctuation(output, "t2jp", punctuation)
+        return OpenCC._apply_punctuation(output, "t2jp", punctuation)
 
     def jp2t(self, input_text: str, punctuation: bool = False) -> str:
         """
@@ -930,7 +858,7 @@ class OpenCC:
         """
         refs = self._get_dict_refs("jp2t")
         output = refs.apply_segment_replace(input_text, union_replace=self.union_replace, validate_delegates=False)
-        return self._apply_punctuation(output, "jp2t", punctuation)
+        return OpenCC._apply_punctuation(output, "jp2t", punctuation)
 
     def convert(self, input_text: str, punctuation: bool = False) -> str:
         """
@@ -1025,6 +953,76 @@ class OpenCC:
             return 2
         else:
             return 0
+
+    # ------ DeTofu helpers ------
+
+    @staticmethod
+    def detofu(
+            text: Optional[str],
+            level: Union[DeTofuLevel, str] = DeTofuLevel.ExtB,
+    ) -> str:
+        """Apply DeTofu display-compatible fallbacks to mapped rare CJK extension characters.
+
+        DeTofu is a display compatibility pass. It does not modify OpenCC
+        conversion dictionaries, phrase matching, regional variant selection,
+        script detection, or punctuation conversion.
+
+        For converted text, apply DeTofu after convert().
+        """
+        return detofu(text, level)
+
+    @staticmethod
+    def detofu_with_custom_file(
+            text: Optional[str],
+            level: Union[DeTofuLevel, str],
+            path: str,
+    ) -> str:
+        """Apply DeTofu using built-in mappings plus a custom fallback file.
+
+        The file must be UTF-8 text using:
+
+            tofu_char<TAB>fallback_char<TAB>extension
+
+        Blank lines and lines beginning with '#' are ignored. Custom mappings
+        override built-in mappings for the same tofu-risk character.
+        """
+        if path is None:
+            raise TypeError("path must not be None")
+
+        if isinstance(level, str):
+            level = parse_level(level)
+
+        return (
+            DeTofuMap
+            .builtin(level)
+            .with_custom_file(path)
+            .convert(text)
+        )
+
+    @staticmethod
+    def detofu_with_custom_pairs(
+            text: Optional[str],
+            level: Union[DeTofuLevel, str],
+            pairs: Union[Mapping[str, str], Iterable[Tuple[str, str]]],
+    ) -> str:
+        """Apply DeTofu using built-in mappings plus custom in-memory pairs.
+
+        Keys are tofu-risk characters and values are display-compatible fallback
+        characters. Only the first Unicode scalar from each key and value is used.
+        Empty keys and values are ignored.
+        """
+        if pairs is None:
+            raise TypeError("pairs must not be None")
+
+        if isinstance(level, str):
+            level = parse_level(level)
+
+        return (
+            DeTofuMap
+            .builtin(level)
+            .with_custom_pairs(pairs)
+            .convert(text)
+        )
 
 
 def chunk_ranges(ranges: List[Tuple[int, int]], group_count: int) -> List[List[Tuple[int, int]]]:

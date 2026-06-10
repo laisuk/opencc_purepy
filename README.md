@@ -26,24 +26,24 @@ It uses dictionary-based segmentation and mapping logic inspired by the original
 
 ## 🔁 Supported Conversion Configs
 
-| Code    | Description                                    |
-|---------|------------------------------------------------|
-| `s2t`   | Simplified → Traditional                       |
-| `t2s`   | Traditional → Simplified                       |
-| `s2tw`  | Simplified → Traditional (Taiwan)              |
-| `tw2s`  | Traditional (Taiwan) → Simplified              |
+| Code    | Description                                                             |
+|---------|-------------------------------------------------------------------------|
+| `s2t`   | Simplified → Traditional                                                |
+| `t2s`   | Traditional → Simplified                                                |
+| `s2tw`  | Simplified → Traditional (Taiwan)                                       |
+| `tw2s`  | Traditional (Taiwan) → Simplified                                       |
 | `s2twp` | Simplified → Traditional (Taiwan) with phrase and variant normalization |
-| `tw2sp` | Traditional (Taiwan) → Simplified with idioms  |
-| `s2hk`  | Simplified → Traditional (Hong Kong)           |
-| `hk2s`  | Traditional (Hong Kong) → Simplified           |
-| `t2tw`  | Traditional → Traditional (Taiwan)             |
-| `tw2t`  | Traditional (Taiwan) → Traditional             |
-| `t2twp` | Traditional → Traditional (Taiwan) with idioms |
-| `tw2tp` | Traditional (Taiwan) → Traditional with idioms |
-| `t2hk`  | Traditional → Traditional (Hong Kong)          |
-| `hk2t`  | Traditional (Hong Kong) → Traditional          |
-| `t2jp`  | Japanese Kyujitai → Shinjitai                  |
-| `jp2t`  | Japanese Shinjitai → Kyujitai                  |
+| `tw2sp` | Traditional (Taiwan) → Simplified with idioms                           |
+| `s2hk`  | Simplified → Traditional (Hong Kong)                                    |
+| `hk2s`  | Traditional (Hong Kong) → Simplified                                    |
+| `t2tw`  | Traditional → Traditional (Taiwan)                                      |
+| `tw2t`  | Traditional (Taiwan) → Traditional                                      |
+| `t2twp` | Traditional → Traditional (Taiwan) with idioms                          |
+| `tw2tp` | Traditional (Taiwan) → Traditional with idioms                          |
+| `t2hk`  | Traditional → Traditional (Hong Kong)                                   |
+| `hk2t`  | Traditional (Hong Kong) → Traditional                                   |
+| `t2jp`  | Japanese Kyujitai → Shinjitai                                           |
+| `jp2t`  | Japanese Shinjitai → Kyujitai                                           |
 
 ---
 
@@ -342,25 +342,139 @@ cc = OpenCC(
 
 ---
 
+## DeTofu display compatibility fallback
+
+DeTofu replaces mapped tofu-risk rare CJK extension characters with display-compatible fallback characters. It is useful
+on systems, browsers, e-book readers, document viewers, or mobile platforms where some non-BMP CJK extension characters
+may render as tofu boxes, missing glyphs, or empty boxes.
+
+DeTofu is a display-compatibility pass, not normal OpenCC dictionary conversion. It does not modify phrase matching,
+regional variant selection, script detection, or punctuation conversion. If you use it with converted text, apply it
+after `convert(...)`.
+
+```python
+from opencc_purepy import OpenCC
+from opencc_purepy.detofu import DeTofuLevel
+
+cc = OpenCC("t2s")
+
+text = "儼驂騑於上路，訪風景於崇阿"
+converted = cc.convert(text)
+
+display_safe = cc.detofu(converted, DeTofuLevel.ExtB)
+
+print(display_safe)
+```
+
+String level names are also supported:
+
+```bash
+display_safe = cc.detofu(converted, "all")
+```
+
+### DeTofu levels
+
+DeTofu levels are threshold-based:
+
+```text
+ExtB means ExtB and above
+ExtC means ExtC and above
+ExtD means ExtD and above
+...
+ExtI means ExtI only
+```
+
+Supported level names:
+
+```text
+all
+ext-b / b
+ext-c / c
+ext-d / d
+ext-e / e
+ext-f / f
+ext-g / g
+ext-h / h
+ext-i / i
+```
+
+`"all"` is equivalent to `ExtB`.
+
+### Custom fallback file
+
+Use `detofu_with_custom_file(...)` to add project-local fallback mappings from a UTF-8 text file:
+
+```bash
+display_safe = cc.detofu_with_custom_file(
+    converted,
+    "all",
+    "custom_tofu.txt",
+)
+```
+
+File format:
+
+```text
+tofu_char<TAB>fallback_char<TAB>extension
+```
+
+Example:
+
+```text
+𱁬	?	ExtB
+```
+
+Blank lines are ignored, and lines beginning with `#` are ignored. The extension column accepts `B` through `I` or
+`ExtB` through `ExtI`. Custom file mappings override built-in mappings for the same tofu-risk character.
+
+### Custom in-memory pairs
+
+Use `detofu_with_custom_pairs(...)` to add direct fallback pairs in memory:
+
+```bash
+display_safe = cc.detofu_with_custom_pairs(
+    converted,
+    "all",
+    {
+        "𱁬": "?",
+    },
+)
+```
+
+Direct pairs do not have an extension column. They are always added to the selected map, and custom pairs override
+built-in mappings for the same tofu-risk character. Only the first Unicode scalar from each key and value is used.
+Empty keys or values are ignored.
+
+### DeTofu contract
+
+- Unknown characters are preserved unchanged.
+- DeTofu never replaces unknown characters with `?`, `□`, `�`, or empty text.
+- DeTofu only replaces characters that exist in the built-in or custom fallback map.
+- DeTofu is intended as a final display-compatibility pass.
+- For converted text, call `cc.detofu(...)` after `cc.convert(...)`.
+
+---
+
 ## 🧩 API Reference
 
 ### Exports
 
 - `OpenCC`
 - `OpenccConfig`
+- `DeTofuLevel` is available from `opencc_purepy.detofu`
 
 ### `OpenCC` class
 
-- `OpenCC(config: str | OpenccConfig = "s2t")`  
+- `OpenCC(config: Union[str, OpenccConfig] = "s2t")`  
   Create a converter with a supported config string or `OpenccConfig` enum value. Raises `ValueError` for unsupported
   configs.
-- `set_config(config: str | OpenccConfig) -> None`  
+- `set_config(config: Union[str, OpenccConfig]) -> None`  
   Update the active conversion config. Raises `ValueError` for unsupported configs.
 - `get_config() -> str`  
   Return the current canonical config name.
-- `supported_configs() -> list[str]`  
+- `supported_configs() -> List[str]`  
   Return all supported config names.
-- `get_last_error() -> str | None`  
+- `get_last_error() -> Optional[str]`  
   Return the last validation or conversion error, if any.
 - `convert(input: str, punctuation: bool = False) -> str`  
   Convert text using the active config, with optional punctuation conversion.
@@ -403,6 +517,13 @@ cc = OpenCC(
 - `zho_check(input: str) -> int`  
   Detect the input text type:  
   &nbsp;&nbsp;`1` - Traditional, `2` - Simplified, `0` - Others
+- `detofu(input: Optional[str], level: Union[DeTofuLevel, str] = DeTofuLevel.ExtB) -> str`  
+  Apply built-in DeTofu display-compatible fallback mappings.
+- `detofu_with_custom_file(input: Optional[str], level: Union[DeTofuLevel, str], path: str) -> str`  
+  Apply built-in DeTofu mappings plus a UTF-8 custom fallback file.
+-
+`detofu_with_custom_pairs(input: Optional[str], level: Union[DeTofuLevel, str], pairs: Union[Mapping[str, str], Iterable[Tuple[str, str]]]) -> str`  
+Apply built-in DeTofu mappings plus direct in-memory fallback pairs.
 
 ### `OpenccConfig` enum
 
