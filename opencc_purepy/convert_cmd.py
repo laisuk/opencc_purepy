@@ -17,6 +17,11 @@ def main(args):
             - output (str): Output file path or None for stdout.
             - config (str): OpenCC conversion configuration.
             - punct (bool): Whether to convert punctuation.
+            - detofu (str | None): Optional DeTofu compatibility level
+              ("all", "ext-b", "ext-c", "ext-d", "ext-e",
+              "ext-f", "ext-g", "ext-h", or "ext-i").
+            - detofu_file (str | None): Optional UTF-8 custom DeTofu
+              fallback mapping file. Requires --detofu.
             - in_enc (str): Input encoding (plain text only).
             - out_enc (str): Output encoding (plain text only).
 
@@ -45,6 +50,23 @@ def main(args):
     # Perform conversion
     output_str = opencc.convert(input_str, args.punct)
 
+    # Optional DeTofu display-safe fallback
+    if args.detofu_file and not args.detofu:
+        print("❌  --detofu-file requires --detofu", file=sys.stderr)
+        return 1
+
+    if args.detofu:
+        level = args.detofu
+
+        if args.detofu_file:
+            output_str = opencc.detofu_with_custom_file(
+                output_str,
+                level,
+                args.detofu_file,
+            )
+        else:
+            output_str = opencc.detofu(output_str, level)
+
     # Write output text (to file or stdout)
     with io.open(args.output if args.output else 1, 'w', encoding=args.out_enc) as f:
         f.write(output_str)
@@ -54,6 +76,11 @@ def main(args):
     if sys.stderr.isatty():
         if not args.output and output_str and not output_str.endswith("\n"):
             print()
-        print(f"Conversion completed ({args.config}): {in_from} -> {out_to}", file=sys.stderr)
+        # print(f"Conversion completed ({args.config}): {in_from} -> {out_to}", file=sys.stderr)
+        status = f"Conversion completed ({args.config}"
+        if args.detofu:
+            status += f", detofu:{args.detofu}"
+        status += f"): {in_from} -> {out_to}"
+        print(status, file=sys.stderr)
 
     return 0

@@ -105,6 +105,25 @@ def main():
         default=False,
         help="Punctuation conversion: Enable/Disable",
     )
+    parser_convert.add_argument(
+        "--detofu",
+        nargs="?",
+        const="ExtB",
+        default=None,
+        metavar="<level>",
+        help=(
+            "Apply tofu-safe fallback after conversion. "
+            "Levels: all/ExtB, ExtC, ExtD, ExtE, ExtF, ExtG, ExtH, ExtI."
+        ),
+    )
+    parser_convert.add_argument(
+        "--detofu-file",
+        metavar="<file>",
+        help=(
+            "Load additional detofu fallback mappings from a UTF-8 text file. "
+            "Custom mappings override built-in mappings; requires --detofu."
+        ),
+    )
     parser_convert.add_argument("--in-enc", metavar="<encoding>", default="UTF-8", help="Input encoding")
     parser_convert.add_argument("--out-enc", metavar="<encoding>", default="UTF-8", help="Output encoding")
     parser_convert.set_defaults(func=_run_convert)
