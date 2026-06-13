@@ -34,7 +34,7 @@ PUNCT_T2S_MAP = str.maketrans({
 # Punctuation conversion architecture during the 1.3.x union-cache transition:
 #
 # Dedicated union punctuation paths:
-#   s2t, t2s, s2tw, tw2s, s2twp, tw2sp, s2hk, hk2s
+#   s2t, t2s, s2tw, tw2s, s2twp, tw2sp, s2hk, hk2s, s2hkp, hk2sp
 # These route punctuation=True through explicit *_punct union configs.
 #
 # Legacy punctuation fallback paths:
@@ -42,7 +42,7 @@ PUNCT_T2S_MAP = str.maketrans({
 # These still run the post-processing helper below to preserve 1.3.x beta
 # behavior until punctuation handling is fully unified.
 UNION_PUNCTUATION_CONFIGS = (
-    "s2t", "t2s", "s2tw", "tw2s", "s2twp", "tw2sp", "s2hk", "hk2s",
+    "s2t", "t2s", "s2tw", "tw2s", "s2twp", "tw2sp", "s2hk", "hk2s", "s2hkp", "hk2sp",
 )
 LEGACY_PUNCTUATION_FALLBACK_CONFIGS = (
     "t2tw", "t2twp", "tw2t", "tw2tp", "t2hk", "hk2t", "t2jp", "jp2t",
@@ -58,6 +58,8 @@ class OpenccConfig(Enum):
     TW2SP = "tw2sp"
     S2HK = "s2hk"
     HK2S = "hk2s"
+    S2HKP = "s2hkp"
+    HK2SP = "hk2sp"
     T2TW = "t2tw"
     TW2T = "tw2t"
     T2TWP = "t2twp"
@@ -629,6 +631,26 @@ class OpenCC:
                 DictRefs(self.union_cache.ensure_indexed(UnionKey.Tw2SpR1TwRevTriple))
                 .with_round_2(self.union_cache.ensure_indexed(UnionKey.T2S_PUNCT))
             )
+        elif config_key == "s2hkp":
+            refs = (
+                DictRefs(self.union_cache.ensure_indexed(UnionKey.S2T))
+                .with_round_2(self.union_cache.ensure_indexed(UnionKey.S2HkpR2HkTriple))
+            )
+        elif config_key == "s2hkp_punct":
+            refs = (
+                DictRefs(self.union_cache.ensure_indexed(UnionKey.S2T_PUNCT))
+                .with_round_2(self.union_cache.ensure_indexed(UnionKey.S2HkpR2HkTriple))
+            )
+        elif config_key == "hk2sp":
+            refs = (
+                DictRefs(self.union_cache.ensure_indexed(UnionKey.Hk2SpR1HkRevTriple))
+                .with_round_2(self.union_cache.ensure_indexed(UnionKey.T2S))
+            )
+        elif config_key == "hk2sp_punct":
+            refs = (
+                DictRefs(self.union_cache.ensure_indexed(UnionKey.Hk2SpR1HkRevTriple))
+                .with_round_2(self.union_cache.ensure_indexed(UnionKey.T2S_PUNCT))
+            )
         elif config_key == "s2hk":
             refs = (
                 DictRefs(self.union_cache.ensure_indexed(UnionKey.S2T))
@@ -774,6 +796,31 @@ class OpenCC:
         refs = self._get_dict_refs("tw2sp_punct" if punctuation else "tw2sp")
         return refs.apply_segment_replace(input_text, union_replace=self.union_replace, validate_delegates=False)
 
+    def s2hkp(self, input_text, punctuation=False):
+        """
+        Convert Simplified Chinese to Hong Kong Traditional with phrase and variant normalization.
+
+        Round 1: Simplified Chinese -> Traditional Chinese.
+        Round 2: Hong Kong phrase and variant normalization.
+
+        :param input_text: The source string
+        :param punctuation: Whether to convert punctuation
+        :return: Transformed string
+        """
+        refs = self._get_dict_refs("s2hkp_punct" if punctuation else "s2hkp")
+        return refs.apply_segment_replace(input_text, union_replace=self.union_replace, validate_delegates=False)
+
+    def hk2sp(self, input_text, punctuation=False):
+        """
+        Convert Hong Kong Traditional with phrases and variants to Simplified Chinese.
+
+        :param input_text: Hong Kong Traditional Chinese input
+        :param punctuation: Whether to convert punctuation
+        :return: Simplified Chinese output
+        """
+        refs = self._get_dict_refs("hk2sp_punct" if punctuation else "hk2sp")
+        return refs.apply_segment_replace(input_text, union_replace=self.union_replace, validate_delegates=False)
+
     def s2hk(self, input_text, punctuation=False):
         """
         Convert Simplified Chinese to Traditional (Hong Kong Standard).
@@ -880,6 +927,8 @@ class OpenCC:
                 return self.s2tw(input_text, punctuation)
             elif config == "s2twp":
                 return self.s2twp(input_text, punctuation)
+            elif config == "s2hkp":
+                return self.s2hkp(input_text, punctuation)
             elif config == "s2hk":
                 return self.s2hk(input_text, punctuation)
             elif config == "t2s":
@@ -900,6 +949,8 @@ class OpenCC:
                 return self.tw2tp(input_text, punctuation)
             elif config == "hk2s":
                 return self.hk2s(input_text, punctuation)
+            elif config == "hk2sp":
+                return self.hk2sp(input_text, punctuation)
             elif config == "hk2t":
                 return self.hk2t(input_text, punctuation)
             elif config == "jp2t":

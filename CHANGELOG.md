@@ -12,6 +12,18 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 ### Added
 
 * Added DeTofu display-compatibility fallback support for rare non-BMP CJK extension characters.
+* Added direct Hong Kong phrase conversion configs:
+
+    * `s2hkp`
+    * `hk2sp`
+* Added `HKPhrases.txt` / `HKPhrasesRev.txt` dictionary slots:
+
+    * `DictSlot.HKPhrases` / `hk_phrases`
+    * `DictSlot.HKPhrasesRev` / `hk_phrases_rev`
+* Added union-cache triples:
+
+    * `S2HkpR2HkTriple`
+    * `Hk2SpR1HkRevTriple`
 * Added `DeTofuLevel` threshold-based extension filtering:
 
     * `ExtB`
@@ -26,6 +38,8 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 * Added built-in fallback mappings loaded from `TSCharactersTofu.txt`.
 * Added support for custom DeTofu fallback files.
 * Added support for custom in-memory DeTofu fallback pairs.
+* Missing `HKPhrases.txt` / `HKPhrasesRev.txt` files are treated as empty dictionaries when loading from TXT
+  dictionary directories for backward compatibility.
 * Added OpenCC convenience APIs:
 
     * `OpenCC.detofu(...)`

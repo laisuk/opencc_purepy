@@ -36,6 +36,8 @@ It uses dictionary-based segmentation and mapping logic inspired by the original
 | `tw2sp` | Traditional (Taiwan) → Simplified with idioms                           |
 | `s2hk`  | Simplified → Traditional (Hong Kong)                                    |
 | `hk2s`  | Traditional (Hong Kong) → Simplified                                    |
+| `s2hkp` | Simplified → Hong Kong Traditional with phrase and variant normalization |
+| `hk2sp` | Hong Kong Traditional with phrases/variants → Simplified                |
 | `t2tw`  | Traditional → Traditional (Taiwan)                                      |
 | `tw2t`  | Traditional (Taiwan) → Traditional                                      |
 | `t2twp` | Traditional → Traditional (Taiwan) with idioms                          |
@@ -288,6 +290,8 @@ dictionary = DictionaryMaxlength.from_json().with_custom_dict_files(
 | `DictSlot.TWVariants`           | `tw_variants`             | `TWVariants.txt`            |
 | `DictSlot.TWVariantsRev`        | `tw_variants_rev`         | `TWVariantsRev.txt`         |
 | `DictSlot.TWVariantsRevPhrases` | `tw_variants_rev_phrases` | `TWVariantsRevPhrases.txt`  |
+| `DictSlot.HKPhrases`            | `hk_phrases`              | `HKPhrases.txt`             |
+| `DictSlot.HKPhrasesRev`         | `hk_phrases_rev`          | `HKPhrasesRev.txt`          |
 | `DictSlot.HKVariantsPhrases`    | `hk_variants_phrases`     | `HKVariantsPhrases.txt`     |
 | `DictSlot.HKVariants`           | `hk_variants`             | `HKVariants.txt`            |
 | `DictSlot.HKVariantsRev`        | `hk_variants_rev`         | `HKVariantsRev.txt`         |
@@ -494,6 +498,10 @@ Empty keys or values are ignored.
   Simplified Chinese to Hong Kong Traditional.
 - `hk2s(input: str, punctuation: bool = False) -> str`  
   Hong Kong Traditional to Simplified Chinese.
+- `s2hkp(input: str, punctuation: bool = False) -> str`  
+  Simplified Chinese to Hong Kong Traditional with phrase and variant normalization.
+- `hk2sp(input: str, punctuation: bool = False) -> str`  
+  Hong Kong Traditional with phrases/variants to Simplified Chinese.
 - `t2tw(input: str, punctuation: bool = False) -> str`  
   Traditional Chinese to Taiwan Traditional.
 - `t2twp(input: str, punctuation: bool = False) -> str`  

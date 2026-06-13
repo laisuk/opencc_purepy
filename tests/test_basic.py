@@ -1,6 +1,10 @@
 import unittest
 import json
 import os
+import shutil
+import tempfile
+from pathlib import Path
+from opencc_purepy import DictSlot
 from opencc_purepy.core import OpenCC, OpenccConfig
 from opencc_purepy.dictionary_lib import DictionaryMaxlength
 from opencc_purepy.union_cache import UnionKey
@@ -48,12 +52,30 @@ class TestOpenCC(unittest.TestCase):
         self.assertIsInstance(result, str)
         self.assertEqual(result, "汉字转换测试：意大利的罗马城不是一天里就能建成的")
 
+    def test_s2hkp_conversion_applies_hong_kong_phrase_and_variant_normalization(self):
+        result = OpenCC("s2hkp").convert("软件搜索")
+
+        self.assertEqual(result, "軟件搜尋")
+
+    def test_hk2sp_conversion_applies_hong_kong_phrase_and_variant_normalization(self):
+        result = OpenCC("hk2sp").convert("軟件伺服器")
+
+        self.assertEqual(result, "软件服务器")
+
     def test_invalid_config(self):
         with self.assertRaises(ValueError):
             OpenCC("bad_config")
 
     def test_config_parse_normalizes_supported_names(self):
         self.assertEqual(OpenccConfig.parse(" S2T "), OpenccConfig.S2T)
+        self.assertEqual(OpenccConfig.parse("s2hkp"), OpenccConfig.S2HKP)
+        self.assertEqual(OpenccConfig.parse("hk2sp"), OpenccConfig.HK2SP)
+
+    def test_supported_configs_include_hong_kong_phrase_configs(self):
+        configs = OpenCC.supported_configs()
+
+        self.assertIn("s2hkp", configs)
+        self.assertIn("hk2sp", configs)
 
     def test_cli_config_arg_normalizes_supported_names(self):
         self.assertEqual(_config_arg("s2TW"), "s2tw")
@@ -107,6 +129,96 @@ class TestOpenCC(unittest.TestCase):
             os.unlink(path)
         self.assertEqual(dictionary.st_punctuations, ({}, 0))
         self.assertEqual(dictionary.ts_punctuations, ({}, 0))
+
+    def test_txt_loading_accepts_missing_hong_kong_phrase_files(self):
+        source_dir = Path(__file__).resolve().parents[1] / "opencc_purepy" / "dicts"
+        legacy_dir = Path(tempfile.mkdtemp())
+
+        try:
+            for path in source_dir.glob("*.txt"):
+                if path.name not in {"HKPhrases.txt", "HKPhrasesRev.txt"}:
+                    shutil.copy(path, legacy_dir / path.name)
+
+            dictionary = DictionaryMaxlength.from_dicts(base_dir=legacy_dir)
+
+            self.assertEqual(dictionary.hk_phrases, ({}, 0))
+            self.assertEqual(dictionary.hk_phrases_rev, ({}, 0))
+        finally:
+            shutil.rmtree(legacy_dir)
+
+    def test_custom_hong_kong_phrase_slots_append_and_override(self):
+        dictionary = DictionaryMaxlength.from_json().with_custom_dicts(
+            appends={
+                DictSlot.HKPhrases: {
+                    "搜索測試": "搜尋測試",
+                },
+                DictSlot.HKPhrasesRev: {
+                    "搜尋測試": "搜索測試",
+                },
+            },
+        )
+
+        self.assertEqual(OpenCC("s2hkp", dictionary=dictionary).convert("搜索测试"), "搜尋測試")
+        self.assertEqual(OpenCC("hk2sp", dictionary=dictionary).convert("搜尋測試"), "搜索测试")
+
+        dictionary = DictionaryMaxlength.from_json().with_custom_dicts(
+            overrides={
+                DictSlot.HKPhrases: {
+                    "搜索": "搵嘢",
+                },
+                DictSlot.HKPhrasesRev: {
+                    "搵嘢": "搜索",
+                },
+            },
+        )
+
+        self.assertEqual(dictionary.hk_phrases, ({"搜索": "搵嘢"}, len("搜索")))
+        self.assertEqual(dictionary.hk_phrases_rev, ({"搵嘢": "搜索"}, len("搵嘢")))
+        self.assertEqual(OpenCC("s2hkp", dictionary=dictionary).convert("搜索"), "搵嘢")
+        self.assertEqual(OpenCC("hk2sp", dictionary=dictionary).convert("搵嘢"), "搜索")
+
+    def test_custom_hong_kong_phrase_slot_files_append_and_override(self):
+        temp_dir = Path(tempfile.mkdtemp())
+
+        try:
+            hk_append = temp_dir / "HKPhrasesAppend.txt"
+            hk_rev_append = temp_dir / "HKPhrasesRevAppend.txt"
+            hk_override = temp_dir / "HKPhrasesOverride.txt"
+            hk_rev_override = temp_dir / "HKPhrasesRevOverride.txt"
+
+            hk_append.write_text("搜索測試\t搜尋測試\n", encoding="utf-8")
+            hk_rev_append.write_text("搜尋測試\t搜索測試\n", encoding="utf-8")
+            hk_override.write_text("搜索\t搵嘢\n", encoding="utf-8")
+            hk_rev_override.write_text("搵嘢\t搜索\n", encoding="utf-8")
+
+            cc = OpenCC.from_dicts(
+                config="s2hkp",
+                appends={
+                    DictSlot.HKPhrases: hk_append,
+                    DictSlot.HKPhrasesRev: hk_rev_append,
+                },
+            )
+
+            self.assertEqual(cc.convert("搜索测试"), "搜尋測試")
+            self.assertEqual(OpenCC.from_dicts(
+                config="hk2sp",
+                appends={
+                    DictSlot.HKPhrases: hk_append,
+                    DictSlot.HKPhrasesRev: hk_rev_append,
+                },
+            ).convert("搜尋測試"), "搜索测试")
+
+            dictionary = DictionaryMaxlength.from_dicts(
+                overrides={
+                    DictSlot.HKPhrases: hk_override,
+                    DictSlot.HKPhrasesRev: hk_rev_override,
+                },
+            )
+
+            self.assertEqual(dictionary.hk_phrases, ({"搜索": "搵嘢"}, len("搜索")))
+            self.assertEqual(dictionary.hk_phrases_rev, ({"搵嘢": "搜索"}, len("搵嘢")))
+        finally:
+            shutil.rmtree(temp_dir)
 
     def test_union_cache_warm_path_reuses_indexed_union(self):
         cc = OpenCC("s2t")

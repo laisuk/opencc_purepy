@@ -22,6 +22,7 @@ class DictionaryMaxlength:
         "tw_phrases", "tw_phrases_rev",
         "tw_variants_phrases", "tw_variants",
         "tw_variants_rev", "tw_variants_rev_phrases",
+        "hk_phrases", "hk_phrases_rev",
         "hk_variants_phrases", "hk_variants",
         "hk_variants_rev", "hk_variants_rev_phrases",
         "jps_characters", "jps_phrases",
@@ -47,6 +48,8 @@ class DictionaryMaxlength:
         self.tw_variants: Tuple[Dict[str, str], int] = ({}, 0)
         self.tw_variants_rev: Tuple[Dict[str, str], int] = ({}, 0)
         self.tw_variants_rev_phrases: Tuple[Dict[str, str], int] = ({}, 0)
+        self.hk_phrases: Tuple[Dict[str, str], int] = ({}, 0)
+        self.hk_phrases_rev: Tuple[Dict[str, str], int] = ({}, 0)
         self.hk_variants_phrases: Tuple[Dict[str, str], int] = ({}, 0)
         self.hk_variants: Tuple[Dict[str, str], int] = ({}, 0)
         self.hk_variants_rev: Tuple[Dict[str, str], int] = ({}, 0)
@@ -294,6 +297,8 @@ class DictionaryMaxlength:
             'tw_variants': "TWVariants.txt",
             'tw_variants_rev': "TWVariantsRev.txt",
             'tw_variants_rev_phrases': "TWVariantsRevPhrases.txt",
+            'hk_phrases': "HKPhrases.txt",
+            'hk_phrases_rev': "HKPhrasesRev.txt",
             'hk_variants_phrases': "HKVariantsPhrases.txt",
             'hk_variants': "HKVariants.txt",
             'hk_variants_rev': "HKVariantsRev.txt",
@@ -345,7 +350,12 @@ class DictionaryMaxlength:
         # Load base dictionaries
         # ------------------------------------------------------------------
 
-        optional_slots = {"st_punctuations", "ts_punctuations"}
+        optional_slots = {
+            "st_punctuations",
+            "ts_punctuations",
+            "hk_phrases",
+            "hk_phrases_rev",
+        }
 
         for attr, path in file_map.items():
             if attr in optional_slots and not path.is_file():
@@ -572,6 +582,8 @@ class DictionaryMaxlength:
             "TWVariants.txt",
             "TWVariantsRev.txt",
             "TWVariantsRevPhrases.txt",
+            "HKPhrases.txt",
+            "HKPhrasesRev.txt",
             "HKVariantsPhrases.txt",
             "HKVariants.txt",
             "HKVariantsRev.txt",
@@ -582,9 +594,14 @@ class DictionaryMaxlength:
             "JPVariantsRev.txt",
         ]
 
+        optional_files = {
+            "HKPhrases.txt",
+            "HKPhrasesRev.txt",
+        }
+
         missing = [
             name for name in required_files
-            if not (base / name).is_file()
+            if name not in optional_files and not (base / name).is_file()
         ]
 
         if missing:
