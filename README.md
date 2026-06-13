@@ -26,26 +26,26 @@ It uses dictionary-based segmentation and mapping logic inspired by the original
 
 ## 🔁 Supported Conversion Configs
 
-| Code    | Description                                                             |
-|---------|-------------------------------------------------------------------------|
-| `s2t`   | Simplified → Traditional                                                |
-| `t2s`   | Traditional → Simplified                                                |
-| `s2tw`  | Simplified → Traditional (Taiwan)                                       |
-| `tw2s`  | Traditional (Taiwan) → Simplified                                       |
-| `s2twp` | Simplified → Traditional (Taiwan) with phrase and variant normalization |
-| `tw2sp` | Traditional (Taiwan) → Simplified with idioms                           |
-| `s2hk`  | Simplified → Traditional (Hong Kong)                                    |
-| `hk2s`  | Traditional (Hong Kong) → Simplified                                    |
+| Code    | Description                                                              |
+|---------|--------------------------------------------------------------------------|
+| `s2t`   | Simplified → Traditional                                                 |
+| `t2s`   | Traditional → Simplified                                                 |
+| `s2tw`  | Simplified → Traditional (Taiwan)                                        |
+| `tw2s`  | Traditional (Taiwan) → Simplified                                        |
+| `s2twp` | Simplified → Traditional (Taiwan) with phrase and variant normalization  |
+| `tw2sp` | Traditional (Taiwan) → Simplified with idioms                            |
+| `s2hk`  | Simplified → Traditional (Hong Kong)                                     |
+| `hk2s`  | Traditional (Hong Kong) → Simplified                                     |
 | `s2hkp` | Simplified → Hong Kong Traditional with phrase and variant normalization |
-| `hk2sp` | Hong Kong Traditional with phrases/variants → Simplified                |
-| `t2tw`  | Traditional → Traditional (Taiwan)                                      |
-| `tw2t`  | Traditional (Taiwan) → Traditional                                      |
-| `t2twp` | Traditional → Traditional (Taiwan) with idioms                          |
-| `tw2tp` | Traditional (Taiwan) → Traditional with idioms                          |
-| `t2hk`  | Traditional → Traditional (Hong Kong)                                   |
-| `hk2t`  | Traditional (Hong Kong) → Traditional                                   |
-| `t2jp`  | Japanese Kyujitai → Shinjitai                                           |
-| `jp2t`  | Japanese Shinjitai → Kyujitai                                           |
+| `hk2sp` | Hong Kong Traditional with phrases/variants → Simplified                 |
+| `t2tw`  | Traditional → Traditional (Taiwan)                                       |
+| `tw2t`  | Traditional (Taiwan) → Traditional                                       |
+| `t2twp` | Traditional → Traditional (Taiwan) with idioms                           |
+| `tw2tp` | Traditional (Taiwan) → Traditional with idioms                           |
+| `t2hk`  | Traditional → Traditional (Hong Kong)                                    |
+| `hk2t`  | Traditional (Hong Kong) → Traditional                                    |
+| `t2jp`  | Japanese Kyujitai → Shinjitai                                            |
+| `jp2t`  | Japanese Shinjitai → Kyujitai                                            |
 
 ---
 
@@ -525,13 +525,32 @@ Empty keys or values are ignored.
 - `zho_check(input: str) -> int`  
   Detect the input text type:  
   &nbsp;&nbsp;`1` - Traditional, `2` - Simplified, `0` - Others
-- `detofu(input: Optional[str], level: Union[DeTofuLevel, str] = DeTofuLevel.ExtB) -> str`  
+
+- `detofu(  
+  input: Optional[str],  
+  level: Union[DeTofuLevel, str] = DeTofuLevel.ExtB  
+  ) -> str`
+
   Apply built-in DeTofu display-compatible fallback mappings.
-- `detofu_with_custom_file(input: Optional[str], level: Union[DeTofuLevel, str], path: str) -> str`  
+
+- `detofu_with_custom_file(
+  input: Optional[str],
+  level: Union[DeTofuLevel, str],
+  path: str
+  ) -> str`
+
   Apply built-in DeTofu mappings plus a UTF-8 custom fallback file.
--
-`detofu_with_custom_pairs(input: Optional[str], level: Union[DeTofuLevel, str], pairs: Union[Mapping[str, str], Iterable[Tuple[str, str]]]) -> str`  
-Apply built-in DeTofu mappings plus direct in-memory fallback pairs.
+
+- `detofu_with_custom_pairs(
+  input: Optional[str],
+  level: Union[DeTofuLevel, str],
+  pairs: Union[
+      Mapping[str, str],
+      Iterable[Tuple[str, str]]
+  ]
+  ) -> str`
+
+  Apply built-in DeTofu mappings plus direct in-memory fallback pairs.
 
 ### `OpenccConfig` enum
 
