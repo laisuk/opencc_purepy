@@ -7,6 +7,16 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ---
 
+## [1.4.0] - Unreleased
+
+### Added
+
+### Changed
+
+- Update dictionary data.
+
+---
+
 ## [1.3.3] - 2026-06-14
 
 ### Added
