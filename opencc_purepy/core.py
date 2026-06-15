@@ -690,9 +690,9 @@ class OpenCC:
         elif config_key == "hk2t":
             refs = DictRefs(self.union_cache.ensure_indexed(UnionKey.HkRevPair))
         elif config_key == "t2jp":
-            refs = DictRefs(self.union_cache.ensure_indexed(UnionKey.JpVariantsOnly))
+            refs = DictRefs(self.union_cache.ensure_indexed(UnionKey.JpsCharactersRev))
         elif config_key == "jp2t":
-            refs = DictRefs(self.union_cache.ensure_indexed(UnionKey.JpRevTriple))
+            refs = DictRefs(self.union_cache.ensure_indexed(UnionKey.JpsPair))
         else:
             raise ValueError(f"Unsupported config: {config_key}")
 

@@ -276,30 +276,29 @@ dictionary = DictionaryMaxlength.from_json().with_custom_dict_files(
 
 ### Supported slots
 
-| `DictSlot`                      | Legacy key                | Default file                |
-|---------------------------------|---------------------------|-----------------------------|
-| `DictSlot.STCharacters`         | `st_characters`           | `STCharacters.txt`          |
-| `DictSlot.STPhrases`            | `st_phrases`              | `STPhrases.txt`             |
-| `DictSlot.STPunctuations`       | `st_punctuations`         | `STPunctuations.txt`        |
-| `DictSlot.TSCharacters`         | `ts_characters`           | `TSCharacters.txt`          |
-| `DictSlot.TSPhrases`            | `ts_phrases`              | `TSPhrases.txt`             |
-| `DictSlot.TSPunctuations`       | `ts_punctuations`         | `TSPunctuations.txt`        |
-| `DictSlot.TWPhrases`            | `tw_phrases`              | `TWPhrases.txt`             |
-| `DictSlot.TWPhrasesRev`         | `tw_phrases_rev`          | `TWPhrasesRev.txt`          |
-| `DictSlot.TWVariantsPhrases`    | `tw_variants_phrases`     | `TWVariantsPhrases.txt`     |
-| `DictSlot.TWVariants`           | `tw_variants`             | `TWVariants.txt`            |
-| `DictSlot.TWVariantsRev`        | `tw_variants_rev`         | `TWVariantsRev.txt`         |
-| `DictSlot.TWVariantsRevPhrases` | `tw_variants_rev_phrases` | `TWVariantsRevPhrases.txt`  |
-| `DictSlot.HKPhrases`            | `hk_phrases`              | `HKPhrases.txt`             |
-| `DictSlot.HKPhrasesRev`         | `hk_phrases_rev`          | `HKPhrasesRev.txt`          |
-| `DictSlot.HKVariantsPhrases`    | `hk_variants_phrases`     | `HKVariantsPhrases.txt`     |
-| `DictSlot.HKVariants`           | `hk_variants`             | `HKVariants.txt`            |
-| `DictSlot.HKVariantsRev`        | `hk_variants_rev`         | `HKVariantsRev.txt`         |
-| `DictSlot.HKVariantsRevPhrases` | `hk_variants_rev_phrases` | `HKVariantsRevPhrases.txt`  |
-| `DictSlot.JPSCharacters`        | `jps_characters`          | `JPShinjitaiCharacters.txt` |
-| `DictSlot.JPSPhrases`           | `jps_phrases`             | `JPShinjitaiPhrases.txt`    |
-| `DictSlot.JPVariants`           | `jp_variants`             | `JPVariants.txt`            |
-| `DictSlot.JPVariantsRev`        | `jp_variants_rev`         | `JPVariantsRev.txt`         |
+| `DictSlot`                      | Legacy key                | Default file                   |
+|---------------------------------|---------------------------|--------------------------------|
+| `DictSlot.STCharacters`         | `st_characters`           | `STCharacters.txt`             |
+| `DictSlot.STPhrases`            | `st_phrases`              | `STPhrases.txt`                |
+| `DictSlot.STPunctuations`       | `st_punctuations`         | `STPunctuations.txt`           |
+| `DictSlot.TSCharacters`         | `ts_characters`           | `TSCharacters.txt`             |
+| `DictSlot.TSPhrases`            | `ts_phrases`              | `TSPhrases.txt`                |
+| `DictSlot.TSPunctuations`       | `ts_punctuations`         | `TSPunctuations.txt`           |
+| `DictSlot.TWPhrases`            | `tw_phrases`              | `TWPhrases.txt`                |
+| `DictSlot.TWPhrasesRev`         | `tw_phrases_rev`          | `TWPhrasesRev.txt`             |
+| `DictSlot.TWVariantsPhrases`    | `tw_variants_phrases`     | `TWVariantsPhrases.txt`        |
+| `DictSlot.TWVariants`           | `tw_variants`             | `TWVariants.txt`               |
+| `DictSlot.TWVariantsRev`        | `tw_variants_rev`         | `TWVariantsRev.txt`            |
+| `DictSlot.TWVariantsRevPhrases` | `tw_variants_rev_phrases` | `TWVariantsRevPhrases.txt`     |
+| `DictSlot.HKPhrases`            | `hk_phrases`              | `HKPhrases.txt`                |
+| `DictSlot.HKPhrasesRev`         | `hk_phrases_rev`          | `HKPhrasesRev.txt`             |
+| `DictSlot.HKVariantsPhrases`    | `hk_variants_phrases`     | `HKVariantsPhrases.txt`        |
+| `DictSlot.HKVariants`           | `hk_variants`             | `HKVariants.txt`               |
+| `DictSlot.HKVariantsRev`        | `hk_variants_rev`         | `HKVariantsRev.txt`            |
+| `DictSlot.HKVariantsRevPhrases` | `hk_variants_rev_phrases` | `HKVariantsRevPhrases.txt`     |
+| `DictSlot.JPSCharacters`        | `jps_characters`          | `JPShinjitaiCharacters.txt`    |
+| `DictSlot.JPSCharactersRev`     | `jps_characters_rev`      | `JPShinjitaiCharactersRev.txt` |
+| `DictSlot.JPSPhrases`           | `jps_phrases`             | `JPShinjitaiPhrases.txt`       |
 
 Forward regional variant phrase slots are applied before their character-level variant slots:
 
@@ -307,6 +306,14 @@ Forward regional variant phrase slots are applied before their character-level v
 |------------------------------|-------------------------|------------------------------|------------------------------------------------------------------|
 | `DictSlot.TWVariantsPhrases` | `TWVariantsPhrases.txt` | Forward TW regional variants | Phrase-level TW variant mappings applied before `TWVariants.txt` |
 | `DictSlot.HKVariantsPhrases` | `HKVariantsPhrases.txt` | Forward HK regional variants | Phrase-level HK variant mappings applied before `HKVariants.txt` |
+
+Japanese Shinjitai slots follow the upstream OpenCC JP layout:
+
+| Slot                        | File                           | Purpose                                               |
+|-----------------------------|--------------------------------|-------------------------------------------------------|
+| `DictSlot.JPSCharacters`    | `JPShinjitaiCharacters.txt`    | Japanese Shinjitai-to-Traditional Kyujitai characters |
+| `DictSlot.JPSCharactersRev` | `JPShinjitaiCharactersRev.txt` | Traditional Kyujitai-to-Japanese Shinjitai characters |
+| `DictSlot.JPSPhrases`       | `JPShinjitaiPhrases.txt`       | Japanese Shinjitai-to-Traditional Kyujitai phrases    |
 
 ---
 

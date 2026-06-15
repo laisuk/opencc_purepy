@@ -62,6 +62,54 @@ class TestOpenCC(unittest.TestCase):
 
         self.assertEqual(result, "软件服务器")
 
+    def test_t2jp_conversion_uses_shinjitai_reverse_characters(self):
+        result = OpenCC("t2jp").convert("舊字體：廣國，讀賣。")
+
+        self.assertEqual(result, "旧字体：広国，読売。")
+
+    def test_jp2t_conversion_uses_shinjitai_phrases_and_characters(self):
+        result = OpenCC("jp2t").convert("旧字体：広国，読売。")
+
+        self.assertEqual(result, "舊字體：廣國，讀賣。")
+
+    def test_custom_japanese_shinjitai_slots_append(self):
+        dictionary = DictionaryMaxlength.from_json().with_custom_dicts(
+            appends={
+                DictSlot.JPSCharactersRev: {
+                    "傳": "伝",
+                },
+                DictSlot.JPSCharacters: {
+                    "仮": "假",
+                },
+                DictSlot.JPSPhrases: {
+                    "売仮": "賣假",
+                },
+            },
+        )
+
+        self.assertEqual(OpenCC("t2jp", dictionary=dictionary).convert("傳"), "伝")
+        self.assertEqual(OpenCC("jp2t", dictionary=dictionary).convert("仮"), "假")
+        self.assertEqual(OpenCC("jp2t", dictionary=dictionary).convert("売仮"), "賣假")
+
+    def test_custom_japanese_shinjitai_slots_override(self):
+        dictionary = DictionaryMaxlength.from_json().with_custom_dicts(
+            overrides={
+                DictSlot.JPSCharactersRev: {
+                    "廣": "广",
+                },
+                DictSlot.JPSCharacters: {
+                    "広": "廣-custom",
+                },
+                DictSlot.JPSPhrases: {
+                    "広国": "廣國-custom",
+                },
+            },
+        )
+
+        self.assertEqual(OpenCC("t2jp", dictionary=dictionary).convert("廣"), "广")
+        self.assertEqual(OpenCC("jp2t", dictionary=dictionary).convert("広"), "廣-custom")
+        self.assertEqual(OpenCC("jp2t", dictionary=dictionary).convert("広国"), "廣國-custom")
+
     def test_invalid_config(self):
         with self.assertRaises(ValueError):
             OpenCC("bad_config")

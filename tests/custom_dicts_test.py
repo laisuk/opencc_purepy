@@ -133,6 +133,12 @@ def test_dictslot_forward_variant_phrase_enum_members_exist():
     assert DictSlot.HKVariantsPhrases.value == "hk_variants_phrases"
 
 
+def test_dictslot_japanese_shinjitai_enum_members_exist():
+    assert DictSlot.JPSCharacters.value == "jps_characters"
+    assert DictSlot.JPSCharactersRev.value == "jps_characters_rev"
+    assert DictSlot.JPSPhrases.value == "jps_phrases"
+
+
 def test_dictionary_from_dicts_loads_forward_variant_phrase_slots():
     dictionary = DictionaryMaxlength.from_dicts()
 
@@ -239,9 +245,8 @@ def test_legacy_custom_dict_dir_without_punctuation_files_loads():
         "HKVariantsRev.txt",
         "HKVariantsRevPhrases.txt",
         "JPShinjitaiCharacters.txt",
+        "JPShinjitaiCharactersRev.txt",
         "JPShinjitaiPhrases.txt",
-        "JPVariants.txt",
-        "JPVariantsRev.txt",
     ]
 
     try:

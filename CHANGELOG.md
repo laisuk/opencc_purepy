@@ -14,6 +14,11 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 ### Changed
 
 - Update dictionary data.
+- Refactored Japanese conversion dictionaries to follow the upstream OpenCC JP Shinjitai layout.
+- Replaced `JPVariants` / `JPVariantsRev` with `JPSCharacters` / `JPSCharactersRev` / `JPSPhrases`.
+- `t2jp` now uses `JPShinjitaiCharactersRev.txt`.
+- `jp2t` now uses `JPShinjitaiPhrases.txt` + `JPShinjitaiCharacters.txt`.
+- Users with custom dictionary folders or generated `dictionary_maxlength.json` snapshots must update/regenerate them.
 
 ---
 
