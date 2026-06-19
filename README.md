@@ -88,8 +88,8 @@ Supports: `.docx`, `.xlsx`, `.pptx`, `.odt`, `.ods`, `.odp`, `.epub`
 # Convert Word document with font preservation
 opencc-purepy office -i example.docx -c t2s --keep-font
 
-# Convert EPUB and auto-detect output name
-opencc-purepy office -i book.epub -c s2t --auto-ext
+# Convert EPUB and auto-detect output name from input file extension
+opencc-purepy office -i book.epub -c s2t
 
 # Convert Excel and specify output path and format
 opencc-purepy office -i sheet.xlsx -o result.xlsx -c s2tw --format xlsx
