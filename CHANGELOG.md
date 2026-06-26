@@ -7,6 +7,23 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ---
 
+## [1.4.1] - 2026-06-26
+
+### Added
+
+- Added `OpenCC.from_dict_files(config, specs)` for post-load custom dictionary file loading on top of the packaged
+  JSON dictionaries.
+- Added CLI `--custom-dict slot:mode:path` support for the `convert` and `office` subcommands.
+- Added `opencc_purepy.utils.CustomDictSpec` and custom dictionary spec parsing helpers for `append` and `override`
+  modes.
+
+### Fixed
+
+- Fixed custom dictionary CLI/API loading so append-only custom files keep the built-in dictionaries available for the
+  remaining conversion rounds, such as `hk2sp` custom Hong Kong phrase mappings followed by Hant-to-Hans conversion.
+
+---
+
 ## [1.4.0] - 2026-06-24
 
 ### Changed

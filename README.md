@@ -113,10 +113,12 @@ Dictionary slot mappings support both:
 
 ---
 
-### Recommended: load-time append mode
+### Raw TXT dictionary loading: `OpenCC.from_dicts()`
 
-Use `appends={...}` to load built-in dictionaries first, then custom entries. Duplicate keys use late-comer wins, so
-custom entries override built-in entries. This is recommended for most users.
+Use `OpenCC.from_dicts()` when you want to load OpenCC TXT dictionary files directly through
+`DictionaryMaxlength.from_dicts()`.
+With `appends={...}`, it loads the base TXT dictionaries first, then custom entries. Duplicate keys use late-comer wins,
+so custom entries override built-in entries. This is recommended for most users.
 
 ```python
 from opencc_purepy import DictSlot, OpenCC
@@ -148,6 +150,56 @@ cc = OpenCC.from_dicts(
 
 The same `appends={...}` and `overrides={...}` arguments are also supported by `DictionaryMaxlength.from_dicts()` when
 you want to create and reuse a dictionary instance yourself.
+
+---
+
+### Quick file API: `OpenCC.from_dict_files()`
+
+Use `OpenCC.from_dict_files()` when you want a post-load custom-file API on top of the packaged JSON dictionaries.
+It loads `dictionary_maxlength.json` first, then applies each OpenCC-compatible custom file to the requested slot.
+
+```python
+from opencc_purepy import DictSlot, OpenCC
+from opencc_purepy.utils import CustomDictSpec
+
+cc = OpenCC.from_dict_files(
+    config="hk2sp",
+    specs=[
+        CustomDictSpec(DictSlot.HKPhrasesRev, "append", "./my_hk_dict.txt"),
+    ],
+)
+
+print(cc.convert("這個細路哥很靈活"))
+```
+
+Each `CustomDictSpec` is `slot, mode, path`:
+
+- `slot`: a `DictSlot`, such as `DictSlot.HKPhrasesRev`
+- `mode`: `"append"` or `"override"`
+- `path`: a UTF-8 OpenCC text dictionary file
+
+Use `"append"` for user terms that should extend a built-in slot. Use `"override"` only when the file is a complete
+replacement for that slot.
+
+---
+
+### CLI custom dictionary files
+
+The `convert` and `office` subcommands support `--custom-dict <slot:mode:path>`. The option can be used multiple times,
+and follows the same packaged-JSON-plus-custom-files behavior as `OpenCC.from_dict_files()`.
+
+```sh
+opencc-purepy convert -c hk2sp \
+  --custom-dict hkphrasesrev:append:./my_hk_dict.txt
+```
+
+Slot names accept enum-style names, compact names, and legacy keys, including `HKPhrasesRev`, `hkphrasesrev`, and
+`hk_phrases_rev`.
+
+```sh
+opencc-purepy office -i book.epub -c hk2sp \
+  --custom-dict hkphrasesrev:append:./my_hk_dict.txt
+```
 
 ---
 
@@ -342,7 +394,9 @@ cc = OpenCC(
 
 ### Which mode should I use?
 
-- Use `appends` for a few user or company terms.
+- Use `OpenCC.from_dict_files()` or CLI `--custom-dict slot:mode:path` when you want packaged JSON dictionaries plus a
+  few custom files.
+- Use `OpenCC.from_dicts()` when you want to load raw OpenCC TXT dictionary files or a custom TXT dictionary directory.
 - Use `overrides` when maintaining a full proprietary replacement of an OpenCC dictionary file.
 - Use `with_custom_dict_files()` to apply OpenCC-compatible text files to a private dictionary after loading it.
 - Use `with_custom_dicts()` for exact in-memory pairs, especially keys with leading or embedded spaces.
@@ -473,12 +527,17 @@ Empty keys or values are ignored.
 - `OpenCC`
 - `OpenccConfig`
 - `DeTofuLevel` is available from `opencc_purepy.detofu`
+- `CustomDictSpec` is available from `opencc_purepy.utils`
 
 ### `OpenCC` class
 
 - `OpenCC(config: Union[str, OpenccConfig] = "s2t")`  
   Create a converter with a supported config string or `OpenccConfig` enum value. Raises `ValueError` for unsupported
   configs.
+- `OpenCC.from_dicts(config="s2t", base_dir=None, paths=None, overrides=None, appends=None) -> OpenCC`  
+  Create a converter by loading raw OpenCC TXT dictionary files through `DictionaryMaxlength.from_dicts()`.
+- `OpenCC.from_dict_files(config="s2t", specs=None) -> OpenCC`  
+  Create a converter from packaged JSON dictionaries, then apply `CustomDictSpec(slot, mode, path)` custom file specs.
 - `set_config(config: Union[str, OpenccConfig]) -> None`  
   Update the active conversion config. Raises `ValueError` for unsupported configs.
 - `get_config() -> str`  

@@ -124,6 +124,16 @@ def main():
             "Custom mappings override built-in mappings; requires --detofu."
         ),
     )
+    parser_convert.add_argument(
+        "--custom-dict",
+        action="append",
+        metavar="<slot:mode:path>",
+        help=(
+            "Load custom dictionary file. "
+            "Format: slot:mode:path, e.g. STPhrases:append:custom.txt. "
+            "Can be used multiple times."
+        ),
+    )
     parser_convert.add_argument("--in-enc", metavar="<encoding>", default="UTF-8", help="Input encoding")
     parser_convert.add_argument("--out-enc", metavar="<encoding>", default="UTF-8", help="Output encoding")
     parser_convert.set_defaults(func=_run_convert)
@@ -168,6 +178,16 @@ def main():
         action="store_false",
         dest="keep_font",
         help="Do not preserve font-family information in Office content (Overrides --keep-font)",
+    )
+    parser_office.add_argument(
+        "--custom-dict",
+        action="append",
+        metavar="<slot:mode:path>",
+        help=(
+            "Load custom dictionary file. "
+            "Format: slot:mode:path, e.g. STPhrases:append:custom.txt. "
+            "Can be used multiple times."
+        ),
     )
     parser_office.set_defaults(func=_run_office)
 

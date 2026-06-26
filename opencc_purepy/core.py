@@ -1,8 +1,9 @@
 import re
 from enum import Enum
 from multiprocessing import Pool, cpu_count
-
 from typing import Dict, Iterable, List, Mapping, Optional, Tuple, Union, cast
+
+from .utils import CustomDictSpec
 from .detofu import DeTofuLevel, DeTofuMap, parse_level, detofu
 from .dict_refs import DictRefs, StarterUnionLike
 from .dictionary_lib import DictionaryMaxlength, PathLike, SlotPathMap
@@ -253,6 +254,77 @@ class OpenCC:
             config=config,
             dictionary=dictionary,
         )
+
+    @classmethod
+    def from_dict_files(
+            cls,
+            config: _ConfigLike = None,
+            specs: Optional[Iterable[CustomDictSpec]] = None,
+    ) -> "OpenCC":
+        """
+        Create an ``OpenCC`` instance from packaged JSON dictionaries plus
+        one or more custom dictionary files.
+
+        This is the post-load custom-file convenience constructor. It loads
+        the bundled ``dictionary_maxlength.json`` data with
+        ``DictionaryMaxlength.from_json()`` first, then applies each
+        ``CustomDictSpec`` through ``with_custom_dict_files()``.
+
+        Use this when you want to keep the packaged dictionaries and add or
+        replace selected slots from OpenCC-compatible UTF-8 text files. For
+        loading a full raw TXT dictionary directory, use
+        ``OpenCC.from_dicts()`` instead.
+
+        Spec format:
+
+            ``CustomDictSpec(slot, mode, path)``
+
+        ``mode`` must be ``"append"`` or ``"override"``. Append mode merges
+        custom entries into the built-in slot with late-comer-wins duplicate
+        handling. Override mode replaces the selected slot before appends are
+        applied.
+
+        Examples
+        --------
+        >>> from opencc_purepy import DictSlot, OpenCC
+        >>> from opencc_purepy.utils import CustomDictSpec
+        >>> cc = OpenCC.from_dict_files(
+        ...     config="hk2sp",
+        ...     specs=[
+        ...         CustomDictSpec(DictSlot.HKPhrasesRev, "append", "./my_hk_dict.txt"),
+        ...     ],
+        ... )
+
+        :param config:
+            OpenCC configuration name. Defaults to ``s2t`` when omitted.
+
+        :param specs:
+            Iterable of ``CustomDictSpec`` values describing slot, mode, and
+            file path for each custom dictionary file.
+
+        :return:
+            ``OpenCC`` instance using packaged JSON dictionaries plus custom
+            file changes.
+        """
+        dictionary = DictionaryMaxlength.from_json()
+
+        overrides: SlotPathMap = {}
+        appends: SlotPathMap = {}
+
+        for spec in specs or ():
+            if spec.mode == "override":
+                overrides[spec.slot] = spec.path
+            elif spec.mode == "append":
+                appends[spec.slot] = spec.path
+            else:
+                raise ValueError("Invalid custom dictionary mode: {}".format(spec.mode))
+
+        dictionary.with_custom_dict_files(
+            overrides=overrides,
+            appends=appends,
+        )
+
+        return cls(config, dictionary=dictionary)
 
     def _normalize_config(self, config: _ConfigLike) -> str:
         """

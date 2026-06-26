@@ -5,6 +5,7 @@ import shutil
 import tempfile
 from pathlib import Path
 from opencc_purepy import DictSlot
+from opencc_purepy.utils import CustomDictSpec
 from opencc_purepy.core import OpenCC, OpenccConfig
 from opencc_purepy.dictionary_lib import DictionaryMaxlength
 from opencc_purepy.union_cache import UnionKey
@@ -235,7 +236,7 @@ class TestOpenCC(unittest.TestCase):
             hk_rev_override = temp_dir / "HKPhrasesRevOverride.txt"
 
             hk_append.write_text("搜索測試\t搜尋測試\n", encoding="utf-8")
-            hk_rev_append.write_text("搜尋測試\t搜索測試\n", encoding="utf-8")
+            hk_rev_append.write_text("搜尋測試\t搜索測試\n細路哥\t小男孩\n", encoding="utf-8")
             hk_override.write_text("搜索\t搵嘢\n", encoding="utf-8")
             hk_rev_override.write_text("搵嘢\t搜索\n", encoding="utf-8")
 
@@ -255,6 +256,13 @@ class TestOpenCC(unittest.TestCase):
                     DictSlot.HKPhrasesRev: hk_rev_append,
                 },
             ).convert("搜尋測試"), "搜索测试")
+
+            self.assertEqual(OpenCC.from_dict_files(
+                config="hk2sp",
+                specs=[
+                    CustomDictSpec(DictSlot.HKPhrasesRev, "append", hk_rev_append),
+                ],
+            ).convert("這個細路哥很靈活"), "这个小男孩很灵活")
 
             dictionary = DictionaryMaxlength.from_dicts(
                 overrides={
