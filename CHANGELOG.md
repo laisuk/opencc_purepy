@@ -7,20 +7,23 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ---
 
-## [1.4.1] - 2026-06-26
+## [1.4.1] - Unreleased
 
 ### Added
 
 - Added `OpenCC.from_dict_files(config, specs)` for post-load custom dictionary file loading on top of the packaged
   JSON dictionaries.
-- Added CLI `--custom-dict slot:mode:path` support for the `convert` and `office` subcommands.
-- Added `opencc_purepy.utils.CustomDictSpec` and custom dictionary spec parsing helpers for `append` and `override`
-  modes.
+- Added CLI `--custom-dict slot:mode:path` support for the `convert`, `office`, and `dictgen` subcommands.
+- Added `opencc_purepy.utils.CustomDictSpec` plus helper functions for parsing and grouping custom dictionary
+  specifications into `append` and `override` mappings.
 
 ### Fixed
 
-- Fixed custom dictionary CLI/API loading so append-only custom files keep the built-in dictionaries available for the
-  remaining conversion rounds, such as `hk2sp` custom Hong Kong phrase mappings followed by Hant-to-Hans conversion.
+- Fixed custom dictionary CLI/API loading so append-only custom dictionary files preserve the packaged dictionaries for
+  all remaining conversion rounds, such as `hk2sp` custom Hong Kong phrase mappings followed by the built-in
+  Traditional-to-Simplified conversion.
+- Fixed `dictgen --custom-dict` so custom dictionary specifications are correctly applied when generating packaged
+  dictionary JSON output.
 
 ---
 
@@ -29,7 +32,7 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 ### Changed
 
 - Update dictionary data to reduce conversion ambiguity.
-- Optimized CLI subcommand `office`. 
+- Optimized CLI subcommand `office`.
 - Refactored Japanese conversion dictionaries to follow the upstream OpenCC JP Shinjitai layout.
 - Replaced `JPVariants` / `JPVariantsRev` with `JPSCharacters` / `JPSCharactersRev` / `JPSPhrases`.
 - `t2jp` now uses `JPShinjitaiCharactersRev.txt`.

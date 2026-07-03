@@ -125,6 +125,7 @@ def main():
         ),
     )
     parser_convert.add_argument(
+        "-D",
         "--custom-dict",
         action="append",
         metavar="<slot:mode:path>",
@@ -180,6 +181,7 @@ def main():
         help="Do not preserve font-family information in Office content (Overrides --keep-font)",
     )
     parser_office.add_argument(
+        "-D",
         "--custom-dict",
         action="append",
         metavar="<slot:mode:path>",
@@ -230,6 +232,17 @@ def main():
         "--no-sort",
         action="store_true",
         help="Preserve insertion/source order instead of sorting JSON keys.",
+    )
+    parser_dictgen.add_argument(
+        "-D",
+        "--custom-dict",
+        action="append",
+        metavar="<slot:mode:path>",
+        help=(
+            "Load custom dictionary file. "
+            "Format: slot:mode:path, e.g. STPhrases:append:custom.txt. "
+            "Can be used multiple times."
+        ),
     )
 
     parser_dictgen.set_defaults(func=_run_dictgen)

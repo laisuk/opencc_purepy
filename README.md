@@ -124,12 +124,12 @@ so custom entries override built-in entries. This is recommended for most users.
 from opencc_purepy import DictSlot, OpenCC
 
 cc = OpenCC.from_dicts(
-    config="s2t",
-    appends={
-        DictSlot.STPhrases: "./UserDict.txt",
-        DictSlot.TWVariantsPhrases: "./custom/TWVariantsPhrases.txt",
-        DictSlot.HKVariantsPhrases: "./custom/HKVariantsPhrases.txt",
-    },
+  config="s2t",
+  appends={
+    DictSlot.STPhrases: "./UserDict.txt",
+    DictSlot.TWVariantsPhrases: "./custom/TWVariantsPhrases.txt",
+    DictSlot.HKVariantsPhrases: "./custom/HKVariantsPhrases.txt",
+  },
 )
 
 print(cc.convert("帕兰蒂尔是一家公司"))
@@ -185,12 +185,13 @@ replacement for that slot.
 
 ### CLI custom dictionary files
 
-The `convert` and `office` subcommands support `--custom-dict <slot:mode:path>`. The option can be used multiple times,
-and follows the same packaged-JSON-plus-custom-files behavior as `OpenCC.from_dict_files()`.
+The `convert`, `office`, and `dictgen` subcommands support `-D/--custom-dict <slot:mode:path>`. The option can be used
+multiple times. For `convert` and `office`, it follows the same packaged-JSON-plus-custom-files behavior as
+`OpenCC.from_dict_files()`.
 
 ```sh
 opencc-purepy convert -c hk2sp \
-  --custom-dict hkphrasesrev:append:./my_hk_dict.txt
+  -D hkphrasesrev:append:./my_hk_dict.txt
 ```
 
 Slot names accept enum-style names, compact names, and legacy keys, including `HKPhrasesRev`, `hkphrasesrev`, and
@@ -199,6 +200,13 @@ Slot names accept enum-style names, compact names, and legacy keys, including `H
 ```sh
 opencc-purepy office -i book.epub -c hk2sp \
   --custom-dict hkphrasesrev:append:./my_hk_dict.txt
+```
+
+For `dictgen`, `-D/--custom-dict` applies custom dictionary files before writing the generated JSON:
+
+```sh
+opencc-purepy dictgen -d ./my_dicts -o dictionary_maxlength.json \
+  -D STPhrases:append:./UserDict.txt
 ```
 
 ---
@@ -376,6 +384,10 @@ TXT dictionaries are human-editable source files. `dictionary_maxlength.json` is
 
 ```sh
 opencc-purepy dictgen -d ./my_dicts -o dictionary_maxlength.json
+
+# Optionally bake custom dictionary files into the generated JSON
+opencc-purepy dictgen -d ./my_dicts -o dictionary_maxlength.json \
+  -D STPhrases:append:./UserDict.txt
 ```
 
 ```python
@@ -394,8 +406,8 @@ cc = OpenCC(
 
 ### Which mode should I use?
 
-- Use `OpenCC.from_dict_files()` or CLI `--custom-dict slot:mode:path` when you want packaged JSON dictionaries plus a
-  few custom files.
+- Use `OpenCC.from_dict_files()` or CLI `-D/--custom-dict slot:mode:path` when you want packaged JSON dictionaries plus
+  a few custom files.
 - Use `OpenCC.from_dicts()` when you want to load raw OpenCC TXT dictionary files or a custom TXT dictionary directory.
 - Use `overrides` when maintaining a full proprietary replacement of an OpenCC dictionary file.
 - Use `with_custom_dict_files()` to apply OpenCC-compatible text files to a private dictionary after loading it.
@@ -527,7 +539,8 @@ Empty keys or values are ignored.
 - `OpenCC`
 - `OpenccConfig`
 - `DeTofuLevel` is available from `opencc_purepy.detofu`
-- `CustomDictSpec` is available from `opencc_purepy.utils`
+- `CustomDictSpec`, `parse_custom_dict_spec`, `parse_custom_dict_specs`, and `custom_dict_specs_to_maps` are available
+  from `opencc_purepy.utils`
 
 ### `OpenCC` class
 

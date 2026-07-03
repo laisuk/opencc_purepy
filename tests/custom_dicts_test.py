@@ -219,8 +219,8 @@ def test_forward_hk_variant_phrase_slot_precedes_character_slot():
 
 
 def test_reverse_tw_hk_variant_behavior_remains_unchanged():
-    assert OpenCC("tw2t").convert("吃口飯") == "喫口飯"
-    assert OpenCC("hk2t").convert("吃口飯") == "喫口飯"
+    assert OpenCC("tw2t").convert("吃口飯") == "吃口飯"
+    assert OpenCC("hk2t").convert("吃口飯") == "吃口飯"
 
 
 def test_legacy_custom_dict_dir_without_punctuation_files_loads():

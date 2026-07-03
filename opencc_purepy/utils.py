@@ -9,14 +9,42 @@ from .dictionary_lib import PathLike, SlotPathMap
 
 CustomDictMode = Literal["append", "override"]
 
+
 @dataclass(frozen=True)
 class CustomDictSpec:
+    """
+    One custom dictionary file request.
+
+    This is the user-facing, ungrouped form used by ``OpenCC.from_dict_files()``
+    and by the CLI ``slot:mode:path`` syntax. It describes exactly one file:
+
+    - ``slot``: the OpenCC dictionary slot to customize.
+    - ``mode``: ``"append"`` to extend that slot, or ``"override"`` to replace
+      that slot.
+    - ``path``: the text dictionary file to load.
+
+    Do not confuse this with the lower-level ``overrides`` / ``appends``
+    ``SlotPathMap`` values accepted by dictionary loading APIs. Those maps are
+    the grouped form: ``{slot: path}`` split by mode.
+    """
+
     slot: DictSlot
     mode: CustomDictMode
     path: PathLike
 
+
 def parse_custom_dict_spec(spec: str) -> CustomDictSpec:
-    """Parse one --custom-dict value in slot:mode:path format."""
+    """
+    Parse one ``--custom-dict`` value into a ``CustomDictSpec``.
+
+    ``spec`` must use ``slot:mode:path`` syntax, for example
+    ``"STPhrases:append:./UserDict.txt"``.
+
+    This function returns the single-spec record. It does not check whether the
+    file exists, and it does not group values into ``overrides`` and ``appends``
+    maps. Use ``parse_custom_dict_specs()`` when parsing CLI values that should
+    be passed directly to dictionary loading APIs.
+    """
     parts = spec.split(":", 2)
     if len(parts) != 3:
         raise ValueError(
@@ -47,10 +75,22 @@ def parse_custom_dict_spec(spec: str) -> CustomDictSpec:
         path=path,
     )
 
+
 def parse_custom_dict_specs(
         specs: Optional[Iterable[str]],
 ) -> Tuple[SlotPathMap, SlotPathMap]:
-    """Parse --custom-dict values into override/appends maps."""
+    """
+    Parse CLI ``--custom-dict`` strings into ``(overrides, appends)`` maps.
+
+    This is the CLI-oriented helper. It accepts raw ``slot:mode:path`` strings,
+    validates that each referenced file exists, and returns the grouped
+    ``SlotPathMap`` form expected by ``DictionaryMaxlength`` customization APIs.
+
+    Return value order is ``(overrides, appends)``.
+
+    For API code that already has ``CustomDictSpec`` instances, use
+    ``custom_dict_specs_to_maps()`` instead.
+    """
     overrides: SlotPathMap = {}
     appends: SlotPathMap = {}
 
@@ -64,6 +104,33 @@ def parse_custom_dict_specs(
             overrides[slot] = path
         else:
             appends[slot] = path
+
+    return overrides, appends
+
+
+def custom_dict_specs_to_maps(
+        specs: Optional[Iterable[CustomDictSpec]],
+) -> Tuple[SlotPathMap, SlotPathMap]:
+    """
+    Group ``CustomDictSpec`` records into ``(overrides, appends)`` maps.
+
+    This is the API-oriented bridge from the user-facing spec form to the
+    lower-level dictionary loader form. Unlike ``parse_custom_dict_specs()``,
+    this function expects already-parsed ``CustomDictSpec`` objects and does not
+    check file existence.
+
+    Return value order is ``(overrides, appends)``.
+    """
+    overrides: SlotPathMap = {}
+    appends: SlotPathMap = {}
+
+    for spec in specs or ():
+        if spec.mode == "override":
+            overrides[spec.slot] = spec.path
+        elif spec.mode == "append":
+            appends[spec.slot] = spec.path
+        else:
+            raise ValueError("Invalid custom dictionary mode: {}".format(spec.mode))
 
     return overrides, appends
 
