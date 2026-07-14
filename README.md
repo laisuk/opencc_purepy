@@ -125,12 +125,12 @@ so custom entries override built-in entries. This is recommended for most users.
 from opencc_purepy import DictSlot, OpenCC
 
 cc = OpenCC.from_dicts(
-  config="s2t",
-  appends={
-    DictSlot.STPhrases: "./UserDict.txt",
-    DictSlot.TWVariantsPhrases: "./custom/TWVariantsPhrases.txt",
-    DictSlot.HKVariantsPhrases: "./custom/HKVariantsPhrases.txt",
-  },
+    config="s2t",
+    appends={
+        DictSlot.STPhrases: "./UserDict.txt",
+        DictSlot.TWVariantsPhrases: "./custom/TWVariantsPhrases.txt",
+        DictSlot.HKVariantsPhrases: "./custom/HKVariantsPhrases.txt",
+    },
 )
 
 print(cc.convert("帕兰蒂尔是一家公司"))
@@ -654,7 +654,9 @@ Empty keys or values are ignored.
 
 ## ⚡ Benchmark
 
-> Measured on GitHub Actions `ubuntu-latest` using the default `s2t` configuration.  
+[**OpenCC benchmark summary**](https://github.com/laisuk/opencc_purepy/actions/runs/29361361539#summary-87181990001)
+
+> Measured on GitHub Actions `ubuntu-latest` using the default `s2t` configuration.
 > Benchmark separates cold startup, first post-init conversion, and warm cached conversion.
 
 ### Runner Platform
@@ -662,8 +664,8 @@ Empty keys or values are ignored.
 | Field     | Value                                                                                                                      |
 |-----------|----------------------------------------------------------------------------------------------------------------------------|
 | Runner    | Linux X64                                                                                                                  |
-| Image     | ubuntu24 20260513.135.3                                                                                                    |
-| Kernel    | `Linux runnervmrw5os 6.17.0-1013-azure #13~24.04.1-Ubuntu SMP Wed Apr 15 16:52:17 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux` |
+| Image     | ubuntu24 20260705.232.1                                                                                                    |
+| Kernel    | `Linux runnervm5mmn9 6.17.0-1018-azure #18~24.04.1-Ubuntu SMP Thu May 28 16:39:11 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux` |
 | CPU       | AMD EPYC 9V74 80-Core Processor                                                                                            |
 | CPU Cores | 4                                                                                                                          |
 | Memory    |                                                                                                                            |
@@ -671,14 +673,14 @@ Empty keys or values are ignored.
 
 ### Results
 
-#### opencc-purepy v1.3.0
+#### opencc-purepy v1.4.1
 
 | Input Size        | Cold Total (ms) | Post-init Cold (ms) |  Warm (ms) |
 |-------------------|----------------:|--------------------:|-----------:|
-| **100 chars**     |       21.849 ms |           19.419 ms |   0.171 ms |
-| **1,000 chars**   |       21.572 ms |           21.409 ms |   1.643 ms |
-| **10,000 chars**  |       34.063 ms |           32.584 ms |  13.480 ms |
-| **100,000 chars** |      158.355 ms |          156.202 ms | 136.870 ms |
+| **100 chars**     |       16.025 ms |           14.065 ms |   0.129 ms |
+| **1,000 chars**   |       16.136 ms |           15.459 ms |   1.287 ms |
+| **10,000 chars**  |       25.506 ms |           24.347 ms |  10.441 ms |
+| **100,000 chars** |      121.911 ms |          119.935 ms | 104.965 ms |
 
 *`cold_total` includes `OpenCC(config)` setup plus conversion. `post_init_cold` measures the first conversion after
 initialization. `warm` measures conversion after the union cache has already been built. Results depend on runner
