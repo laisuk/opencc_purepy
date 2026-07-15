@@ -46,6 +46,17 @@ class TestOpenCC(unittest.TestCase):
         self.assertIsNotNone(refs.round_2)
         self.assertIsNone(refs.round_3)
 
+    def test_direct_taiwan_phrase_configs_use_one_round_triple_unions(self):
+        forward_refs = self.converter._get_dict_refs("t2twp")
+        reverse_refs = self.converter._get_dict_refs("tw2tp")
+
+        self.assertIs(forward_refs.round_1, self.converter.union_cache.get_union(UnionKey.TwTriple))
+        self.assertIsNone(forward_refs.round_2)
+        self.assertIsNone(forward_refs.round_3)
+        self.assertIs(reverse_refs.round_1, self.converter.union_cache.get_union(UnionKey.TwRevTriple))
+        self.assertIsNone(reverse_refs.round_2)
+        self.assertIsNone(reverse_refs.round_3)
+
     def test_tw2sp_conversion(self):
         traditional = "漢字轉換測試：義大利的羅馬城不是一天裡就能建成的"
         self.converter.config = "tw2sp"

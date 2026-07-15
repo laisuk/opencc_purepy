@@ -12,6 +12,10 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 ### Changed
 
 - Update dictionary data.
+- Flatten direct `t2twp` and `tw2tp` conversion from two dictionary passes to one by using the Taiwan phrase/variant
+  triple unions.
+- Rename the internal Taiwan and Hong Kong triple union keys to `TwTriple`, `TwRevTriple`, `HkTriple`, and
+  `HkRevTriple`.
 
 ---
 

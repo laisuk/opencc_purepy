@@ -677,41 +677,41 @@ class OpenCC:
         elif config_key == "s2twp":
             refs = (
                 DictRefs(self.union_cache.ensure_indexed(UnionKey.S2T))
-                .with_round_2(self.union_cache.ensure_indexed(UnionKey.S2TwpR2TwTriple))
+                .with_round_2(self.union_cache.ensure_indexed(UnionKey.TwTriple))
             )
         elif config_key == "s2twp_punct":
             refs = (
                 DictRefs(self.union_cache.ensure_indexed(UnionKey.S2T_PUNCT))
-                .with_round_2(self.union_cache.ensure_indexed(UnionKey.S2TwpR2TwTriple))
+                .with_round_2(self.union_cache.ensure_indexed(UnionKey.TwTriple))
             )
         elif config_key == "tw2sp":
             refs = (
-                DictRefs(self.union_cache.ensure_indexed(UnionKey.Tw2SpR1TwRevTriple))
+                DictRefs(self.union_cache.ensure_indexed(UnionKey.TwRevTriple))
                 .with_round_2(self.union_cache.ensure_indexed(UnionKey.T2S))
             )
         elif config_key == "tw2sp_punct":
             refs = (
-                DictRefs(self.union_cache.ensure_indexed(UnionKey.Tw2SpR1TwRevTriple))
+                DictRefs(self.union_cache.ensure_indexed(UnionKey.TwRevTriple))
                 .with_round_2(self.union_cache.ensure_indexed(UnionKey.T2S_PUNCT))
             )
         elif config_key == "s2hkp":
             refs = (
                 DictRefs(self.union_cache.ensure_indexed(UnionKey.S2T))
-                .with_round_2(self.union_cache.ensure_indexed(UnionKey.S2HkpR2HkTriple))
+                .with_round_2(self.union_cache.ensure_indexed(UnionKey.HkTriple))
             )
         elif config_key == "s2hkp_punct":
             refs = (
                 DictRefs(self.union_cache.ensure_indexed(UnionKey.S2T_PUNCT))
-                .with_round_2(self.union_cache.ensure_indexed(UnionKey.S2HkpR2HkTriple))
+                .with_round_2(self.union_cache.ensure_indexed(UnionKey.HkTriple))
             )
         elif config_key == "hk2sp":
             refs = (
-                DictRefs(self.union_cache.ensure_indexed(UnionKey.Hk2SpR1HkRevTriple))
+                DictRefs(self.union_cache.ensure_indexed(UnionKey.HkRevTriple))
                 .with_round_2(self.union_cache.ensure_indexed(UnionKey.T2S))
             )
         elif config_key == "hk2sp_punct":
             refs = (
-                DictRefs(self.union_cache.ensure_indexed(UnionKey.Hk2SpR1HkRevTriple))
+                DictRefs(self.union_cache.ensure_indexed(UnionKey.HkRevTriple))
                 .with_round_2(self.union_cache.ensure_indexed(UnionKey.T2S_PUNCT))
             )
         elif config_key == "s2hk":
@@ -737,17 +737,11 @@ class OpenCC:
         elif config_key == "t2tw":
             refs = DictRefs(self.union_cache.ensure_indexed(UnionKey.TwVariantsPair))
         elif config_key == "t2twp":
-            refs = (
-                DictRefs(self.union_cache.ensure_indexed(UnionKey.TwPhrasesOnly))
-                .with_round_2(self.union_cache.ensure_indexed(UnionKey.TwVariantsPair))
-            )
+            refs = DictRefs(self.union_cache.ensure_indexed(UnionKey.TwTriple))
         elif config_key == "tw2t":
             refs = DictRefs(self.union_cache.ensure_indexed(UnionKey.TwRevPair))
         elif config_key == "tw2tp":
-            refs = (
-                DictRefs(self.union_cache.ensure_indexed(UnionKey.TwRevPair))
-                .with_round_2(self.union_cache.ensure_indexed(UnionKey.TwPhrasesRevOnly))
-            )
+            refs = DictRefs(self.union_cache.ensure_indexed(UnionKey.TwRevTriple))
         elif config_key == "t2hk":
             refs = DictRefs(self.union_cache.ensure_indexed(UnionKey.HkVariantsPair))
         elif config_key == "hk2t":
@@ -915,8 +909,14 @@ class OpenCC:
         return OpenCC._apply_punctuation(output, "t2tw", punctuation)
 
     def t2twp(self, input_text: str, punctuation: bool = False) -> str:
-        """
-        Convert Traditional Chinese to Taiwan Standard using phrase and variant mappings.
+        """Convert Traditional Chinese to Taiwan Traditional with idioms.
+
+        Phrase mappings take precedence over phrase-level and character-level
+        Taiwan variant mappings in a single dictionary pass.
+
+        :param input_text: Traditional Chinese text to convert.
+        :param punctuation: Whether to convert punctuation to Traditional style.
+        :return: Taiwan Traditional Chinese text with idioms and variants normalized.
         """
         refs = self._get_dict_refs("t2twp")
         output = refs.apply_segment_replace(input_text, union_replace=self.union_replace, validate_delegates=False)
@@ -931,8 +931,15 @@ class OpenCC:
         return OpenCC._apply_punctuation(output, "tw2t", punctuation)
 
     def tw2tp(self, input_text: str, punctuation: bool = False) -> str:
-        """
-        Convert Taiwan Traditional to Traditional with phrase reversal.
+        """Convert Taiwan Traditional with idioms to general Traditional Chinese.
+
+        Reverse phrase mappings take precedence over phrase-level and
+        character-level reverse Taiwan variant mappings in a single dictionary
+        pass.
+
+        :param input_text: Taiwan Traditional Chinese text to convert.
+        :param punctuation: Whether to convert punctuation to Traditional style.
+        :return: General Traditional Chinese text with idioms and variants reversed.
         """
         refs = self._get_dict_refs("tw2tp")
         output = refs.apply_segment_replace(input_text, union_replace=self.union_replace, validate_delegates=False)
