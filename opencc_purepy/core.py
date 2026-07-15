@@ -39,14 +39,14 @@ PUNCT_T2S_MAP = str.maketrans({
 # These route punctuation=True through explicit *_punct union configs.
 #
 # Legacy punctuation fallback paths:
-#   t2tw, t2twp, tw2t, tw2tp, t2hk, hk2t, t2jp, jp2t
+#   t2tw, t2twp, tw2t, tw2tp, t2hk, t2hkp, hk2t, hk2tp, t2jp, jp2t
 # These still run the post-processing helper below to preserve 1.3.x beta
 # behavior until punctuation handling is fully unified.
 UNION_PUNCTUATION_CONFIGS = (
     "s2t", "t2s", "s2tw", "tw2s", "s2twp", "tw2sp", "s2hk", "hk2s", "s2hkp", "hk2sp",
 )
 LEGACY_PUNCTUATION_FALLBACK_CONFIGS = (
-    "t2tw", "t2twp", "tw2t", "tw2tp", "t2hk", "hk2t", "t2jp", "jp2t",
+    "t2tw", "t2twp", "tw2t", "tw2tp", "t2hk", "t2hkp", "hk2t", "hk2tp", "t2jp", "jp2t",
 )
 
 
@@ -67,6 +67,8 @@ class OpenccConfig(Enum):
     TW2TP = "tw2tp"
     T2HK = "t2hk"
     HK2T = "hk2t"
+    T2HKP = "t2hkp"
+    HK2TP = "hk2tp"
     T2JP = "t2jp"
     JP2T = "jp2t"
 
@@ -744,8 +746,12 @@ class OpenCC:
             refs = DictRefs(self.union_cache.ensure_indexed(UnionKey.TwRevTriple))
         elif config_key == "t2hk":
             refs = DictRefs(self.union_cache.ensure_indexed(UnionKey.HkVariantsPair))
+        elif config_key == "t2hkp":
+            refs = DictRefs(self.union_cache.ensure_indexed(UnionKey.HkTriple))
         elif config_key == "hk2t":
             refs = DictRefs(self.union_cache.ensure_indexed(UnionKey.HkRevPair))
+        elif config_key == "hk2tp":
+            refs = DictRefs(self.union_cache.ensure_indexed(UnionKey.HkRevTriple))
         elif config_key == "t2jp":
             refs = DictRefs(self.union_cache.ensure_indexed(UnionKey.JpsCharactersRev))
         elif config_key == "jp2t":
@@ -762,10 +768,10 @@ class OpenCC:
         Deprecated compatibility layer for legacy punctuation post-processing.
 
         Dedicated union punctuation paths currently exist for:
-            s2t, t2s, s2tw, tw2s, s2twp, tw2sp, s2hk, hk2s
+            s2t, t2s, s2tw, tw2s, s2twp, tw2sp, s2hk, hk2s, s2hkp, hk2sp
 
         Legacy fallback paths that still call this helper:
-            t2tw, t2twp, tw2t, tw2tp, t2hk, hk2t, t2jp, jp2t
+            t2tw, t2twp, tw2t, tw2tp, t2hk, t2hkp, hk2t, hk2tp, t2jp, jp2t
 
         Runtime behavior is intentionally preserved for 1.3.x beta users. Do
         not emit runtime deprecation warnings here; this is an internal
@@ -953,6 +959,20 @@ class OpenCC:
         output = refs.apply_segment_replace(input_text, union_replace=self.union_replace, validate_delegates=False)
         return OpenCC._apply_punctuation(output, "t2hk", punctuation)
 
+    def t2hkp(self, input_text: str, punctuation: bool = False) -> str:
+        """Convert Traditional Chinese to Hong Kong Traditional with idioms.
+
+        Phrase mappings take precedence over phrase-level and character-level
+        Hong Kong variant mappings in a single dictionary pass.
+
+        :param input_text: Traditional Chinese text to convert.
+        :param punctuation: Whether to convert punctuation to Traditional style.
+        :return: Hong Kong Traditional text with idioms and variants normalized.
+        """
+        refs = self._get_dict_refs("t2hkp")
+        output = refs.apply_segment_replace(input_text, union_replace=self.union_replace, validate_delegates=False)
+        return OpenCC._apply_punctuation(output, "t2hkp", punctuation)
+
     def hk2t(self, input_text: str, punctuation: bool = False) -> str:
         """
         Convert Hong Kong Traditional to standard Traditional Chinese.
@@ -960,6 +980,21 @@ class OpenCC:
         refs = self._get_dict_refs("hk2t")
         output = refs.apply_segment_replace(input_text, union_replace=self.union_replace, validate_delegates=False)
         return OpenCC._apply_punctuation(output, "hk2t", punctuation)
+
+    def hk2tp(self, input_text: str, punctuation: bool = False) -> str:
+        """Convert Hong Kong Traditional with idioms to general Traditional Chinese.
+
+        Reverse phrase mappings take precedence over phrase-level and
+        character-level reverse Hong Kong variant mappings in a single
+        dictionary pass.
+
+        :param input_text: Hong Kong Traditional Chinese text to convert.
+        :param punctuation: Whether to convert punctuation to Traditional style.
+        :return: General Traditional Chinese text with idioms and variants reversed.
+        """
+        refs = self._get_dict_refs("hk2tp")
+        output = refs.apply_segment_replace(input_text, union_replace=self.union_replace, validate_delegates=False)
+        return OpenCC._apply_punctuation(output, "hk2tp", punctuation)
 
     def t2jp(self, input_text: str, punctuation: bool = False) -> str:
         """
@@ -1009,6 +1044,8 @@ class OpenCC:
                 return self.t2twp(input_text, punctuation)
             elif config == "t2hk":
                 return self.t2hk(input_text, punctuation)
+            elif config == "t2hkp":
+                return self.t2hkp(input_text, punctuation)
             elif config == "tw2s":
                 return self.tw2s(input_text, punctuation)
             elif config == "tw2sp":
@@ -1023,6 +1060,8 @@ class OpenCC:
                 return self.hk2sp(input_text, punctuation)
             elif config == "hk2t":
                 return self.hk2t(input_text, punctuation)
+            elif config == "hk2tp":
+                return self.hk2tp(input_text, punctuation)
             elif config == "jp2t":
                 return self.jp2t(input_text, punctuation)
             elif config == "t2jp":

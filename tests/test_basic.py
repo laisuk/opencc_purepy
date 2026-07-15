@@ -57,6 +57,23 @@ class TestOpenCC(unittest.TestCase):
         self.assertIsNone(reverse_refs.round_2)
         self.assertIsNone(reverse_refs.round_3)
 
+    def test_direct_hong_kong_phrase_configs_use_one_round_triple_unions(self):
+        forward_refs = self.converter._get_dict_refs("t2hkp")
+        reverse_refs = self.converter._get_dict_refs("hk2tp")
+
+        self.assertIs(forward_refs.round_1, self.converter.union_cache.get_union(UnionKey.HkTriple))
+        self.assertIsNone(forward_refs.round_2)
+        self.assertIsNone(forward_refs.round_3)
+        self.assertIs(reverse_refs.round_1, self.converter.union_cache.get_union(UnionKey.HkRevTriple))
+        self.assertIsNone(reverse_refs.round_2)
+        self.assertIsNone(reverse_refs.round_3)
+
+    def test_direct_hong_kong_phrase_conversion_and_dispatch(self):
+        self.assertEqual(self.converter.t2hkp("搜索服務器"), "搜尋伺服器")
+        self.assertEqual(self.converter.hk2tp("搜尋伺服器"), "搜索服務器")
+        self.assertEqual(OpenCC("t2hkp").convert("搜索服務器"), "搜尋伺服器")
+        self.assertEqual(OpenCC("hk2tp").convert("搜尋伺服器"), "搜索服務器")
+
     def test_tw2sp_conversion(self):
         traditional = "漢字轉換測試：義大利的羅馬城不是一天裡就能建成的"
         self.converter.config = "tw2sp"
@@ -130,16 +147,22 @@ class TestOpenCC(unittest.TestCase):
         self.assertEqual(OpenccConfig.parse(" S2T "), OpenccConfig.S2T)
         self.assertEqual(OpenccConfig.parse("s2hkp"), OpenccConfig.S2HKP)
         self.assertEqual(OpenccConfig.parse("hk2sp"), OpenccConfig.HK2SP)
+        self.assertEqual(OpenccConfig.parse("t2hkp"), OpenccConfig.T2HKP)
+        self.assertEqual(OpenccConfig.parse("hk2tp"), OpenccConfig.HK2TP)
 
     def test_supported_configs_include_hong_kong_phrase_configs(self):
         configs = OpenCC.supported_configs()
 
         self.assertIn("s2hkp", configs)
         self.assertIn("hk2sp", configs)
+        self.assertIn("t2hkp", configs)
+        self.assertIn("hk2tp", configs)
 
     def test_cli_config_arg_normalizes_supported_names(self):
         self.assertEqual(_config_arg("s2TW"), "s2tw")
         self.assertEqual(_config_arg("S2t"), "s2t")
+        self.assertEqual(_config_arg("T2HKP"), "t2hkp")
+        self.assertEqual(_config_arg("HK2TP"), "hk2tp")
 
     def test_cli_format_arg_normalizes_supported_names(self):
         self.assertEqual(_format_arg("DOCX"), "docx")

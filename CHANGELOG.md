@@ -9,6 +9,11 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ## [1.4.2] - Unreleased
 
+### Added
+
+- Add direct Hong Kong phrase conversion configs and APIs: `t2hkp` / `OpenCC.t2hkp()` and `hk2tp` /
+  `OpenCC.hk2tp()`.
+
 ### Changed
 
 - Update dictionary data.
@@ -19,7 +24,7 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ---
 
-## [1.4.1] - 2026-0/-15
+## [1.4.1] - 2026-07-15
 
 ### Added
 

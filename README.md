@@ -44,7 +44,9 @@ It uses dictionary-based segmentation and mapping logic inspired by the original
 | `t2twp` | Traditional → Traditional (Taiwan) with idioms                           |
 | `tw2tp` | Traditional (Taiwan) → Traditional with idioms                           |
 | `t2hk`  | Traditional → Traditional (Hong Kong)                                    |
+| `t2hkp` | Traditional → Traditional (Hong Kong) with idioms                        |
 | `hk2t`  | Traditional (Hong Kong) → Traditional                                    |
+| `hk2tp` | Traditional (Hong Kong) → Traditional with idioms                        |
 | `t2jp`  | Japanese Kyujitai → Shinjitai                                            |
 | `jp2t`  | Japanese Shinjitai → Kyujitai                                            |
 
@@ -592,8 +594,12 @@ Empty keys or values are ignored.
   Taiwan Traditional to standard Traditional Chinese with phrase reversal.
 - `t2hk(input: str, punctuation: bool = False) -> str`  
   Traditional Chinese to Hong Kong variant.
+- `t2hkp(input: str, punctuation: bool = False) -> str`
+  Traditional Chinese to Hong Kong Traditional with phrase and variant normalization.
 - `hk2t(input: str, punctuation: bool = False) -> str`  
   Hong Kong Traditional to standard Traditional Chinese.
+- `hk2tp(input: str, punctuation: bool = False) -> str`
+  Hong Kong Traditional to standard Traditional Chinese with phrase and variant reversal.
 - `t2jp(input: str, punctuation: bool = False) -> str`  
   Traditional Chinese to Japanese variants.
 - `jp2t(input: str, punctuation: bool = False) -> str`  
@@ -634,8 +640,8 @@ Empty keys or values are ignored.
 
 ### `OpenccConfig` enum
 
-- Members include: `S2T`, `T2S`, `S2TW`, `TW2S`, `S2TWP`, `TW2SP`, `S2HK`, `HK2S`, `T2TW`, `TW2T`, `T2TWP`, `TW2TP`,
-  `T2HK`, `HK2T`, `T2JP`, `JP2T`
+- Members include: `S2T`, `T2S`, `S2TW`, `TW2S`, `S2TWP`, `TW2SP`, `S2HK`, `HK2S`, `S2HKP`, `HK2SP`, `T2TW`,
+  `TW2T`, `T2TWP`, `TW2TP`, `T2HK`, `HK2T`, `T2HKP`, `HK2TP`, `T2JP`, `JP2T`
 - `to_canonical_name() -> str`  
   Return the lowercase OpenCC config string.
 - `parse(value: str) -> OpenccConfig`  
