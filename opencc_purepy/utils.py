@@ -95,15 +95,17 @@ def parse_custom_dict_specs(
     appends: SlotPathMap = {}
 
     for spec in specs or ():
-        slot, mode, path = parse_custom_dict_spec(spec)
+        parsed = parse_custom_dict_spec(spec)
 
-        if not Path(path).is_file():
-            raise ValueError("Custom dictionary file not found: {}".format(path))
+        if not Path(parsed.path).is_file():
+            raise ValueError(
+                "Custom dictionary file not found: {}".format(parsed.path)
+            )
 
-        if mode == "override":
-            overrides[slot] = path
+        if parsed.mode == "override":
+            overrides[parsed.slot] = parsed.path
         else:
-            appends[slot] = path
+            appends[parsed.slot] = parsed.path
 
     return overrides, appends
 

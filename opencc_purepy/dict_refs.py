@@ -91,11 +91,11 @@ class DictRefs:
 
         if DictRefs._is_starter_union_like(value):
             union = cast(StarterUnionLike, value)
-            return [(union.merged_map, int(union.cap))], int(union.cap)
+            return [(union.merged_map, union.cap)], union.cap
 
         if isinstance(value, tuple) and len(value) == 2 and isinstance(value[0], dict):
             dictionary, length = value
-            return [(dictionary, int(length))], int(length)
+            return [(dictionary, length)], length
 
         if isinstance(value, list):
             slots: List[DictSlot] = []
@@ -103,7 +103,7 @@ class DictRefs:
             for item in value:
                 if isinstance(item, tuple) and len(item) == 2 and isinstance(item[0], dict):
                     dictionary, length = item
-                    slot_len = int(length)
+                    slot_len = length
                     slots.append((dictionary, slot_len))
                     max_len = max(max_len, slot_len)
                 else:
@@ -118,7 +118,8 @@ class DictRefs:
                 self._as_slots_and_cap(r)
                 for r in (self.round_1, self.round_2, self.round_3)
             ]
-        return cast(List[Tuple[List[DictSlot], int]], self._norm)
+        assert self._norm is not None
+        return self._norm
 
     def _get_max_lengths(self) -> List[int]:
         return [cap for _slots, cap in self._normalize()]

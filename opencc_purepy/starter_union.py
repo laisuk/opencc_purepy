@@ -22,7 +22,7 @@ class StarterUnion(StarterUnionLike):
 
         if len(slot_list) == 1:
             dictionary, max_len = slot_list[0]
-            return StarterUnion(merged_map=dictionary, cap=int(max_len))
+            return StarterUnion(merged_map=dictionary, cap=max_len)
 
         merged: Dict[str, str] = {}
         max_len = 0
@@ -32,7 +32,7 @@ class StarterUnion(StarterUnionLike):
         for dictionary, slot_max_len in reversed(slot_list):
             if dictionary:
                 merged.update(dictionary)
-            max_len = max(max_len, int(slot_max_len))
+            max_len = max(max_len, slot_max_len)
 
         return StarterUnion(merged_map=merged, cap=max_len)
 
