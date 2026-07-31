@@ -35,17 +35,30 @@ class DictSlot(str, Enum):
 
     @classmethod
     def parse(cls, value: "DictSlotLike") -> "DictSlot":
-        """
-            Normalize a user-supplied dictionary slot to a DictSlot.
+        """Normalize a user-supplied dictionary slot.
 
-            Accepts:
-                HKPhrasesRev
-                hkphrasesrev
-                hk_phrases_rev
-                DictSlot.HKPhrasesRev
-            """
+        Accepts enum members, enum-style names, compact names, and canonical
+        underscore-separated names.
+
+        Args:
+            value: Dictionary slot enum member or string representation.
+
+        Returns:
+            The normalized dictionary slot.
+
+        Raises:
+            TypeError: If value is neither a DictSlot nor a string.
+            ValueError: If the slot name is unknown.
+        """
         if isinstance(value, cls):
             return value
+
+        if not isinstance(value, str):
+            raise TypeError(
+                "Dictionary slot must be a DictSlot or str, got {}".format(
+                    type(value).__name__
+                )
+            )
 
         key = value.strip().lower().replace("_", "")
 
