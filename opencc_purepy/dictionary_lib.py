@@ -69,7 +69,7 @@ class DictionaryMaxlength:
         return "<DictionaryMaxlength with {} loaded dicts>".format(count)
 
     @classmethod
-    def get_provider(cls):
+    def get_provider(cls) -> "DictionaryMaxlength":
         """
         Return a shared dictionary provider loaded from precompiled JSON.
         :return: DictionaryMaxlength instance
@@ -90,7 +90,7 @@ class DictionaryMaxlength:
             )
 
     @classmethod
-    def new(cls):
+    def new(cls) -> "DictionaryMaxlength":
         """
         Backward-compatible alias for the shared dictionary provider.
         :return: DictionaryMaxlength instance
