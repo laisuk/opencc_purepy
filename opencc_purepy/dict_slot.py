@@ -33,5 +33,30 @@ class DictSlot(str, Enum):
     JPSCharactersRev = "jps_characters_rev"
     JPSPhrases = "jps_phrases"
 
+    @classmethod
+    def parse(cls, value: "DictSlotLike") -> "DictSlot":
+        """
+            Normalize a user-supplied dictionary slot to a DictSlot.
+
+            Accepts:
+                HKPhrasesRev
+                hkphrasesrev
+                hk_phrases_rev
+                DictSlot.HKPhrasesRev
+            """
+        if isinstance(value, cls):
+            return value
+
+        key = value.strip().lower().replace("_", "")
+
+        for member in cls:
+            if member.name.lower() == key:
+                return member
+
+            if member.value.replace("_", "").lower() == key:
+                return member
+
+        raise ValueError("Unknown dictionary slot: {}".format(value))
+
 
 DictSlotLike = Union[DictSlot, str]

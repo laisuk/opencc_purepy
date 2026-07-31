@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Literal, Optional, Tuple
 
-from .dict_slot import DictSlot, DictSlotLike
+from .dict_slot import DictSlot
 from .dictionary_lib import PathLike, SlotPathMap
 
 CustomDictMode = Literal["append", "override"]
@@ -70,7 +70,7 @@ def parse_custom_dict_spec(spec: str) -> CustomDictSpec:
         )
 
     return CustomDictSpec(
-        slot=normalize_dict_slot(slot),
+        slot=DictSlot.parse(slot),
         mode=mode,
         path=path,
     )
@@ -135,28 +135,3 @@ def custom_dict_specs_to_maps(
             raise ValueError("Invalid custom dictionary mode: {}".format(spec.mode))
 
     return overrides, appends
-
-
-def normalize_dict_slot(slot: DictSlotLike) -> DictSlot:
-    """
-    Normalize a user-supplied dictionary slot to a DictSlot.
-
-    Accepts:
-        HKPhrasesRev
-        hkphrasesrev
-        hk_phrases_rev
-        DictSlot.HKPhrasesRev
-    """
-    if isinstance(slot, DictSlot):
-        return slot
-
-    key = slot.strip().lower().replace("_", "")
-
-    for member in DictSlot:
-        if member.name.lower() == key:
-            return member
-
-        if member.value.replace("_", "").lower() == key:
-            return member
-
-    raise ValueError("Unknown dictionary slot: {}".format(slot))
