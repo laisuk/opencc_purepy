@@ -577,6 +577,9 @@ Empty keys or values are ignored.
 
 - `OpenCC`
 - `OpenccConfig`
+- `DictSlot`
+- `DictSlotLike`
+- `PathLike`
 - `DeTofuLevel` is available from `opencc_purepy.detofu`
 - `CustomDictSpec`, `parse_custom_dict_spec`, `parse_custom_dict_specs`, and `custom_dict_specs_to_maps` are available
   from `opencc_purepy.utils`
