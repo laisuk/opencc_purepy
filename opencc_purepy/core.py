@@ -356,7 +356,7 @@ class OpenCC:
         """
         self.config = self._normalize_config(config)
 
-    def get_config(self):
+    def get_config(self) -> str:
         """
         Get the current conversion config.
 
@@ -365,15 +365,15 @@ class OpenCC:
         return self.config
 
     @classmethod
-    def supported_configs(cls):
+    def supported_configs(cls) -> List[str]:
         """
         Return a list of supported conversion config strings.
 
         :return: List of config names
         """
-        return cls.CONFIG_LIST
+        return list(cls.CONFIG_LIST)
 
-    def get_last_error(self):
+    def get_last_error(self) -> Optional[str]:
         """
         Retrieve the last error message, if any.
 
@@ -790,7 +790,7 @@ class OpenCC:
             translate_table = cast(_PunctuationTranslateTable, PUNCT_S2T_MAP)
         return text.translate(translate_table)
 
-    def s2t(self, input_text, punctuation=False):
+    def s2t(self, input_text: str, punctuation: bool = False) -> str:
         """
         Convert Simplified Chinese to Traditional Chinese.
 
@@ -801,7 +801,7 @@ class OpenCC:
         refs = self._get_dict_refs("s2t_punct" if punctuation else "s2t")
         return refs.apply_segment_replace(input_text, union_replace=self.union_replace, validate_delegates=False)
 
-    def t2s(self, input_text, punctuation=False):
+    def t2s(self, input_text: str, punctuation: bool = False) -> str:
         """
         Convert Traditional Chinese to Simplified Chinese.
 
@@ -812,7 +812,7 @@ class OpenCC:
         refs = self._get_dict_refs("t2s_punct" if punctuation else "t2s")
         return refs.apply_segment_replace(input_text, union_replace=self.union_replace, validate_delegates=False)
 
-    def s2tw(self, input_text, punctuation=False):
+    def s2tw(self, input_text: str, punctuation: bool = False) -> str:
         """
         Convert Simplified Chinese to Traditional Chinese (Taiwan Standard).
 
@@ -823,7 +823,7 @@ class OpenCC:
         refs = self._get_dict_refs("s2tw_punct" if punctuation else "s2tw")
         return refs.apply_segment_replace(input_text, union_replace=self.union_replace, validate_delegates=False)
 
-    def tw2s(self, input_text, punctuation=False):
+    def tw2s(self, input_text: str, punctuation: bool = False) -> str:
         """
         Convert Traditional Chinese (Taiwan) to Simplified Chinese.
 
@@ -834,7 +834,7 @@ class OpenCC:
         refs = self._get_dict_refs("tw2s_punct" if punctuation else "tw2s")
         return refs.apply_segment_replace(input_text, union_replace=self.union_replace, validate_delegates=False)
 
-    def s2twp(self, input_text, punctuation=False):
+    def s2twp(self, input_text: str, punctuation: bool = False) -> str:
         """
         Convert Simplified Chinese to Traditional (Taiwan) with phrase and variant normalization.
 
@@ -848,7 +848,7 @@ class OpenCC:
         refs = self._get_dict_refs("s2twp_punct" if punctuation else "s2twp")
         return refs.apply_segment_replace(input_text, union_replace=self.union_replace, validate_delegates=False)
 
-    def tw2sp(self, input_text, punctuation=False):
+    def tw2sp(self, input_text: str, punctuation: bool = False) -> str:
         """
         Convert Traditional (Taiwan) with phrases to Simplified Chinese.
 
@@ -859,7 +859,7 @@ class OpenCC:
         refs = self._get_dict_refs("tw2sp_punct" if punctuation else "tw2sp")
         return refs.apply_segment_replace(input_text, union_replace=self.union_replace, validate_delegates=False)
 
-    def s2hkp(self, input_text, punctuation=False):
+    def s2hkp(self, input_text: str, punctuation: bool = False) -> str:
         """
         Convert Simplified Chinese to Hong Kong Traditional with phrase and variant normalization.
 
@@ -873,7 +873,7 @@ class OpenCC:
         refs = self._get_dict_refs("s2hkp_punct" if punctuation else "s2hkp")
         return refs.apply_segment_replace(input_text, union_replace=self.union_replace, validate_delegates=False)
 
-    def hk2sp(self, input_text, punctuation=False):
+    def hk2sp(self, input_text: str, punctuation: bool = False) -> str:
         """
         Convert Hong Kong Traditional with phrases and variants to Simplified Chinese.
 
@@ -884,7 +884,7 @@ class OpenCC:
         refs = self._get_dict_refs("hk2sp_punct" if punctuation else "hk2sp")
         return refs.apply_segment_replace(input_text, union_replace=self.union_replace, validate_delegates=False)
 
-    def s2hk(self, input_text, punctuation=False):
+    def s2hk(self, input_text: str, punctuation: bool = False) -> str:
         """
         Convert Simplified Chinese to Traditional (Hong Kong Standard).
 
@@ -895,7 +895,7 @@ class OpenCC:
         refs = self._get_dict_refs("s2hk_punct" if punctuation else "s2hk")
         return refs.apply_segment_replace(input_text, union_replace=self.union_replace, validate_delegates=False)
 
-    def hk2s(self, input_text, punctuation=False):
+    def hk2s(self, input_text: str, punctuation: bool = False) -> str:
         """
         Convert Traditional (Hong Kong) to Simplified Chinese.
 
