@@ -484,7 +484,7 @@ print(display_safe)
 
 String level names are also supported:
 
-```bash
+```python
 display_safe = cc.detofu(converted, "all")
 ```
 
@@ -520,7 +520,7 @@ ext-i / i
 
 Use `detofu_with_custom_file(...)` to add project-local fallback mappings from a UTF-8 text file:
 
-```bash
+```python
 display_safe = cc.detofu_with_custom_file(
     converted,
     "all",
@@ -547,7 +547,7 @@ Blank lines are ignored, and lines beginning with `#` are ignored. The extension
 
 Use `detofu_with_custom_pairs(...)` to add direct fallback pairs in memory:
 
-```bash
+```python
 display_safe = cc.detofu_with_custom_pairs(
     converted,
     "all",
@@ -598,65 +598,65 @@ Empty keys or values are ignored.
   Return all supported config names.
 - `get_last_error() -> Optional[str]`  
   Return the last validation or conversion error, if any.
-- `convert(input: str, punctuation: bool = False) -> str`  
+- `convert(input_text: str, punctuation: bool = False) -> str`  
   Convert text using the active config, with optional punctuation conversion.
-- `s2t(input: str, punctuation: bool = False) -> str`  
+- `s2t(input_text: str, punctuation: bool = False) -> str`  
   Simplified Chinese to Traditional Chinese.
-- `t2s(input: str, punctuation: bool = False) -> str`  
+- `t2s(input_text: str, punctuation: bool = False) -> str`  
   Traditional Chinese to Simplified Chinese.
-- `s2tw(input: str, punctuation: bool = False) -> str`  
+- `s2tw(input_text: str, punctuation: bool = False) -> str`  
   Simplified Chinese to Taiwan Traditional.
-- `tw2s(input: str, punctuation: bool = False) -> str`  
+- `tw2s(input_text: str, punctuation: bool = False) -> str`  
   Taiwan Traditional to Simplified Chinese.
-- `s2twp(input: str, punctuation: bool = False) -> str`  
+- `s2twp(input_text: str, punctuation: bool = False) -> str`  
   Simplified Chinese to Taiwan Traditional with phrase and variant normalization.
-- `tw2sp(input: str, punctuation: bool = False) -> str`  
+- `tw2sp(input_text: str, punctuation: bool = False) -> str`  
   Taiwan Traditional with idioms to Simplified Chinese.
-- `s2hk(input: str, punctuation: bool = False) -> str`  
+- `s2hk(input_text: str, punctuation: bool = False) -> str`  
   Simplified Chinese to Hong Kong Traditional.
-- `hk2s(input: str, punctuation: bool = False) -> str`  
+- `hk2s(input_text: str, punctuation: bool = False) -> str`  
   Hong Kong Traditional to Simplified Chinese.
-- `s2hkp(input: str, punctuation: bool = False) -> str`  
+- `s2hkp(input_text: str, punctuation: bool = False) -> str`  
   Simplified Chinese to Hong Kong Traditional with phrase and variant normalization.
-- `hk2sp(input: str, punctuation: bool = False) -> str`  
+- `hk2sp(input_text: str, punctuation: bool = False) -> str`  
   Hong Kong Traditional with phrases/variants to Simplified Chinese.
-- `t2tw(input: str, punctuation: bool = False) -> str`  
+- `t2tw(input_text: str, punctuation: bool = False) -> str`  
   Traditional Chinese to Taiwan Traditional.
-- `t2twp(input: str, punctuation: bool = False) -> str`  
+- `t2twp(input_text: str, punctuation: bool = False) -> str`  
   Traditional Chinese to Taiwan Traditional with phrase mappings.
-- `tw2t(input: str, punctuation: bool = False) -> str`  
+- `tw2t(input_text: str, punctuation: bool = False) -> str`  
   Taiwan Traditional to standard Traditional Chinese.
-- `tw2tp(input: str, punctuation: bool = False) -> str`  
+- `tw2tp(input_text: str, punctuation: bool = False) -> str`  
   Taiwan Traditional to standard Traditional Chinese with phrase reversal.
-- `t2hk(input: str, punctuation: bool = False) -> str`  
+- `t2hk(input_text: str, punctuation: bool = False) -> str`  
   Traditional Chinese to Hong Kong variant.
-- `t2hkp(input: str, punctuation: bool = False) -> str`
+- `t2hkp(input_text: str, punctuation: bool = False) -> str`
   Traditional Chinese to Hong Kong Traditional with phrase and variant normalization.
-- `hk2t(input: str, punctuation: bool = False) -> str`  
+- `hk2t(input_text: str, punctuation: bool = False) -> str`  
   Hong Kong Traditional to standard Traditional Chinese.
-- `hk2tp(input: str, punctuation: bool = False) -> str`
+- `hk2tp(input_text: str, punctuation: bool = False) -> str`
   Hong Kong Traditional to standard Traditional Chinese with phrase and variant reversal.
-- `t2jp(input: str, punctuation: bool = False) -> str`  
+- `t2jp(input_text: str, punctuation: bool = False) -> str`  
   Traditional Chinese to Japanese variants.
-- `jp2t(input: str, punctuation: bool = False) -> str`  
+- `jp2t(input_text: str, punctuation: bool = False) -> str`  
   Japanese Shinjitai to Traditional Chinese.
-- `st(input: str) -> str`  
+- `st(input_text: str) -> str`  
   Character-only Simplified to Traditional conversion.
-- `ts(input: str) -> str`  
+- `ts(input_text: str) -> str`  
   Character-only Traditional to Simplified conversion.
-- `zho_check(input: str) -> int`  
+- `zho_check(input_text: str) -> int`  
   Detect the input text type:  
   &nbsp;&nbsp;`1` - Traditional, `2` - Simplified, `0` - Others
 
 - `detofu(  
-  input: Optional[str],  
+  text: Optional[str],  
   level: Union[DeTofuLevel, str] = DeTofuLevel.ExtB  
   ) -> str`
 
   Apply built-in DeTofu display-compatible fallback mappings.
 
 - `detofu_with_custom_file(
-  input: Optional[str],
+  text: Optional[str],
   level: Union[DeTofuLevel, str],
   path: str
   ) -> str`
@@ -664,7 +664,7 @@ Empty keys or values are ignored.
   Apply built-in DeTofu mappings plus a UTF-8 custom fallback file.
 
 - `detofu_with_custom_pairs(
-  input: Optional[str],
+  text: Optional[str],
   level: Union[DeTofuLevel, str],
   pairs: Union[
       Mapping[str, str],
