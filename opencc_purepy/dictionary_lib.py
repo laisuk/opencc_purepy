@@ -61,8 +61,11 @@ class DictionaryMaxlength:
 
         self._is_shared_provider = False
 
-    def __repr__(self):
-        count = sum(bool(v[0]) for v in self.__dict__.values())
+    def __repr__(self) -> str:
+        count = sum(
+            bool(getattr(self, field)[0])
+            for field in self.DICT_FIELDS
+        )
         return "<DictionaryMaxlength with {} loaded dicts>".format(count)
 
     @classmethod
