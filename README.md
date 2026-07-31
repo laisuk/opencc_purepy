@@ -184,6 +184,42 @@ Each `CustomDictSpec` is `slot, mode, path`:
 Use `"append"` for user terms that should extend a built-in slot. Use `"override"` only when the file is a complete
 replacement for that slot.
 
+#### Dictionary slot parsing
+
+`DictSlot.parse()` accepts a `DictSlot` directly or parses enum-style, compact, and canonical string forms. In Python,
+the enum's `.value` is already its canonical serialized name, so no separate `canonical_name()` method is needed.
+
+```python
+from opencc_purepy import DictSlot
+
+slot = DictSlot.parse("HKPhrasesRev")
+assert slot is DictSlot.HKPhrasesRev
+assert DictSlot.parse("hkphrasesrev") is slot
+assert DictSlot.parse("hk_phrases_rev") is slot
+assert slot.value == "hk_phrases_rev"
+```
+
+For advanced API use, `parse_custom_dict_spec()` reuses the same parser for the complete CLI-style
+`slot:mode:path` token. This avoids manually constructing `CustomDictSpec` records while keeping token parsing in the
+utility layer:
+
+```python
+from opencc_purepy import OpenCC
+from opencc_purepy.utils import parse_custom_dict_spec
+
+tokens = [
+    "hk_phrases_rev:append:./my_hk_dict.txt",
+]
+
+cc = OpenCC.from_dict_files(
+    config="hk2sp",
+    specs=[parse_custom_dict_spec(token) for token in tokens],
+)
+```
+
+Use `DictSlot.parse()` when only a slot name needs normalization. Use `parse_custom_dict_spec()` when the input is the
+combined `slot:mode:path` form used by the CLI.
+
 ---
 
 ### CLI custom dictionary files
