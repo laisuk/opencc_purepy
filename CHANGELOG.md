@@ -40,8 +40,8 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ### Added
 
-- Added `OpenCC.from_dict_files(config, specs)` for post-load custom dictionary file loading on top of the packaged
-  JSON dictionaries.
+- Added `OpenCC.from_dict_files(config, specs)` for post-load custom dictionary file loading on top of the packaged JSON
+  dictionaries.
 - Added CLI `--custom-dict slot:mode:path` support for the `convert`, `office`, and `dictgen` subcommands.
 - Added `opencc_purepy.utils.CustomDictSpec` plus helper functions for parsing and grouping custom dictionary
   specifications into `append` and `override` mappings.
@@ -101,8 +101,8 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 * Added built-in fallback mappings loaded from `TSCharactersTofu.txt`.
 * Added support for custom DeTofu fallback files.
 * Added support for custom in-memory DeTofu fallback pairs.
-* Missing `HKPhrases.txt` / `HKPhrasesRev.txt` files are treated as empty dictionaries when loading from TXT
-  dictionary directories for backward compatibility.
+* Missing `HKPhrases.txt` / `HKPhrasesRev.txt` files are treated as empty dictionaries when loading from TXT dictionary
+  directories for backward compatibility.
 * Added OpenCC convenience APIs:
 
     * `OpenCC.detofu(...)`
@@ -141,7 +141,7 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 ### Changed
 
 - Update and optimize dictionary data to reduce ambiguity.
-- Optimized serialize_to_json()
+- Optimized serialize_to_json ()
 
 ---
 
@@ -193,8 +193,8 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 - Improved `from_dicts()` documentation and examples to include `DictSlot` usage.
 - Moved dictionary slot definitions into dedicated `dict_slot.py` module for cleaner public API organization.
 - Updated dictionary JSON schema for punctuation slot support.
-- Kept older JSON dictionaries without `st_punctuations` or `ts_punctuations` loadable by defaulting missing
-  punctuation slots to empty dictionaries.
+- Kept older JSON dictionaries without `st_punctuations` or `ts_punctuations` loadable by defaulting missing punctuation
+  slots to empty dictionaries.
 - Kept legacy custom dictionary directories loadable when punctuation text files are absent.
 - Clarified the distinction between OpenCC-compatible text dictionary files and exact in-memory custom dictionary pairs.
 - Improved large-text steady-state conversion performance.
@@ -333,7 +333,7 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 - Optimized internal dictionary caching for better performance.
 - Improved punctuation replacement logic using `str.translate()` fallback.
-- Improved UTF-8 byte-limit handling in zho_check() by using safe character slicing based on actual encoded byte count
+- Improved UTF-8 byte-limit handling in zho_check () by using safe character slicing based on actual encoded byte count
 - Ensured accurate language detection without cutting multibyte characters mid-way
 - Clarified that the module is compatible with Python 2.7+ (core only).
 - Optimized conversion code to reduce intermediate allocations.
