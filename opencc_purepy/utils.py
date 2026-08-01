@@ -92,6 +92,10 @@ def parse_custom_dict_specs(
 
     Return value order is ``(overrides, appends)``.
 
+    Because mappings can hold only one path per slot and mode, later records
+    replace earlier records with the same slot. Use ``OpenCC.from_dict_files()``
+    when repeated files or mixed modes must be applied sequentially.
+
     For API code that already has ``CustomDictSpec`` instances, use
     ``custom_dict_specs_to_maps()`` instead.
     """
@@ -126,6 +130,10 @@ def custom_dict_specs_to_maps(
     check file existence.
 
     Return value order is ``(overrides, appends)``.
+
+    Because mappings can hold only one path per slot and mode, later records
+    replace earlier records with the same slot. Use ``OpenCC.from_dict_files()``
+    when repeated files or mixed modes must be applied sequentially.
     """
     overrides: SlotPathMap = {}
     appends: SlotPathMap = {}

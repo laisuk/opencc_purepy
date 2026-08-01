@@ -25,6 +25,7 @@ def main(args):
               fallback mapping file. Requires --detofu.
             - in_enc (str): Input encoding (plain text only).
             - out_enc (str): Output encoding (plain text only).
+            - custom_dict (list[str] | None): Ordered custom dictionary specs.
 
     Returns:
         int: Exit code (0 for success, 1 for failure).
@@ -37,12 +38,14 @@ def main(args):
         print(f"Error: Input file not found: {args.input}", file=sys.stderr)
         return 1
 
-    # Plain text conversion fallback
-    # opencc = OpenCC(args.config)
+    if args.detofu_file and not args.detofu:
+        print("❌  --detofu-file requires --detofu", file=sys.stderr)
+        return 1
+
     try:
         specs = [parse_custom_dict_spec(s) for s in (args.custom_dict or [])]
         opencc = OpenCC.from_dict_files(args.config, specs) if specs else OpenCC(args.config)
-    except Exception as ex:
+    except (OSError, UnicodeError, ValueError) as ex:
         print(f"❌  Invalid --custom-dict: {ex}", file=sys.stderr)
         return 1
 
@@ -50,33 +53,27 @@ def main(args):
     if args.input is None and sys.stdin.isatty():
         print("Input text to convert, <Ctrl+Z>/<Ctrl+D> to submit:", file=sys.stderr)
 
-    # Read input text (from file or stdin)
-    with io.open(args.input if args.input else 0, encoding=args.in_enc) as f:
-        input_str = f.read()
+    try:
+        with io.open(args.input if args.input else 0, encoding=args.in_enc) as f:
+            input_str = f.read()
 
-    # Perform conversion
-    output_str = opencc.convert(input_str, args.punct)
+        output_str = opencc.convert(input_str, args.punct)
 
-    # Optional DeTofu display-safe fallback
-    if args.detofu_file and not args.detofu:
-        print("❌  --detofu-file requires --detofu", file=sys.stderr)
+        if args.detofu:
+            if args.detofu_file:
+                output_str = opencc.detofu_with_custom_file(
+                    output_str,
+                    args.detofu,
+                    args.detofu_file,
+                )
+            else:
+                output_str = opencc.detofu(output_str, args.detofu)
+
+        with io.open(args.output if args.output else 1, 'w', encoding=args.out_enc) as f:
+            f.write(output_str)
+    except (OSError, UnicodeError, LookupError, ValueError) as ex:
+        print("❌  Conversion failed: {}".format(ex), file=sys.stderr)
         return 1
-
-    if args.detofu:
-        level = args.detofu
-
-        if args.detofu_file:
-            output_str = opencc.detofu_with_custom_file(
-                output_str,
-                level,
-                args.detofu_file,
-            )
-        else:
-            output_str = opencc.detofu(output_str, level)
-
-    # Write output text (to file or stdout)
-    with io.open(args.output if args.output else 1, 'w', encoding=args.out_enc) as f:
-        f.write(output_str)
 
     in_from = args.input if args.input else "<stdin>"
     out_to = args.output if args.output else "stdout"

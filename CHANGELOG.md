@@ -26,6 +26,10 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
   triple unions.
 - Rename the internal Taiwan and Hong Kong triple union keys to `TwTriple`, `TwRevTriple`, `HkTriple`, and
   `HkRevTriple`.
+- Apply repeated CLI/API custom dictionary specifications sequentially in their supplied order, including multiple
+  files and mixed append/override operations for the same slot.
+- Expand CLI help and README coverage for supported configs and slots, defaults, encodings, DeToFu, stdin/stdout, and
+  dictionary-generation formatting options.
 
 ### Fixed
 
@@ -33,6 +37,8 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
   underscore names such as `ST_PHRASES`.
 - Add release-gating tests for the minimum and latest supported Python versions before publishing artifacts.
 - Complete the public DeTofu and `OpenccConfig.parse()` docstring contracts.
+- Report expected text-conversion and dictionary-generation failures as concise stderr messages with exit code 1
+  instead of exposing Python tracebacks.
 
 ---
 

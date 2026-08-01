@@ -3,7 +3,7 @@ from enum import Enum
 from multiprocessing import Pool, cpu_count
 from typing import Dict, Iterable, List, Mapping, Optional, Tuple, Union, cast
 
-from .utils import CustomDictSpec, custom_dict_specs_to_maps
+from .utils import CustomDictSpec
 from .detofu import DeTofuLevel, DeTofuMap, parse_level, detofu
 from .dict_refs import DictRefs, StarterUnionLike
 from .dict_slot import DictSlot
@@ -324,12 +324,15 @@ class OpenCC:
         """
         dictionary = DictionaryMaxlength.from_json()
 
-        overrides, appends = custom_dict_specs_to_maps(specs)
-
-        dictionary.with_custom_dict_files(
-            overrides=overrides,
-            appends=appends,
-        )
+        for spec in specs or ():
+            if spec.mode == "override":
+                dictionary.with_custom_dict_files(overrides={spec.slot: spec.path})
+            elif spec.mode == "append":
+                dictionary.with_custom_dict_files(appends={spec.slot: spec.path})
+            else:
+                raise ValueError(
+                    "Invalid custom dictionary mode: {}".format(spec.mode)
+                )
 
         return cls(config, dictionary=dictionary)
 

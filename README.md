@@ -75,12 +75,32 @@ print(converted)  # 「春眠不覺曉，處處聞啼鳥。」
 
 ### CLI
 
+The default conversion configuration is `s2t`. Run any subcommand with `--help` to see the complete supported
+configuration and custom-dictionary slot lists.
+
 #### Text File Conversion
 
 ```sh
 python -m opencc_purepy convert -i input.txt -o output.txt -c s2t -p
 # or, if installed as a script:
 opencc-purepy convert -i input.txt -o output.txt -c s2t -p
+```
+
+Standard input and output are used when `-i` or `-o` is omitted:
+
+```sh
+echo "汉字转换" | opencc-purepy convert -c s2t
+```
+
+Use `--in-enc` and `--out-enc` for non-UTF-8 text files. DeToFu fallback can be enabled at a selected extension level,
+with an optional UTF-8 custom mapping file:
+
+```sh
+opencc-purepy convert -i input.txt -o output.txt -c s2t \
+  --in-enc utf-8 --out-enc utf-8 --detofu ext-c
+
+opencc-purepy convert -i input.txt -c s2t \
+  --detofu all --detofu-file ./custom_detofu.txt
 ```
 
 #### Office Document Conversion subcommand (`office`)
@@ -233,7 +253,8 @@ combined `slot:mode:path` form used by the CLI.
 
 The `convert`, `office`, and `dictgen` subcommands support `-D/--custom-dict <slot:mode:path>`. The option can be used
 multiple times. For `convert` and `office`, it follows the same packaged-JSON-plus-custom-files behavior as
-`OpenCC.from_dict_files()`.
+`OpenCC.from_dict_files()`. Specifications are applied from left to right; when multiple files affect the same slot,
+later specifications see and may replace entries produced by earlier ones.
 
 ```sh
 opencc-purepy convert -c hk2sp \
@@ -253,6 +274,9 @@ For `dictgen`, `-D/--custom-dict` applies custom dictionary files before writing
 ```sh
 opencc-purepy dictgen -d ./my_dicts -o dictionary_maxlength.json \
   -D STPhrases:append:./UserDict.txt
+
+# Compact JSON while preserving dictionary insertion/source order
+opencc-purepy dictgen -o dictionary_maxlength.json --compact --no-sort
 ```
 
 ---
