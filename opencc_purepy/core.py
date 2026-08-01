@@ -6,6 +6,7 @@ from typing import Dict, Iterable, List, Mapping, Optional, Tuple, Union, cast
 from .utils import CustomDictSpec, custom_dict_specs_to_maps
 from .detofu import DeTofuLevel, DeTofuMap, parse_level, detofu
 from .dict_refs import DictRefs, StarterUnionLike
+from .dict_slot import DictSlot
 from .dictionary_lib import DictionaryMaxlength, PathLike, SlotPathMap
 from .union_cache import UnionCache, UnionKey
 
@@ -372,6 +373,11 @@ class OpenCC:
         :return: List of config names
         """
         return list(cls.CONFIG_LIST)
+
+    @staticmethod
+    def available_slots() -> List[str]:
+        """Return the canonical names of all available dictionary slots."""
+        return [slot.canonical_name() for slot in DictSlot]
 
     def get_last_error(self) -> Optional[str]:
         """
