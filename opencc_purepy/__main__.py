@@ -11,7 +11,6 @@ except ImportError:
     version = None
     PackageNotFoundError = Exception
 
-
 CONFIG_HELP = "Supported configurations: {}. Default: s2t.".format(
     ", ".join(OpenCC.supported_configs())
 )
@@ -151,10 +150,10 @@ def main():
         action="append",
         metavar="<slot:mode:path>",
         help=(
-            "Load custom dictionary file. "
-            "Format: slot:mode:path, e.g. STPhrases:append:custom.txt. "
-            "Can be used multiple times."
-            " " + SLOTS_HELP
+                "Load custom dictionary file. "
+                "Format: slot:mode:path, e.g. STPhrases:append:custom.txt. "
+                "Can be used multiple times."
+                " " + SLOTS_HELP
         ),
     )
     parser_convert.add_argument("--in-enc", metavar="<encoding>", default="UTF-8", help="Input encoding")
@@ -208,10 +207,10 @@ def main():
         action="append",
         metavar="<slot:mode:path>",
         help=(
-            "Load custom dictionary file. "
-            "Format: slot:mode:path, e.g. STPhrases:append:custom.txt. "
-            "Can be used multiple times."
-            " " + SLOTS_HELP
+                "Load custom dictionary file. "
+                "Format: slot:mode:path, e.g. STPhrases:append:custom.txt. "
+                "Can be used multiple times."
+                " " + SLOTS_HELP
         ),
     )
     parser_office.set_defaults(func=_run_office)
@@ -262,10 +261,10 @@ def main():
         action="append",
         metavar="<slot:mode:path>",
         help=(
-            "Load custom dictionary file. "
-            "Format: slot:mode:path, e.g. STPhrases:append:custom.txt. "
-            "Can be used multiple times."
-            " " + SLOTS_HELP
+                "Load custom dictionary file. "
+                "Format: slot:mode:path, e.g. STPhrases:append:custom.txt. "
+                "Can be used multiple times."
+                " " + SLOTS_HELP
         ),
     )
 
