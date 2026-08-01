@@ -81,6 +81,19 @@ class OpenccConfig(Enum):
 
     @classmethod
     def parse(cls, s: str) -> "OpenccConfig":
+        """Normalize a supported OpenCC configuration name.
+
+        Args:
+            s: Configuration name. Surrounding whitespace and letter case are
+                ignored.
+
+        Returns:
+            The matching OpenCC configuration.
+
+        Raises:
+            ValueError: If s is not a string or names an unsupported
+                configuration.
+        """
         if not isinstance(s, str):
             raise ValueError("Invalid config: {}".format(s))
         return cls(s.strip().lower())
