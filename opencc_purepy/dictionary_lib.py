@@ -527,16 +527,8 @@ class DictionaryMaxlength:
 
     @staticmethod
     def _normalize_slot(slot: DictSlotLike) -> str:
-        if isinstance(slot, DictSlot):
-            return slot.value
-
-        if slot in DictSlot._value2member_map_:
-            return slot
-
-        try:
-            return DictSlot.__members__[slot].value
-        except KeyError:
-            raise ValueError("Unknown dictionary slot: {}".format(slot)) from None
+        """Return the serialized field name for a public dictionary slot."""
+        return DictSlot.parse(slot).value
 
     @classmethod
     def _normalize_slot_path_map(
