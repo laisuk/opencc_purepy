@@ -13,13 +13,14 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 - Add direct Hong Kong phrase conversion configs and APIs: `t2hkp` / `OpenCC.t2hkp()` and `hk2tp` /
   `OpenCC.hk2tp()`.
-- Add `DictSlot.parse()` for normalizing enum-style, compact, and canonical dictionary slot names.
+- Add `DictSlot.parse()` for normalizing enum-style, compact, and legacy underscore-separated dictionary slot names.
+- Add `DictSlot.canonical_name()` for retrieving the public enum-style dictionary slot name.
+- Add `OpenCC.available_slots()` for discovering all currently available canonical dictionary slot names.
 
 ### Changed
 
 - Refactor custom dictionary token parsing to delegate slot normalization to `DictSlot.parse()`, while retaining
   `parse_custom_dict_spec()` for complete `slot:mode:path` values.
-- Document `DictSlot.value` as the canonical Python slot name instead of adding a redundant `canonical_name()` method.
 - Update dictionary data.
 - Flatten direct `t2twp` and `tw2tp` conversion from two dictionary passes to one by using the Taiwan phrase/variant
   triple unions.
