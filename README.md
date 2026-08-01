@@ -186,17 +186,24 @@ replacement for that slot.
 
 #### Dictionary slot parsing
 
-`DictSlot.parse()` accepts a `DictSlot` directly or parses enum-style, compact, and canonical string forms. In Python,
-the enum's `.value` is already its canonical serialized name, so no separate `canonical_name()` method is needed.
+`DictSlot.parse()` accepts a `DictSlot` directly or parses enum-style, compact, and legacy
+underscore-separated string forms. `DictSlot.canonical_name()` returns the public enum-style slot name used by
+cross-language APIs and custom dictionary specifications; `.value` remains the legacy underscore-separated key.
 
 ```python
-from opencc_purepy import DictSlot
+from opencc_purepy import DictSlot, OpenCC
 
 slot = DictSlot.parse("HKPhrasesRev")
 assert slot is DictSlot.HKPhrasesRev
 assert DictSlot.parse("hkphrasesrev") is slot
 assert DictSlot.parse("hk_phrases_rev") is slot
+assert slot.canonical_name() == "HKPhrasesRev"
 assert slot.value == "hk_phrases_rev"
+
+# Discover every currently supported public slot name.
+slots = OpenCC.available_slots()
+assert "HKPhrasesRev" in slots
+assert "JPSCharactersRev" in slots
 ```
 
 For advanced API use, `parse_custom_dict_spec()` reuses the same parser for the complete CLI-style
@@ -598,6 +605,8 @@ Empty keys or values are ignored.
   Return the current canonical config name.
 - `supported_configs() -> List[str]`  
   Return all supported config names.
+- `available_slots() -> List[str]`  
+  Return the canonical names of all currently available dictionary slots.
 - `get_last_error() -> Optional[str]`  
   Return the last validation or conversion error, if any.
 - `convert(input_text: str, punctuation: bool = False) -> str`  
@@ -675,6 +684,13 @@ Empty keys or values are ignored.
   ) -> str`
 
   Apply built-in DeTofu mappings plus direct in-memory fallback pairs.
+
+### `DictSlot` enum
+
+- `parse(value: Union[DictSlot, str]) -> DictSlot`  
+  Normalize an enum member, enum-style name, compact name, or legacy underscore-separated key.
+- `canonical_name() -> str`  
+  Return the public enum-style slot name, such as `"HKPhrasesRev"`.
 
 ### `OpenccConfig` enum
 
