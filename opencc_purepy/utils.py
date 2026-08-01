@@ -1,13 +1,17 @@
-from __future__ import annotations
-
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, Literal, Optional, Tuple
+from typing import Iterable, Optional, Tuple
+from typing import TYPE_CHECKING
 
 from .dict_slot import DictSlot
 from .dictionary_lib import PathLike, SlotPathMap
 
-CustomDictMode = Literal["append", "override"]
+if TYPE_CHECKING:
+    from typing import Literal
+
+    CustomDictMode = Literal["append", "override"]
+else:
+    CustomDictMode = str
 
 
 @dataclass(frozen=True)
