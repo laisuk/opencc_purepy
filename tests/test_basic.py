@@ -158,6 +158,26 @@ class TestOpenCC(unittest.TestCase):
         self.assertIn("t2hkp", configs)
         self.assertIn("hk2tp", configs)
 
+    def test_dictionary_slot_normalization_uses_public_parser(self):
+        self.assertEqual(
+            DictionaryMaxlength._normalize_slot("ST_PHRASES"),
+            DictSlot.STPhrases.value,
+        )
+        self.assertEqual(
+            DictionaryMaxlength._normalize_slot("stphrases"),
+            DictSlot.STPhrases.value,
+        )
+
+    def test_available_slots_match_canonical_enum_order(self):
+        expected = [slot.canonical_name() for slot in DictSlot]
+
+        self.assertEqual(OpenCC.available_slots(), expected)
+        self.assertEqual(len(expected), len(set(expected)))
+        self.assertIn("JPSCharacters", expected)
+        self.assertIn("JPSCharactersRev", expected)
+        self.assertIn("JPSPhrases", expected)
+        self.assertFalse(any("JPVariants" in name for name in expected))
+
     def test_cli_config_arg_normalizes_supported_names(self):
         self.assertEqual(_config_arg("s2TW"), "s2tw")
         self.assertEqual(_config_arg("S2t"), "s2t")
