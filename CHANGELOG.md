@@ -27,6 +27,13 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 - Rename the internal Taiwan and Hong Kong triple union keys to `TwTriple`, `TwRevTriple`, `HkTriple`, and
   `HkRevTriple`.
 
+### Fixed
+
+- Make all `DictionaryMaxlength` custom-dictionary APIs use `DictSlot.parse()` consistently, including enum-style
+  underscore names such as `ST_PHRASES`.
+- Add release-gating tests for the minimum and latest supported Python versions before publishing artifacts.
+- Complete the public DeTofu and `OpenccConfig.parse()` docstring contracts.
+
 ---
 
 ## [1.4.1] - 2026-07-15
