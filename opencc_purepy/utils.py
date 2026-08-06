@@ -73,6 +73,11 @@ def parse_custom_dict_spec(spec: str) -> CustomDictSpec:
             "Invalid --custom-dict spec {!r}: path is empty".format(spec)
         )
 
+    if not Path(path).is_file():
+        raise ValueError(
+            "Custom dictionary file not found: {}".format(path)
+        )
+
     return CustomDictSpec(
         slot=DictSlot.parse(slot),
         mode=mode,
