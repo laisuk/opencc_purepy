@@ -54,8 +54,11 @@ def main(args):
         print("Input text to convert, <Ctrl+Z>/<Ctrl+D> to submit:", file=sys.stderr)
 
     try:
-        with io.open(args.input if args.input else 0, encoding=args.in_enc) as f:
-            input_str = f.read()
+        if args.input:
+            with io.open(args.input, "r", encoding=args.in_enc) as f:
+                input_str = f.read()
+        else:
+            input_str = sys.stdin.buffer.read().decode(args.in_enc)
 
         output_str = opencc.convert(input_str, args.punct)
 
@@ -69,21 +72,66 @@ def main(args):
             else:
                 output_str = opencc.detofu(output_str, args.detofu)
 
-        with io.open(args.output if args.output else 1, 'w', encoding=args.out_enc) as f:
-            f.write(output_str)
+        # Write converted text to a file, an interactive console, or redirected stdout.
+        # Validate the requested output encoding explicitly. Interactive Windows
+        # consoles bypass normal codec lookup, so this provides consistent
+        # fail-fast behavior for invalid codec names.
+        import codecs
+        try:
+            codecs.lookup(args.out_enc)
+        except LookupError as ex:
+            print(
+                "❌ Invalid output encoding '{}': {}".format(args.out_enc, ex),
+                file=sys.stderr,
+            )
+            return 1
+
+        try:
+            if args.output:
+                with io.open(args.output, "w", encoding=args.out_enc) as f:
+                    f.write(output_str)
+            elif sys.stdout.isatty():
+                # Interactive Windows consoles write Unicode directly through the
+                # terminal stream instead of re-encoding through --out-enc.
+                sys.stdout.write(output_str)
+                sys.stdout.flush()
+            else:
+                # Redirected stdout or pipeline: honor --out-enc.
+                encoded = output_str.encode(args.out_enc)
+                sys.stdout.buffer.write(encoded)
+                sys.stdout.buffer.flush()
+        except (OSError, UnicodeError) as ex:
+            target = args.output or "<stdout>"
+            print(
+                "❌ Failed to write output '{}': {}".format(target, ex),
+                file=sys.stderr,
+            )
+            return 1
+
     except (OSError, UnicodeError, LookupError, ValueError) as ex:
         print("❌  Conversion failed: {}".format(ex), file=sys.stderr)
         return 1
 
     in_from = args.input if args.input else "<stdin>"
     out_to = args.output if args.output else "stdout"
+
     if sys.stderr.isatty():
         if not args.output and output_str and not output_str.endswith("\n"):
-            print()
-        # print(f"Conversion completed ({args.config}): {in_from} -> {out_to}", file=sys.stderr)
+            sys.stdout.write("\n")
+            sys.stdout.flush()
+
         status = f"Conversion completed ({args.config}"
+
         if args.detofu:
             status += f", detofu:{args.detofu}"
+
+        if specs:
+            custom_status = ",".join(
+                f"{spec.slot.name}:{spec.mode}"
+                for spec in specs
+            )
+            status += f", custom:{custom_status}"
+
         status += f"): {in_from} -> {out_to}"
         print(status, file=sys.stderr)
 
