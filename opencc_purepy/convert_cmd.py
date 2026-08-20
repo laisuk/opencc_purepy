@@ -3,7 +3,7 @@ import os
 import sys
 
 from opencc_purepy import OpenCC
-from opencc_purepy.utils import parse_custom_dict_spec
+from opencc_purepy.utils import parse_custom_dict_spec, ensure_distinct_paths
 
 
 def main(args):
@@ -40,6 +40,12 @@ def main(args):
 
     if args.detofu_file and not args.detofu:
         print("❌  --detofu-file requires --detofu", file=sys.stderr)
+        return 1
+
+    try:
+        ensure_distinct_paths(args.input, args.output)
+    except ValueError as ex:
+        print(f"❌  {ex}", file=sys.stderr)
         return 1
 
     try:
