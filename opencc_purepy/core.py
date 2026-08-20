@@ -553,7 +553,7 @@ class OpenCC:
         if not text:
             return text
 
-        if not getattr(union, "_indexed", False):
+        if not union.indexed:
             union.build_starter_index()
 
         total_length = len(text)
@@ -585,7 +585,7 @@ class OpenCC:
     def convert_union(segment: str, union: StarterUnionLike) -> str:
         if not segment:
             return segment
-        if not getattr(union, "_indexed", False):
+        if not union.indexed:
             union.build_starter_index()
         return OpenCC.convert_union_indexed(segment, union)
 
