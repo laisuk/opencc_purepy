@@ -119,6 +119,15 @@ def test_dictslot_punctuation_append_is_used_by_punctuation_conversion():
         )
 
         assert cc.convert("“汉字”！", punctuation=True) == "「漢字」‼"
+
+        jp_cc = OpenCC.from_dicts(
+            config="t2jp",
+            appends={
+                DictSlot.STPunctuations: _CUSTOM_PUNCT_DICT,
+            },
+        )
+        assert jp_cc.convert("“！”", punctuation=True) == "「‼」"
+        assert jp_cc.convert("“！”", punctuation=False) == "“！”"
     finally:
         _cleanup_custom_dict()
 

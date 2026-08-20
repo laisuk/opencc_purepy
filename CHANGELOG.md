@@ -12,6 +12,13 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 ### Changed
 
 - Updated dictionary data.
+- Refined CLI text input/output handling for interactive consoles, redirected streams, encoding validation, and clearer
+  conversion status reporting.
+- Added input/output path validation to prevent overwriting the source file during `convert` and `office` conversions.
+- Refactored Traditional-region and Japanese punctuation handling to use cached conversion plans with a dedicated
+  `StPunctOnly` union instead of post-conversion punctuation translation.
+- Custom `STPunctuations` dictionaries now apply consistently to `t2tw`, `t2twp`, `tw2t`, `tw2tp`, `t2hk`, `t2hkp`,
+  `hk2t`, `hk2tp`, `t2jp`, and `jp2t` punctuation-enabled conversions.
 
 ---
 
@@ -34,8 +41,8 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
   triple unions.
 - Rename the internal Taiwan and Hong Kong triple union keys to `TwTriple`, `TwRevTriple`, `HkTriple`, and
   `HkRevTriple`.
-- Apply repeated CLI/API custom dictionary specifications sequentially in their supplied order, including multiple
-  files and mixed append/override operations for the same slot.
+- Apply repeated CLI/API custom dictionary specifications sequentially in their supplied order, including multiple files
+  and mixed append/override operations for the same slot.
 - Expand CLI help and README coverage for supported configs and slots, defaults, encodings, DeToFu, stdin/stdout, and
   dictionary-generation formatting options.
 
@@ -45,8 +52,8 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
   underscore names such as `ST_PHRASES`.
 - Add release-gating tests for the minimum and latest supported Python versions before publishing artifacts.
 - Complete the public DeTofu and `OpenccConfig.parse()` docstring contracts.
-- Report expected text-conversion and dictionary-generation failures as concise stderr messages with exit code 1
-  instead of exposing Python tracebacks.
+- Report expected text-conversion and dictionary-generation failures as concise stderr messages with exit code 1 instead
+  of exposing Python tracebacks.
 
 ---
 
