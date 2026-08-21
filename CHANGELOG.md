@@ -19,6 +19,7 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
   `StPunctOnly` union instead of post-conversion punctuation translation.
 - Custom `STPunctuations` dictionaries now apply consistently to `t2tw`, `t2twp`, `tw2t`, `tw2tp`, `t2hk`, `t2hkp`,
   `hk2t`, `hk2tp`, `t2jp`, and `jp2t` punctuation-enabled conversions.
+- Extended DeTofu table with ST candidates and renamed `TSCharactersTofu.txt` to `CharactersTofu.txt`.
 
 ---
 
@@ -119,7 +120,7 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
     * `ExtH`
     * `ExtI`
 * Added `DeTofuMap` for built-in and custom fallback mappings.
-* Added built-in fallback mappings loaded from `CharactersTofu.txt`.
+* Added built-in fallback mappings loaded from `TSCharactersTofu.txt`.
 * Added support for custom DeTofu fallback files.
 * Added support for custom in-memory DeTofu fallback pairs.
 * Missing `HKPhrases.txt` / `HKPhrasesRev.txt` files are treated as empty dictionaries when loading from TXT dictionary
