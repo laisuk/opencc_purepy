@@ -119,7 +119,7 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
     * `ExtH`
     * `ExtI`
 * Added `DeTofuMap` for built-in and custom fallback mappings.
-* Added built-in fallback mappings loaded from `TSCharactersTofu.txt`.
+* Added built-in fallback mappings loaded from `CharactersTofu.txt`.
 * Added support for custom DeTofu fallback files.
 * Added support for custom in-memory DeTofu fallback pairs.
 * Missing `HKPhrases.txt` / `HKPhrasesRev.txt` files are treated as empty dictionaries when loading from TXT dictionary
