@@ -18,6 +18,8 @@ def main(args):
             - output (str): Output file path or None for stdout.
             - config (str): OpenCC conversion configuration.
             - punct (bool): Whether to convert punctuation.
+            - norm_compat (bool): Normalize CJK Compatibility Ideographs before conversion.
+            - norm_compat_extended (bool): Apply extended Unicode compatibility normalization before conversion.
             - detofu (str | None): Optional DeTofu compatibility level
               ("all", "ext-b", "ext-c", "ext-d", "ext-e",
               "ext-f", "ext-g", "ext-h", or "ext-i").
@@ -65,6 +67,11 @@ def main(args):
                 input_str = f.read()
         else:
             input_str = sys.stdin.buffer.read().decode(args.in_enc)
+
+        if args.norm_compat_extended:
+            input_str = opencc.normalize_compat_extended(input_str)
+        elif args.norm_compat:
+            input_str = opencc.normalize_compat(input_str)
 
         output_str = opencc.convert(input_str, args.punct)
 
@@ -127,6 +134,11 @@ def main(args):
             sys.stdout.flush()
 
         status = f"Conversion completed ({args.config}"
+
+        if args.norm_compat_extended:
+            status += ", norm-compat-extended"
+        elif args.norm_compat:
+            status += ", norm-compat"
 
         if args.detofu:
             status += f", detofu:{args.detofu}"

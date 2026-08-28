@@ -226,13 +226,13 @@ class TestOpenCC(unittest.TestCase):
                     simplified_style,
                 )
 
-
         converter = OpenCC("t2tw")
         plain_refs = converter._get_dict_refs("t2tw")
         punct_refs = converter._get_dict_refs("t2tw_punct")
         self.assertIsNot(plain_refs, punct_refs)
         self.assertIsNone(plain_refs.round_2)
         self.assertIs(punct_refs.round_2, converter.union_cache.ensure_indexed(UnionKey.StPunctOnly))
+
     def test_segment_replace_matches_direct_conversion_for_short_punctuated_text(self):
         refs = self.converter._get_dict_refs("s2t")
         slots, cap = refs._normalize()[0]
@@ -447,6 +447,40 @@ class TestOpenCC(unittest.TestCase):
         cc = OpenCC("t2s")
 
         self.assertEqual(cc.detofu("abc𱁬xyz", "all"), "abc𱁬xyz")
+
+    def test_normalize_compat(self):
+        cc = OpenCC("t2s")
+
+        text = "天龍八部書裡的喬峰是契丹人"
+        result = cc.normalize_compat(text)
+
+        self.assertEqual(result, "天龍八部書裡的喬峰是契丹人")
+
+    def test_normalize_unicode_compat(self):
+        cc = OpenCC("t2s")
+
+        text = "聼聼竒羙甁噐"
+        result = cc.normalize_unicode_compat(text)
+
+        self.assertEqual(result, "聽聽奇美瓶器")
+
+    def test_normalize_compat_extended(self):
+        cc = OpenCC("t2s")
+
+        text = "聼聼竒羙⽟䂖甁噐⾳"
+        result = cc.normalize_compat_extended(text)
+
+        self.assertEqual(result, "聽聽奇美玉石瓶器音")
+
+    def test_normalize_compat_extended_then_convert(self):
+        cc = OpenCC("t2s")
+
+        text = "聼聼竒羙⽟䂖甁噐⾳"
+        normalized = cc.normalize_compat_extended(text)
+        converted = cc.convert(normalized)
+
+        self.assertEqual(normalized, "聽聽奇美玉石瓶器音")
+        self.assertEqual(converted, "听听奇美玉石瓶器音")
 
 
 if __name__ == "__main__":

@@ -9,6 +9,17 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ## [1.4.3] - Unreleased
 
+### Added
+
+- Added Unicode compatibility normalization APIs:
+    - `OpenCC.normalize_compat()` for CJK Compatibility Ideographs.
+    - `OpenCC.normalize_unicode_compat()` for additional Unicode CJK compatibility forms and allographs.
+    - `OpenCC.normalize_compat_extended()` for combined extended and CJK compatibility normalization.
+- Added bundled Unicode compatibility mapping data for normalizing legacy, compatibility, radical, and mapped CJK
+  allograph forms before OpenCC conversion.
+- CLI: Added `-n/--norm-compat` and `-E/--norm-compat-extended` to normalize Unicode compatibility forms before text
+  conversion; `-E` takes precedence when both options are specified.
+
 ### Changed
 
 - Updated dictionary data.

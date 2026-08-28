@@ -4,6 +4,11 @@ from multiprocessing import Pool, cpu_count
 from typing import Dict, Iterable, List, Mapping, Optional, Tuple, Union
 
 from .utils import CustomDictSpec
+from .unicode_compat import (
+    normalize_compat,
+    normalize_unicode_compat,
+    normalize_compat_extended,
+)
 from .detofu import DeTofuLevel, DeTofuMap, parse_level, detofu
 from .dict_refs import DictRefs, StarterUnionLike
 from .dict_slot import DictSlot
@@ -1113,6 +1118,23 @@ class OpenCC:
             return 2
         else:
             return 0
+
+    # ------ Unicode Compatibility Helpers ------
+
+    @staticmethod
+    def normalize_compat(text: Optional[str]) -> str:
+        """Normalize CJK Compatibility Ideographs."""
+        return normalize_compat(text)
+
+    @staticmethod
+    def normalize_unicode_compat(text: Optional[str]) -> str:
+        """Normalize additional Unicode CJK compatibility/allograph mappings."""
+        return normalize_unicode_compat(text)
+
+    @staticmethod
+    def normalize_compat_extended(text: Optional[str]) -> str:
+        """Apply Unicode compatibility normalization followed by CJK compatibility normalization."""
+        return normalize_compat_extended(text)
 
     # ------ DeTofu helpers ------
 

@@ -7,8 +7,8 @@
 [![Build & Release](https://github.com/laisuk/opencc_purepy/actions/workflows/release.yml/badge.svg)](https://github.com/laisuk/opencc_purepy/actions/workflows/release.yml)
 
 **opencc_purepy** is a **pure Python** implementation
-of [OpenCC (Open Chinese Convert)](https://github.com/BYVoid/OpenCC),
-supporting conversion between Simplified, Traditional, Hong Kong, Taiwan, and Japanese Kanji.  
+of [OpenCC (Open Chinese Convert)](https://github.com/BYVoid/OpenCC), supporting conversion between Simplified,
+Traditional, Hong Kong, Taiwan, and Japanese Kanji.  
 It uses dictionary-based segmentation and mapping logic inspired by the original OpenCC.
 
 ---
@@ -18,6 +18,7 @@ It uses dictionary-based segmentation and mapping logic inspired by the original
 - **Pure Python** – no native dependencies
 - **Multiple Chinese locale conversions** (Simplified, Traditional, HK, TW, JP)
 - **Punctuation style conversion** (optional)
+- **Unicode compatibility normalization** (CJK compatibility ideographs and extended allographs)
 - **Automatic code detection** (Simplified/Traditional)
 - **CLI** with Office document support (`.docx`, `.xlsx`, `.pptx`, `.odt`, `.ods`, `.odp`, `.epub`)
 
@@ -126,8 +127,8 @@ opencc-purepy office -i sheet.xlsx -o result.xlsx -c s2tw --format xlsx
 ## 📚 Custom Dictionaries
 
 `opencc_purepy` follows the OpenCC lexicon structure. Custom entries are loaded through existing OpenCC dictionary
-slots, such as `DictSlot.STPhrases`, `DictSlot.TSPhrases`, `DictSlot.STPunctuations`, and other OpenCC slots.
-There is no generic `UserDict` slot.
+slots, such as `DictSlot.STPhrases`, `DictSlot.TSPhrases`, `DictSlot.STPunctuations`, and other OpenCC slots. There is
+no generic `UserDict` slot.
 
 Dictionary slot mappings support both:
 
@@ -139,9 +140,8 @@ Dictionary slot mappings support both:
 ### Raw TXT dictionary loading: `OpenCC.from_dicts()`
 
 Use `OpenCC.from_dicts()` when you want to load OpenCC TXT dictionary files directly through
-`DictionaryMaxlength.from_dicts()`.
-With `appends={...}`, it loads the base TXT dictionaries first, then custom entries. Duplicate keys use late-comer wins,
-so custom entries override built-in entries. This is recommended for most users.
+`DictionaryMaxlength.from_dicts()`. With `appends={...}`, it loads the base TXT dictionaries first, then custom entries.
+Duplicate keys use late-comer wins, so custom entries override built-in entries. This is recommended for most users.
 
 ```python
 from opencc_purepy import DictSlot, OpenCC
@@ -178,8 +178,8 @@ you want to create and reuse a dictionary instance yourself.
 
 ### Quick file API: `OpenCC.from_dict_files()`
 
-Use `OpenCC.from_dict_files()` when you want a post-load custom-file API on top of the packaged JSON dictionaries.
-It loads `dictionary_maxlength.json` first, then applies each OpenCC-compatible custom file to the requested slot.
+Use `OpenCC.from_dict_files()` when you want a post-load custom-file API on top of the packaged JSON dictionaries. It
+loads `dictionary_maxlength.json` first, then applies each OpenCC-compatible custom file to the requested slot.
 
 ```python
 from opencc_purepy import DictSlot, OpenCC
@@ -206,9 +206,9 @@ replacement for that slot.
 
 #### Dictionary slot parsing
 
-`DictSlot.parse()` accepts a `DictSlot` directly or parses enum-style, compact, and legacy
-underscore-separated string forms. `DictSlot.canonical_name()` returns the public enum-style slot name used by
-cross-language APIs and custom dictionary specifications; `.value` remains the legacy underscore-separated key.
+`DictSlot.parse()` accepts a `DictSlot` directly or parses enum-style, compact, and legacy underscore-separated string
+forms. `DictSlot.canonical_name()` returns the public enum-style slot name used by cross-language APIs and custom
+dictionary specifications; `.value` remains the legacy underscore-separated key.
 
 ```python
 from opencc_purepy import DictSlot, OpenCC
@@ -312,11 +312,11 @@ Do not mutate the shared global provider returned by `DictionaryMaxlength.get_pr
 
 ### Tofu-risk / Extension Unicode fallback pairs
 
-Use `DictionaryMaxlength.with_custom_dicts()` for exact in-memory custom pairs when you need to patch
-tofu-risk characters or Extension Unicode mappings without restructuring the built-in OpenCC dictionaries.
+Use `DictionaryMaxlength.with_custom_dicts()` for exact in-memory custom pairs when you need to patch tofu-risk
+characters or Extension Unicode mappings without restructuring the built-in OpenCC dictionaries.
 
-This is useful for platforms where some CJK Extension characters may render as tofu boxes, or where you want
-to provide a temporary project-local fallback before the upstream dictionary data is updated.
+This is useful for platforms where some CJK Extension characters may render as tofu boxes, or where you want to provide
+a temporary project-local fallback before the upstream dictionary data is updated.
 
 ```python
 from opencc_purepy import DictSlot, OpenCC
@@ -350,8 +350,8 @@ print(cc.convert("𫜩合"))
 print(cc.convert("帕兰蒂尔"))
 ```
 
-This keeps the core dictionary structure unchanged while still allowing applications to patch specific
-high-risk entries at load time.
+This keeps the core dictionary structure unchanged while still allowing applications to patch specific high-risk entries
+at load time.
 
 ---
 
@@ -489,6 +489,108 @@ cc = OpenCC(
 
 ---
 
+## Unicode compatibility normalization
+
+`opencc_purepy` provides optional Unicode normalization helpers for text that contains CJK compatibility ideographs,
+legacy glyph forms, radicals, or other mapped allographs. These helpers are separate from normal OpenCC conversion:
+they normalize Unicode forms without selecting a Simplified, Traditional, Taiwan, Hong Kong, or Japanese conversion
+configuration.
+
+Three APIs are available:
+
+- `normalize_compat(text)` — normalize CJK Compatibility Ideographs.
+- `normalize_unicode_compat(text)` — normalize additional Unicode CJK compatibility and allograph mappings.
+- `normalize_compat_extended(text)` — apply both normalization tables for the broadest normalization.
+
+### CJK Compatibility Ideographs
+
+Use `normalize_compat()` when the input contains characters from the Unicode CJK compatibility ranges:
+
+```python
+from opencc_purepy import OpenCC
+
+cc = OpenCC("t2s")
+
+text = "天龍八部書裡的喬峰是契丹人"
+normalized = cc.normalize_compat(text)
+
+print(normalized)
+# 天龍八部書裡的喬峰是契丹人
+```
+
+This pass only performs compatibility normalization. It does not automatically run OpenCC conversion:
+
+```python
+converted = cc.convert(normalized)
+
+print(converted)
+# 天龙八部书里的乔峰是契丹人
+```
+
+### Extended Unicode compatibility mappings
+
+Use `normalize_unicode_compat()` for additional mapped CJK allographs and legacy forms outside the dedicated CJK
+Compatibility Ideographs table:
+
+```python
+from opencc_purepy import OpenCC
+
+cc = OpenCC("t2s")
+
+text = "聼聼竒羙甁噐"
+normalized = cc.normalize_unicode_compat(text)
+
+print(normalized)
+# 聽聽奇美瓶器
+```
+
+Unmapped characters are preserved unchanged.
+
+### Combined normalization
+
+For text from PDFs, OCR, legacy documents, historical sources, or mixed Unicode data, `normalize_compat_extended()` is
+the convenient-combined pass. It applies the extended Unicode compatibility mappings and CJK Compatibility Ideographs
+normalization in the intended order:
+
+```python
+from opencc_purepy import OpenCC
+
+cc = OpenCC("t2s")
+
+text = "聼聼竒羙⽟䂖甁噐⾳"
+
+normalized = cc.normalize_compat_extended(text)
+print(normalized)
+# 聽聽奇美玉石瓶器音
+
+converted = cc.convert(normalized)
+print(converted)
+# 听听奇美玉石瓶器音
+```
+
+Normalization is intentionally explicit and is not automatically performed by `convert()`. This keeps normal OpenCC
+conversion behavior unchanged and lets applications choose the preprocessing appropriate for their input.
+
+When both Unicode normalization and DeToFu are needed, use the following processing order:
+
+```python
+from opencc_purepy import OpenCC
+
+cc = OpenCC("t2s")
+
+text = cc.normalize_compat_extended(text)
+text = cc.convert(text)
+text = cc.detofu(text, "all")
+```
+
+In short:
+
+```text
+Unicode normalization -> OpenCC conversion -> DeToFu
+```
+
+---
+
 ## DeTofu display compatibility fallback
 
 DeTofu replaces mapped tofu-risk rare CJK extension characters with display-compatible fallback characters. It is useful
@@ -589,8 +691,8 @@ display_safe = cc.detofu_with_custom_pairs(
 ```
 
 Direct pairs do not have an extension column. They are always added to the selected map, and custom pairs override
-built-in mappings for the same tofu-risk character. Only the first Unicode scalar from each key and value is used.
-Empty keys or values are ignored.
+built-in mappings for the same tofu-risk character. Only the first Unicode scalar from each key and value is used. Empty
+keys or values are ignored.
 
 ### DeTofu contract
 
@@ -682,6 +784,12 @@ Empty keys or values are ignored.
 - `zho_check(input_text: str) -> int`  
   Detect the input text type:  
   &nbsp;&nbsp;`1` - Traditional, `2` - Simplified, `0` - Others
+- `normalize_compat(text: Optional[str]) -> str`  
+  Normalize mapped CJK Compatibility Ideographs while preserving unmapped characters.
+- `normalize_unicode_compat(text: Optional[str]) -> str`  
+  Normalize additional mapped Unicode CJK compatibility forms and allographs.
+- `normalize_compat_extended(text: Optional[str]) -> str`  
+  Apply extended Unicode compatibility normalization followed by CJK Compatibility Ideographs normalization.
 
 - `detofu(  
   text: Optional[str],  
