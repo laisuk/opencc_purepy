@@ -1123,17 +1123,82 @@ class OpenCC:
 
     @staticmethod
     def normalize_compat(text: Optional[str]) -> str:
-        """Normalize CJK Compatibility Ideographs."""
+        """
+        Normalize mapped CJK Compatibility Ideographs to their canonical forms.
+
+        This pass handles characters from the CJK Compatibility Ideographs
+        mappings, including compatibility forms commonly found in legacy text,
+        PDFs, and other Unicode sources.
+
+        Unmapped characters are preserved unchanged. This method performs Unicode
+        normalization only; it does not run OpenCC conversion.
+
+        For broader normalization that also includes additional CJK allograph and
+        legacy mappings, use ``normalize_compat_extended()``.
+
+        Args:
+            text: Input text to normalize. ``None`` and empty input are accepted.
+
+        Returns:
+            The normalized string.
+        """
         return normalize_compat(text)
 
     @staticmethod
     def normalize_unicode_compat(text: Optional[str]) -> str:
-        """Normalize additional Unicode CJK compatibility/allograph mappings."""
+        """
+        Normalize additional mapped Unicode CJK compatibility and allograph forms.
+
+        This pass handles the extended compatibility table, including selected
+        legacy glyph forms, radicals, and CJK allographs that are not part of the
+        dedicated CJK Compatibility Ideographs mapping.
+
+        Unmapped characters are preserved unchanged. This method performs Unicode
+        normalization only; it does not run OpenCC conversion.
+
+        To apply both this extended table and the CJK Compatibility Ideographs
+        table, use ``normalize_compat_extended()``.
+
+        Args:
+            text: Input text to normalize. ``None`` and empty input are accepted.
+
+        Returns:
+            The normalized string.
+        """
         return normalize_unicode_compat(text)
 
     @staticmethod
     def normalize_compat_extended(text: Optional[str]) -> str:
-        """Apply Unicode compatibility normalization followed by CJK compatibility normalization."""
+        """
+        Apply the complete built-in Unicode CJK compatibility normalization.
+
+        This is the combined normalization pass. It first applies the additional
+        Unicode CJK compatibility/allograph mappings from
+        ``normalize_unicode_compat()``, then applies the CJK Compatibility
+        Ideographs mappings from ``normalize_compat()``.
+
+        It is useful for text extracted from PDFs, legacy documents, historical
+        sources, or other input containing mixed compatibility and allograph forms.
+
+        Unmapped characters are preserved unchanged. OpenCC conversion is not
+        performed automatically; when conversion is also required, normalize
+        first and then call ``convert()``.
+
+        Example:
+            >>> cc = OpenCC("t2s")
+            >>> txt = "聼聼竒羙⽟䂖甁噐⾳"
+            >>> normalized = cc.normalize_compat_extended(txt)
+            >>> normalized
+            '聽聽奇美玉石瓶器音'
+            >>> cc.convert(normalized)
+            '听听奇美玉石瓶器音'
+
+        Args:
+            text: Input text to normalize. ``None`` and empty input are accepted.
+
+        Returns:
+            The normalized string.
+        """
         return normalize_compat_extended(text)
 
     # ------ DeTofu helpers ------
