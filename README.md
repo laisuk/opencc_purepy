@@ -527,11 +527,9 @@ normalized = cc.normalize_compat(text)
 
 print(normalized)
 # 天龍八部書裡的喬峰是契丹人
-```
 
-This pass only performs compatibility normalization. It does not automatically run OpenCC conversion:
+# This pass only performs compatibility normalization. It does not automatically run OpenCC conversion:
 
-```python
 converted = cc.convert(normalized)
 
 print(converted)
@@ -587,6 +585,8 @@ When both Unicode normalization and DeToFu are needed, use the following process
 ```python
 from opencc_purepy import OpenCC
 
+text = "聼聼竒羙⽟䂖甁噐⾳"
+
 cc = OpenCC("t2s")
 
 text = cc.normalize_compat_extended(text)
@@ -624,11 +624,9 @@ converted = cc.convert(text)
 display_safe = cc.detofu(converted, DeTofuLevel.ExtB)
 
 print(display_safe)
-```
 
-String level names are also supported:
+# String level names are also supported:
 
-```python
 display_safe = cc.detofu(converted, "all")
 ```
 
@@ -665,6 +663,13 @@ ext-i / i
 Use `detofu_with_custom_file(...)` to add project-local fallback mappings from a UTF-8 text file:
 
 ```python
+from opencc_purepy import OpenCC
+
+cc = OpenCC("t2s")
+
+text = "儼驂騑於上路，訪風景於崇阿𱁬"
+converted = cc.convert(text)
+
 display_safe = cc.detofu_with_custom_file(
     converted,
     "all",
@@ -692,6 +697,13 @@ Blank lines are ignored, and lines beginning with `#` are ignored. The extension
 Use `detofu_with_custom_pairs(...)` to add direct fallback pairs in memory:
 
 ```python
+from opencc_purepy import OpenCC
+
+cc = OpenCC("t2s")
+
+text = "儼驂騑於上路，訪風景於崇阿𱁬"
+converted = cc.convert(text)
+
 display_safe = cc.detofu_with_custom_pairs(
     converted,
     "all",
