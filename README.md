@@ -1,7 +1,7 @@
 # opencc_purepy
 
 [![PyPI version](https://img.shields.io/pypi/v/opencc-purepy)](https://pypi.org/project/opencc-purepy/)
-[![License](https://img.shields.io/github/license/laisuk/opencc_pyo3)](https://github.com/laisuk/opencc_purepy/blob/master/LICENSE)
+[![License](https://img.shields.io/github/license/laisuk/opencc_purepy)](https://github.com/laisuk/opencc_purepy/blob/master/LICENSE)
 [![Total Downloads](https://static.pepy.tech/personalized-badge/opencc-purepy?period=total&units=international_system&left_color=black&right_color=orange&left_text=Downloads)](https://pepy.tech/project/opencc-purepy)
 [![Monthly Downloads](https://static.pepy.tech/personalized-badge/opencc-purepy?period=month&units=international_system&left_color=black&right_color=orange&left_text=Monthly)](https://pepy.tech/project/opencc-purepy)
 [![Build & Release](https://github.com/laisuk/opencc_purepy/actions/workflows/release.yml/badge.svg)](https://github.com/laisuk/opencc_purepy/actions/workflows/release.yml)
@@ -102,6 +102,17 @@ opencc-purepy convert -i input.txt -o output.txt -c s2t \
 
 opencc-purepy convert -i input.txt -c s2t \
   --detofu all --detofu-file ./custom_detofu.txt
+```
+
+Use `-n/--norm-compat` to normalize CJK Compatibility Ideographs before conversion, or
+`-E/--norm-compat-extended` to apply the complete built-in Unicode CJK compatibility normalization. If both options are
+specified, `--norm-compat-extended` takes precedence:
+
+```sh
+opencc-purepy convert -i input.txt -o output.txt -c t2s --norm-compat
+
+opencc-purepy convert -i input.txt -o output.txt -c t2s \
+  --norm-compat-extended
 ```
 
 #### Office Document Conversion subcommand (`office`)
@@ -718,9 +729,10 @@ keys or values are ignored.
 
 ### `OpenCC` class
 
-- `OpenCC(config: Union[str, OpenccConfig] = "s2t")`  
-  Create a converter with a supported config string or `OpenccConfig` enum value. Raises `ValueError` for unsupported
-  configs.
+- `OpenCC(config: Optional[Union[str, OpenccConfig]] = None, dictionary: Optional[DictionaryMaxlength] = None)`
+  Create a converter with a supported config string or `OpenccConfig` enum value. The config defaults to `"s2t"` when
+  omitted. Advanced callers may inject a private or preloaded `DictionaryMaxlength` instance. Raises `ValueError` for
+  unsupported configs.
 - `OpenCC.from_dicts(config="s2t", base_dir=None, paths=None, overrides=None, appends=None) -> OpenCC`  
   Create a converter by loading raw OpenCC TXT dictionary files through `DictionaryMaxlength.from_dicts()`.
 - `OpenCC.from_dict_files(config="s2t", specs=None) -> OpenCC`  
