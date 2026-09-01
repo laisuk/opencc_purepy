@@ -221,8 +221,7 @@
 ⿕	龠
 
 # Simplified CJK radical forms
-# CJK Radicals Supplement forms mapped to ordinary Simplified Chinese
-# ideographs.
+# CJK Radicals Supplement forms mapped to ordinary Simplified Chinese ideographs.
 #
 ⺦	丬
 ⺰	纟
@@ -486,7 +485,6 @@
 〈	〈
 〉	〉
 # Optional: U+2E3A TWO-EM DASH -> U+2014 EM DASH.
-# Disabled by default because U+2E3A may be intentional.
 # ⸺	—
 
 # Additional punctuation forms
