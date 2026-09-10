@@ -93,7 +93,7 @@ Standard input and output are used when `-i` or `-o` is omitted:
 echo "汉字转换" | opencc-purepy convert -c s2t
 ```
 
-Use `--in-enc` and `--out-enc` for non-UTF-8 text files. DeToFu fallback can be enabled at a selected extension level,
+Use `--in-enc` and `--out-enc` for non-UTF-8 text files. DeTofu fallback can be enabled at a selected extension level,
 with an optional UTF-8 custom mapping file:
 
 ```sh
@@ -580,7 +580,7 @@ print(converted)
 Normalization is intentionally explicit and is not automatically performed by `convert()`. This keeps normal OpenCC
 conversion behavior unchanged and lets applications choose the preprocessing appropriate for their input.
 
-When both Unicode normalization and DeToFu are needed, use the following processing order:
+When both Unicode normalization and DeTofu are needed, use the following processing order:
 
 ```python
 from opencc_purepy import OpenCC
@@ -597,7 +597,7 @@ text = cc.detofu(text, "all")
 In short:
 
 ```text
-Unicode normalization -> OpenCC conversion -> DeToFu
+Unicode normalization -> OpenCC conversion -> DeTofu
 ```
 
 ---

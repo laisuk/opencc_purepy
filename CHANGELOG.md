@@ -9,9 +9,28 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ## [1.4.4] - Unreleased
 
+### Added
+
+- CLI:
+
+    - Add compatibility normalization (`-n` / `-E`) to Office and EPUB conversion.
+    - Add DeTofu (`--detofu [level]` / `--detofu-file`) to Office and EPUB conversion.
+    - Support the full `Normalize -> Convert -> DeTofu` pipeline consistently across text and document conversion.
+
 ### Changed
 
 - Update dictionary date.
+- CLI:
+
+    - Refactor text and Office/document conversion to share a common text transformation pipeline.
+    - Validate DeTofu levels through the shared backend parser for both `convert` and `office`.
+    - Require `--detofu` when `--detofu-file` is specified.
+- Office/document conversion:
+
+    - Decouple Office/EPUB container processing from `OpenCC` by passing a generic `str -> str` text converter to the
+      Office helper.
+    - Preserve existing document-format, XML, ZIP, XLSX, EPUB, and font-preservation behavior while allowing
+      normalization and DeTofu to compose with conversion.
 
 ---
 
@@ -63,7 +82,7 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
   `HkRevTriple`.
 - Apply repeated CLI/API custom dictionary specifications sequentially in their supplied order, including multiple files
   and mixed append/override operations for the same slot.
-- Expand CLI help and README coverage for supported configs and slots, defaults, encodings, DeToFu, stdin/stdout, and
+- Expand CLI help and README coverage for supported configs and slots, defaults, encodings, DeTofu, stdin/stdout, and
   dictionary-generation formatting options.
 
 ### Fixed
@@ -107,7 +126,8 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 - Replaced `JPVariants` / `JPVariantsRev` with `JPSCharacters` / `JPSCharactersRev` / `JPSPhrases`.
 - `t2jp` now uses `JPShinjitaiCharactersRev.txt`.
 - `jp2t` now uses `JPShinjitaiPhrases.txt` + `JPShinjitaiCharacters.txt`.
-- Users with custom dictionary folders or generated `opencc_purepy/dicts/dictionary_maxlength.json` snapshots must update/regenerate them.
+- Users with custom dictionary folders or generated `opencc_purepy/dicts/dictionary_maxlength.json` snapshots must
+  update/regenerate them.
 
 ---
 
@@ -115,65 +135,66 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ### Added
 
-* Added DeTofu display-compatibility fallback support for rare non-BMP CJK extension characters.
-* Added direct Hong Kong phrase conversion configs:
+- Added DeTofu display-compatibility fallback support for rare non-BMP CJK extension characters.
+- Added direct Hong Kong phrase conversion configs:
 
-    * `s2hkp`
-    * `hk2sp`
-* Added `HKPhrases.txt` / `HKPhrasesRev.txt` dictionary slots:
+    - `s2hkp`
+    - `hk2sp`
+- Added `HKPhrases.txt` / `HKPhrasesRev.txt` dictionary slots:
 
-    * `DictSlot.HKPhrases` / `hk_phrases`
-    * `DictSlot.HKPhrasesRev` / `hk_phrases_rev`
-* Added union-cache triples:
+    - `DictSlot.HKPhrases` / `hk_phrases`
+    - `DictSlot.HKPhrasesRev` / `hk_phrases_rev`
+- Added union-cache triples:
 
-    * `S2HkpR2HkTriple`
-    * `Hk2SpR1HkRevTriple`
-* Added `DeTofuLevel` threshold-based extension filtering:
+    - `S2HkpR2HkTriple`
+    - `Hk2SpR1HkRevTriple`
+- Added `DeTofuLevel` threshold-based extension filtering:
 
-    * `ExtB`
-    * `ExtC`
-    * `ExtD`
-    * `ExtE`
-    * `ExtF`
-    * `ExtG`
-    * `ExtH`
-    * `ExtI`
-* Added `DeTofuMap` for built-in and custom fallback mappings.
-* Added built-in fallback mappings loaded from `TSCharactersTofu.txt`.
-* Added support for custom DeTofu fallback files.
-* Added support for custom in-memory DeTofu fallback pairs.
-* Missing `HKPhrases.txt` / `HKPhrasesRev.txt` files are treated as empty dictionaries when loading from TXT dictionary
+    - `ExtB`
+    - `ExtC`
+    - `ExtD`
+    - `ExtE`
+    - `ExtF`
+    - `ExtG`
+    - `ExtH`
+    - `ExtI`
+- Added `DeTofuMap` for built-in and custom fallback mappings.
+- Added built-in fallback mappings loaded from `TSCharactersTofu.txt`.
+- Added support for custom DeTofu fallback files.
+- Added support for custom in-memory DeTofu fallback pairs.
+- Missing `HKPhrases.txt` / `HKPhrasesRev.txt` files are treated as empty dictionaries when loading from TXT dictionary
   directories for backward compatibility.
-* Added OpenCC convenience APIs:
+- Added OpenCC convenience APIs:
 
-    * `OpenCC.detofu(...)`
-    * `OpenCC.detofu_with_custom_file(...)`
-    * `OpenCC.detofu_with_custom_pairs(...)`
-* Added DeTofu unit test coverage.
+    - `OpenCC.detofu(...)`
+    - `OpenCC.detofu_with_custom_file(...)`
+    - `OpenCC.detofu_with_custom_pairs(...)`
+- Added DeTofu unit test coverage.
 
 ### Changed
 
-* Added forward TW/HK regional variant phrase dictionary slots:
+- Added forward TW/HK regional variant phrase dictionary slots:
 
-    * `DictSlot.TWVariantsPhrases` / `tw_variants_phrases` backed by `TWVariantsPhrases.txt`
-    * `DictSlot.HKVariantsPhrases` / `hk_variants_phrases` backed by `HKVariantsPhrases.txt`
-* Refactored forward TW/HK variant conversion to apply phrase-level regional variant mappings before character-level
+    - `DictSlot.TWVariantsPhrases` / `tw_variants_phrases` backed by `TWVariantsPhrases.txt`
+    - `DictSlot.HKVariantsPhrases` / `hk_variants_phrases` backed by `HKVariantsPhrases.txt`
+- Refactored forward TW/HK variant conversion to apply phrase-level regional variant mappings before character-level
   mappings:
 
-    * `tw_variants_phrases` before `tw_variants`
-    * `hk_variants_phrases` before `hk_variants`
-* Renamed internal union cache keys:
+    - `tw_variants_phrases` before `tw_variants`
+    - `hk_variants_phrases` before `hk_variants`
+- Renamed internal union cache keys:
 
-    * `TwVariantsOnly` → `TwVariantsPair`
-    * `HkVariantsOnly` → `HkVariantsPair`
-* Regenerated bundled `opencc_purepy/dicts/dictionary_maxlength.json` to include the new forward regional variant phrase slots.
-* Preserved existing reverse TW/HK regional variant behavior.
-* Updated and optimized dictionary data to reduce ambiguity.
-* Refactored `s2twp` from three conversion rounds to two rounds by combining Taiwan phrase and variant normalization
+    - `TwVariantsOnly` → `TwVariantsPair`
+    - `HkVariantsOnly` → `HkVariantsPair`
+- Regenerated bundled `opencc_purepy/dicts/dictionary_maxlength.json` to include the new forward regional variant phrase
+  slots.
+- Preserved existing reverse TW/HK regional variant behavior.
+- Updated and optimized dictionary data to reduce ambiguity.
+- Refactored `s2twp` from three conversion rounds to two rounds by combining Taiwan phrase and variant normalization
   into a single round, matching upstream OpenCC behavior and improving conversion efficiency.
-* Removed obsolete Python 2.x and Python < 3.5 compatibility code paths.
-* Simplified typing imports and removed legacy typing fallback shims.
-* Removed obsolete punctuation conversion fallback logic for unsupported Python versions.
+- Removed obsolete Python 2.x and Python < 3.5 compatibility code paths.
+- Simplified typing imports and removed legacy typing fallback shims.
+- Removed obsolete punctuation conversion fallback logic for unsupported Python versions.
 
 ---
 
@@ -273,7 +294,8 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
   `overrides`.
 - Added direct `DictionaryMaxlength` customization support through `DictionaryMaxlength.from_dicts(...)`, allowing one
   loaded dictionary container to be shared across many `OpenCC` instances.
-- Added the `dictgen` CLI subcommand for generating `opencc_purepy/dicts/dictionary_maxlength.json` from TXT dictionary files.
+- Added the `dictgen` CLI subcommand for generating `opencc_purepy/dicts/dictionary_maxlength.json` from TXT dictionary
+  files.
 
 ### Notes
 
