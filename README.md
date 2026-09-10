@@ -190,7 +190,7 @@ you want to create and reuse a dictionary instance yourself.
 ### Quick file API: `OpenCC.from_dict_files()`
 
 Use `OpenCC.from_dict_files()` when you want a post-load custom-file API on top of the packaged JSON dictionaries. It
-loads `dictionary_maxlength.json` first, then applies each OpenCC-compatible custom file to the requested slot.
+loads `opencc_purepy/dicts/dictionary_maxlength.json` first, then applies each OpenCC-compatible custom file to the requested slot.
 
 ```python
 from opencc_purepy import DictSlot, OpenCC
@@ -460,7 +460,7 @@ Japanese Shinjitai slots follow the upstream OpenCC JP layout:
 
 ### Generate JSON with dictgen
 
-TXT dictionaries are human-editable source files. `dictionary_maxlength.json` is a generated/cache format, so prefer
+TXT dictionaries are human-editable source files. `opencc_purepy/dicts/dictionary_maxlength.json` is a generated/cache format, so prefer
 `dictgen` instead of manually editing JSON.
 
 ```sh

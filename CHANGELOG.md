@@ -7,6 +7,14 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ---
 
+## [1.4.4] - Unreleased
+
+### Changed
+
+- Update dictionary date.
+
+---
+
 ## [1.4.3] - 2026-08-29
 
 ### Added
@@ -99,7 +107,7 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 - Replaced `JPVariants` / `JPVariantsRev` with `JPSCharacters` / `JPSCharactersRev` / `JPSPhrases`.
 - `t2jp` now uses `JPShinjitaiCharactersRev.txt`.
 - `jp2t` now uses `JPShinjitaiPhrases.txt` + `JPShinjitaiCharacters.txt`.
-- Users with custom dictionary folders or generated `dictionary_maxlength.json` snapshots must update/regenerate them.
+- Users with custom dictionary folders or generated `opencc_purepy/dicts/dictionary_maxlength.json` snapshots must update/regenerate them.
 
 ---
 
@@ -158,7 +166,7 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
     * `TwVariantsOnly` → `TwVariantsPair`
     * `HkVariantsOnly` → `HkVariantsPair`
-* Regenerated bundled `dictionary_maxlength.json` to include the new forward regional variant phrase slots.
+* Regenerated bundled `opencc_purepy/dicts/dictionary_maxlength.json` to include the new forward regional variant phrase slots.
 * Preserved existing reverse TW/HK regional variant behavior.
 * Updated and optimized dictionary data to reduce ambiguity.
 * Refactored `s2twp` from three conversion rounds to two rounds by combining Taiwan phrase and variant normalization
@@ -265,7 +273,7 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
   `overrides`.
 - Added direct `DictionaryMaxlength` customization support through `DictionaryMaxlength.from_dicts(...)`, allowing one
   loaded dictionary container to be shared across many `OpenCC` instances.
-- Added the `dictgen` CLI subcommand for generating `dictionary_maxlength.json` from TXT dictionary files.
+- Added the `dictgen` CLI subcommand for generating `opencc_purepy/dicts/dictionary_maxlength.json` from TXT dictionary files.
 
 ### Notes
 
