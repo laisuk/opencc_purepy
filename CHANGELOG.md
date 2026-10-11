@@ -20,6 +20,9 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 ### Changed
 
 - Update dictionary date.
+- Update Compatibility mapping table.
+- Optimized office_helper.
+- Core: added indexed starter for mono scalar key.
 - CLI:
 
     - Refactor text and Office/document conversion to share a common text transformation pipeline.
