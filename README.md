@@ -126,12 +126,24 @@ opencc-purepy office -i example.docx -c t2s --keep-font
 # Convert EPUB and auto-detect output name from input file extension
 opencc-purepy office -i book.epub -c s2t
 
+# Normalize, convert, then apply display fallbacks (v1.4.4)
+opencc-purepy office -i book.epub -c t2s -E --detofu ext-b
+
+# Use custom display fallbacks after conversion
+opencc-purepy office -i example.docx -c s2t \
+  --detofu all --detofu-file ./custom_detofu.txt
+
 # Convert Excel and specify output path and format
 opencc-purepy office -i sheet.xlsx -o result.xlsx -c s2tw --format xlsx
 ```
 
-> ℹ️ With `office` subcommand, the input is processed as an Office or EPUB document and OpenCC conversion is applied
-> internally.
+Both `convert` and `office` apply the same order: optional compatibility normalization → OpenCC conversion (including
+`-p` punctuation mappings) → optional DeTofu. `-E` takes precedence over `-n`.
+`--detofu-file` requires `--detofu`; it supplies display fallbacks rather than OpenCC phrase mappings.
+
+When `-o` is omitted, `office` writes `<input-stem>_converted.<format>` beside the source. Use `--convert-filename`
+to apply the same text pipeline to the generated output stem. `--format` selects the input package format; it does
+not convert between document formats. `--keep-font` preserves recognized font-family attributes.
 
 ---
 
@@ -190,7 +202,8 @@ you want to create and reuse a dictionary instance yourself.
 ### Quick file API: `OpenCC.from_dict_files()`
 
 Use `OpenCC.from_dict_files()` when you want a post-load custom-file API on top of the packaged JSON dictionaries. It
-loads `opencc_purepy/dicts/dictionary_maxlength.json` first, then applies each OpenCC-compatible custom file to the requested slot.
+loads `opencc_purepy/dicts/dictionary_maxlength.json` first, then applies each OpenCC-compatible custom file to the
+requested slot.
 
 ```python
 from opencc_purepy import DictSlot, OpenCC
@@ -316,7 +329,9 @@ print(cc.convert("帕兰蒂尔是一家公司"))
 ```
 
 Create a private dictionary instance first with `DictionaryMaxlength.from_json()` or `DictionaryMaxlength.from_dicts()`.
-Do not mutate the shared global provider returned by `DictionaryMaxlength.get_provider()` or
+These methods mutate and return the same dictionary instance. Apply customization before constructing `OpenCC`,
+which caches conversion plans. Do not mutate the shared global provider returned by `DictionaryMaxlength.get_provider()`
+or
 `DictionaryMaxlength.new()`; the post-load customization APIs are intended for private dictionary instances.
 
 ---
@@ -376,8 +391,9 @@ Custom dictionary files are UTF-8 text files in OpenCC lexicon format. Use one m
 AI模型 AI模型
 ```
 
-Each entry is parsed as `key<TAB>value` or `key whitespace value`. Blank lines are ignored, comments are allowed with
-`#`, and duplicate keys use late-comer wins.
+Each entry uses the first two whitespace-separated columns as key and value. Additional translation candidates
+are ignored. Blank lines and lines whose first non-whitespace character is `#` are skipped; inline comments are
+not parsed specially. Duplicate keys use late-comer wins.
 
 Because file parsing follows OpenCC dictionary rules, leading spaces and embedded spaces in keys are not preserved. Use
 `with_custom_dicts()` when the custom key itself contains spaces.
@@ -460,7 +476,8 @@ Japanese Shinjitai slots follow the upstream OpenCC JP layout:
 
 ### Generate JSON with dictgen
 
-TXT dictionaries are human-editable source files. `opencc_purepy/dicts/dictionary_maxlength.json` is a generated/cache format, so prefer
+TXT dictionaries are human-editable source files. `opencc_purepy/dicts/dictionary_maxlength.json` is a generated/cache
+format, so prefer
 `dictgen` instead of manually editing JSON.
 
 ```sh
@@ -749,8 +766,9 @@ keys or values are ignored.
   Create a converter by loading raw OpenCC TXT dictionary files through `DictionaryMaxlength.from_dicts()`.
 - `OpenCC.from_dict_files(config="s2t", specs=None) -> OpenCC`  
   Create a converter from packaged JSON dictionaries, then apply `CustomDictSpec(slot, mode, path)` custom file specs.
-- `set_config(config: Union[str, OpenccConfig]) -> None`  
-  Update the active conversion config. Raises `ValueError` for unsupported configs.
+- `set_config(config: Optional[Union[str, OpenccConfig]]) -> None`
+  Update the active config; `None` resets to `s2t`. Strings are stripped and lowercased. Invalid values raise
+  `ValueError` and leave the active config unchanged.
 - `get_config() -> str`  
   Return the current canonical config name.
 - `supported_configs() -> List[str]`  
@@ -758,9 +776,12 @@ keys or values are ignored.
 - `available_slots() -> List[str]`  
   Return the canonical names of all currently available dictionary slots.
 - `get_last_error() -> Optional[str]`  
-  Return the last validation or conversion error, if any.
+  Return the most recently recorded error, if any. Successful conversions do not clear previous errors.
 - `convert(input_text: str, punctuation: bool = False) -> str`  
-  Convert text using the active config, with optional punctuation conversion.
+  Convert text using the active config, with optional punctuation conversion. Empty input returns `""` and records
+  an error. Caught conversion failures return an error message and record it in `get_last_error()`. Normalization
+  and DeTofu require explicit calls in Python; they are not enabled by `convert()`.
+  Direction-specific methods below do not change the active config and propagate conversion exceptions.
 - `s2t(input_text: str, punctuation: bool = False) -> str`  
   Simplified Chinese to Traditional Chinese.
 - `t2s(input_text: str, punctuation: bool = False) -> str`  
@@ -806,8 +827,8 @@ keys or values are ignored.
 - `ts(input_text: str) -> str`  
   Character-only Traditional to Simplified conversion.
 - `zho_check(input_text: str) -> int`  
-  Detect the input text type:  
-  &nbsp;&nbsp;`1` - Traditional, `2` - Simplified, `0` - Others
+  Heuristically classify a short prefix: `1` = Traditional, `2` = Simplified, `0` = empty or indeterminate.
+  Mixed text is not reliably classified; Traditional evidence is checked first.
 - `normalize_compat(text: Optional[str]) -> str`  
   Normalize mapped CJK Compatibility Ideographs while preserving unmapped characters.
 - `normalize_unicode_compat(text: Optional[str]) -> str`  

@@ -19,10 +19,10 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ### Changed
 
-- Update dictionary date.
-- Update Compatibility mapping table.
-- Optimized office_helper.
-- Core: added indexed starter for mono scalar key.
+- Update bundled dictionary data and Unicode compatibility mappings.
+- Optimize dictionary matching with indexed starter lengths, including single-character keys.
+- Refine public API docstrings and usage documentation for configuration handling, conversion error reporting,
+  custom dictionary ordering and mutation, and the Office/EPUB text transformation pipeline.
 - CLI:
 
     - Refactor text and Office/document conversion to share a common text transformation pipeline.

@@ -449,6 +449,14 @@ class DictionaryMaxlength:
 
         append:
             Merge into the existing slot. Duplicate keys use late-comer wins.
+
+        Both mappings accept ``DictSlot`` or parseable string slot names.
+        Overrides are applied before appends. This method mutates and returns
+        ``self``; customize before constructing an ``OpenCC`` converter so its
+        cached plans use the updated data.
+
+        :raises RuntimeError: If this is the shared dictionary provider.
+        :raises ValueError: If a slot name is invalid.
         """
         self._ensure_mutable()
 
@@ -495,7 +503,19 @@ class DictionaryMaxlength:
         Dictionary files follow the normal OpenCC whitespace-separated format.
         Keys are parsed from the first column, so leading spaces or embedded
         spaces in keys are not preserved. Use with_custom_dicts() for exact
-        in-memory keys.
+        in-memory keys. Only the first two whitespace-separated columns are
+        used; additional candidate translations are ignored. Blank lines and
+        lines beginning with ``#`` are skipped.
+
+        ``overrides`` replaces entire slots; ``appends`` merges entries with
+        later values winning. Both accept ``DictSlot`` or parseable string keys.
+        Overrides are applied before appends. This method mutates and returns
+        ``self``; call it before constructing an ``OpenCC`` converter.
+
+        :raises RuntimeError: If this is the shared dictionary provider.
+        :raises ValueError: If a slot name is invalid.
+        :raises OSError: If a file cannot be read.
+        :raises UnicodeError: If a file is not valid UTF-8.
         """
         self._ensure_mutable()
 
