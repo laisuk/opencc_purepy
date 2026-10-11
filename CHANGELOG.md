@@ -7,6 +7,26 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ---
 
+## [1.5.0] - Unreleased
+
+### Added
+
+- Add Small Seal Script conversion configs: `s2seal`, `t2seal`, `seal2s`, and `seal2t`, available through
+  Python configuration selection and the CLI.
+- Add direct conversion APIs: `OpenCC.s2seal()`, `OpenCC.t2seal()`, `OpenCC.seal2s()`, and `OpenCC.seal2t()`,
+  each supporting optional punctuation conversion without changing the active configuration.
+- Add `DictSlot.SealCharacters`, `DictSlot.SealCharactersRev`, `DictSlot.SealVariants`, and
+  `DictSlot.SealVariantsRev`, including text/JSON loading and existing custom dictionary append/override workflows.
+
+### Changed
+
+- Extend cached conversion plans and starter unions for the Seal dictionary rounds, matching the OpenccNet
+  conversion order and punctuation handling.
+- Include the four Seal dictionaries in the packaged `dictionary_maxlength.json` data. Legacy custom dictionary
+  directories and JSON files may omit the new slots.
+
+---
+
 ## [1.4.4] - 2026-10-10
 
 ### Added

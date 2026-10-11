@@ -482,6 +482,14 @@ class TestOpenCC(unittest.TestCase):
         self.assertEqual(normalized, "聽聽奇美玉石瓶器音")
         self.assertEqual(converted, "听听奇美玉石瓶器音")
 
+    def test_seal_conversion(self):
+        cc = OpenCC(OpenccConfig.S2SEAL)  # Also accepts "s2seal"
+        seal_text = cc.convert("汉字小篆")  # 𾽺𿮵𽌠𽴖
+        assert cc.t2seal("漢字小篆") == seal_text
+        assert cc.seal2s(seal_text) == "汉字小篆"
+        assert cc.seal2t(seal_text) == "漢字小篆"
+        assert cc.s2seal("汉字小篆") == seal_text
+
 
 if __name__ == "__main__":
     unittest.main()

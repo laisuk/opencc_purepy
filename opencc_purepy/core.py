@@ -43,6 +43,11 @@ class OpenccConfig(Enum):
     HK2TP = "hk2tp"
     T2JP = "t2jp"
     JP2T = "jp2t"
+    S2SEAL = "s2seal"
+    T2SEAL = "t2seal"
+    SEAL2S = "seal2s"
+    SEAL2T = "seal2t"
+
 
     # value: str
 
@@ -817,6 +822,31 @@ class OpenCC:
                 DictRefs(self.union_cache.ensure_indexed(UnionKey.JpsPair))
                 .with_round_2(self.union_cache.ensure_indexed(UnionKey.StPunctOnly))
             )
+        elif config_key in ("s2seal", "s2seal_punct"):
+            refs = (
+                DictRefs(self.union_cache.ensure_indexed(
+                    UnionKey.S2T_PUNCT if config_key.endswith("_punct") else UnionKey.S2T))
+                .with_round_2(self.union_cache.ensure_indexed(UnionKey.SealVariantsOnly))
+                .with_round_3(self.union_cache.ensure_indexed(UnionKey.SealCharactersRevOnly))
+            )
+        elif config_key in ("seal2s", "seal2s_punct"):
+            refs = (
+                DictRefs(self.union_cache.ensure_indexed(UnionKey.SealCharactersOnly))
+                .with_round_2(self.union_cache.ensure_indexed(UnionKey.SealVariantsRevOnly))
+                .with_round_3(self.union_cache.ensure_indexed(
+                    UnionKey.T2S_PUNCT if config_key.endswith("_punct") else UnionKey.T2S))
+            )
+        elif config_key in ("t2seal", "t2seal_punct", "seal2t", "seal2t_punct"):
+            if config_key.startswith("t2seal"):
+                first, second = UnionKey.SealVariantsOnly, UnionKey.SealCharactersRevOnly
+            else:
+                first, second = UnionKey.SealCharactersOnly, UnionKey.SealVariantsRevOnly
+            refs = (
+                DictRefs(self.union_cache.ensure_indexed(first))
+                .with_round_2(self.union_cache.ensure_indexed(second))
+            )
+            if config_key.endswith("_punct"):
+                refs.with_round_3(self.union_cache.ensure_indexed(UnionKey.StPunctOnly))
         else:
             raise ValueError(f"Unsupported config: {config_key}")
 
@@ -1059,6 +1089,42 @@ class OpenCC:
         refs = self._get_dict_refs("jp2t_punct" if punctuation else "jp2t")
         return refs.apply_segment_replace(input_text, union_replace=self.union_replace, validate_delegates=False)
 
+    def s2seal(self, input_text: str, punctuation: bool = False) -> str:
+        """Convert Simplified Chinese to Small Seal Script, independently of the active config.
+
+        Optional punctuation follows the corresponding Chinese conversion.
+        Conversion exceptions propagate.
+        """
+        refs = self._get_dict_refs("s2seal_punct" if punctuation else "s2seal")
+        return refs.apply_segment_replace(input_text, union_replace=self.union_replace, validate_delegates=False)
+
+    def t2seal(self, input_text: str, punctuation: bool = False) -> str:
+        """Convert Traditional Chinese to Small Seal Script, independently of the active config.
+
+        Optional punctuation follows the corresponding Chinese conversion.
+        Conversion exceptions propagate.
+        """
+        refs = self._get_dict_refs("t2seal_punct" if punctuation else "t2seal")
+        return refs.apply_segment_replace(input_text, union_replace=self.union_replace, validate_delegates=False)
+
+    def seal2s(self, input_text: str, punctuation: bool = False) -> str:
+        """Convert Small Seal Script to Simplified Chinese, independently of the active config.
+
+        Optional punctuation follows the corresponding Chinese conversion.
+        Conversion exceptions propagate.
+        """
+        refs = self._get_dict_refs("seal2s_punct" if punctuation else "seal2s")
+        return refs.apply_segment_replace(input_text, union_replace=self.union_replace, validate_delegates=False)
+
+    def seal2t(self, input_text: str, punctuation: bool = False) -> str:
+        """Convert Small Seal Script to Traditional Chinese, independently of the active config.
+
+        Optional punctuation follows the corresponding Chinese conversion.
+        Conversion exceptions propagate.
+        """
+        refs = self._get_dict_refs("seal2t_punct" if punctuation else "seal2t")
+        return refs.apply_segment_replace(input_text, union_replace=self.union_replace, validate_delegates=False)
+
     def convert(self, input_text: str, punctuation: bool = False) -> str:
         """
         Convert text using the active configuration.
@@ -1123,6 +1189,14 @@ class OpenCC:
                 return self.jp2t(input_text, punctuation)
             elif config == "t2jp":
                 return self.t2jp(input_text, punctuation)
+            elif config == "s2seal":
+                return self.s2seal(input_text, punctuation)
+            elif config == "t2seal":
+                return self.t2seal(input_text, punctuation)
+            elif config == "seal2s":
+                return self.seal2s(input_text, punctuation)
+            elif config == "seal2t":
+                return self.seal2t(input_text, punctuation)
             else:
                 self._last_error = f"Invalid config: {config}"
                 return self._last_error

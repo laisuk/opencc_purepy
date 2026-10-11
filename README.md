@@ -8,7 +8,7 @@
 
 **opencc_purepy** is a **pure Python** implementation
 of [OpenCC (Open Chinese Convert)](https://github.com/BYVoid/OpenCC), supporting conversion between Simplified,
-Traditional, Hong Kong, Taiwan, and Japanese Kanji.  
+Traditional, Hong Kong, Taiwan, Japanese Kanji, and Small Seal Script.
 It uses dictionary-based segmentation and mapping logic inspired by the original OpenCC.
 
 ---
@@ -17,6 +17,7 @@ It uses dictionary-based segmentation and mapping logic inspired by the original
 
 - **Pure Python** – no native dependencies
 - **Multiple Chinese locale conversions** (Simplified, Traditional, HK, TW, JP)
+- **Small Seal Script conversions** (`s2seal`, `t2seal`, `seal2s`, `seal2t`)
 - **Punctuation style conversion** (optional)
 - **Unicode compatibility normalization** (CJK compatibility ideographs and extended allographs)
 - **Automatic code detection** (Simplified/Traditional)
@@ -28,28 +29,32 @@ It uses dictionary-based segmentation and mapping logic inspired by the original
 
 ## 🔁 Supported Conversion Configs
 
-| Code    | Description                                                              |
-|---------|--------------------------------------------------------------------------|
-| `s2t`   | Simplified → Traditional                                                 |
-| `t2s`   | Traditional → Simplified                                                 |
-| `s2tw`  | Simplified → Traditional (Taiwan)                                        |
-| `tw2s`  | Traditional (Taiwan) → Simplified                                        |
-| `s2twp` | Simplified → Traditional (Taiwan) with phrase and variant normalization  |
-| `tw2sp` | Traditional (Taiwan) → Simplified with idioms                            |
-| `s2hk`  | Simplified → Traditional (Hong Kong)                                     |
-| `hk2s`  | Traditional (Hong Kong) → Simplified                                     |
-| `s2hkp` | Simplified → Hong Kong Traditional with phrase and variant normalization |
-| `hk2sp` | Hong Kong Traditional with phrases/variants → Simplified                 |
-| `t2tw`  | Traditional → Traditional (Taiwan)                                       |
-| `tw2t`  | Traditional (Taiwan) → Traditional                                       |
-| `t2twp` | Traditional → Traditional (Taiwan) with idioms                           |
-| `tw2tp` | Traditional (Taiwan) → Traditional with idioms                           |
-| `t2hk`  | Traditional → Traditional (Hong Kong)                                    |
-| `t2hkp` | Traditional → Traditional (Hong Kong) with idioms                        |
-| `hk2t`  | Traditional (Hong Kong) → Traditional                                    |
-| `hk2tp` | Traditional (Hong Kong) → Traditional with idioms                        |
-| `t2jp`  | Japanese Kyujitai → Shinjitai                                            |
-| `jp2t`  | Japanese Shinjitai → Kyujitai                                            |
+| Code     | Description                                                              |
+|----------|--------------------------------------------------------------------------|
+| `s2t`    | Simplified → Traditional                                                 |
+| `t2s`    | Traditional → Simplified                                                 |
+| `s2tw`   | Simplified → Traditional (Taiwan)                                        |
+| `tw2s`   | Traditional (Taiwan) → Simplified                                        |
+| `s2twp`  | Simplified → Traditional (Taiwan) with phrase and variant normalization  |
+| `tw2sp`  | Traditional (Taiwan) → Simplified with idioms                            |
+| `s2hk`   | Simplified → Traditional (Hong Kong)                                     |
+| `hk2s`   | Traditional (Hong Kong) → Simplified                                     |
+| `s2hkp`  | Simplified → Hong Kong Traditional with phrase and variant normalization |
+| `hk2sp`  | Hong Kong Traditional with phrases/variants → Simplified                 |
+| `t2tw`   | Traditional → Traditional (Taiwan)                                       |
+| `tw2t`   | Traditional (Taiwan) → Traditional                                       |
+| `t2twp`  | Traditional → Traditional (Taiwan) with idioms                           |
+| `tw2tp`  | Traditional (Taiwan) → Traditional with idioms                           |
+| `t2hk`   | Traditional → Traditional (Hong Kong)                                    |
+| `t2hkp`  | Traditional → Traditional (Hong Kong) with idioms                        |
+| `hk2t`   | Traditional (Hong Kong) → Traditional                                    |
+| `hk2tp`  | Traditional (Hong Kong) → Traditional with idioms                        |
+| `t2jp`   | Japanese Kyujitai → Shinjitai                                            |
+| `jp2t`   | Japanese Shinjitai → Kyujitai                                            |
+| `s2seal` | Simplified Chinese → Small Seal Script                                   |
+| `t2seal` | Traditional Chinese → Small Seal Script                                  |
+| `seal2s` | Small Seal Script → Simplified Chinese                                   |
+| `seal2t` | Small Seal Script → Traditional Chinese                                  |
 
 ---
 
@@ -73,6 +78,39 @@ opencc = OpenCC("s2t")
 converted = opencc.convert(text, punctuation=True)
 print(converted)  # 「春眠不覺曉，處處聞啼鳥。」
 ```
+
+### Small Seal Script conversion
+
+Use a config with `convert()` or call a direction-specific method:
+
+```python
+from opencc_purepy import OpenCC, OpenccConfig
+
+cc = OpenCC(OpenccConfig.S2SEAL)  # Also accepts "s2seal"
+seal_text = cc.convert("汉字小篆") # 𾽺𿮵𽌠𽴖
+assert cc.t2seal("漢字小篆") == seal_text
+assert cc.seal2s(seal_text) == "汉字小篆"
+assert cc.seal2t(seal_text) == "漢字小篆"
+assert cc.s2seal("汉字小篆") == seal_text
+```
+
+The direct methods leave the active config unchanged. All four accept `punctuation=True`:
+`s2seal`, `t2seal`, and `seal2t` apply Traditional-style punctuation mappings; `seal2s` applies
+Simplified-style punctuation mappings.
+
+```sh
+opencc-purepy convert -i simplified.txt -o seal.txt -c s2seal
+opencc-purepy convert -i seal.txt -o traditional.txt -c seal2t
+```
+
+Conversion applies these dictionary rounds in order:
+
+| Config   | Dictionary rounds                                               |
+|----------|-----------------------------------------------------------------|
+| `s2seal` | Simplified → Traditional → `SealVariants` → `SealCharactersRev` |
+| `t2seal` | `SealVariants` → `SealCharactersRev`                            |
+| `seal2s` | `SealCharacters` → `SealVariantsRev` → Traditional → Simplified |
+| `seal2t` | `SealCharacters` → `SealVariantsRev`                            |
 
 ### CLI
 
@@ -433,6 +471,22 @@ dictionary = DictionaryMaxlength.from_json().with_custom_dict_files(
 
 ### Supported slots
 
+The four Seal slots support the same append/override APIs and CLI `--custom-dict` syntax as other slots.
+`SealCharacters` maps Seal characters to regular-script transcriptions; `SealCharactersRev` maps those
+transcriptions to Seal characters. `SealVariants` normalizes modern characters to those transcriptions,
+and `SealVariantsRev` maps them back to modern standard characters.
+
+For example, replace the character-to-Seal mapping with a UTF-8 tab-separated dictionary:
+
+```python
+from opencc_purepy import DictSlot, OpenCC
+
+cc = OpenCC.from_dicts(
+    config="t2seal",
+    overrides={DictSlot.SealCharactersRev: "./custom/SealCharactersRev.txt"},
+)
+```
+
 | `DictSlot`                      | Legacy key                | Default file                   |
 |---------------------------------|---------------------------|--------------------------------|
 | `DictSlot.STCharacters`         | `st_characters`           | `STCharacters.txt`             |
@@ -456,6 +510,10 @@ dictionary = DictionaryMaxlength.from_json().with_custom_dict_files(
 | `DictSlot.JPSCharacters`        | `jps_characters`          | `JPShinjitaiCharacters.txt`    |
 | `DictSlot.JPSCharactersRev`     | `jps_characters_rev`      | `JPShinjitaiCharactersRev.txt` |
 | `DictSlot.JPSPhrases`           | `jps_phrases`             | `JPShinjitaiPhrases.txt`       |
+| `DictSlot.SealCharacters`       | `seal_characters`         | `SealCharacters.txt`           |
+| `DictSlot.SealCharactersRev`    | `seal_characters_rev`     | `SealCharactersRev.txt`        |
+| `DictSlot.SealVariants`         | `seal_variants`           | `SealVariants.txt`             |
+| `DictSlot.SealVariantsRev`      | `seal_variants_rev`       | `SealVariantsRev.txt`          |
 
 Forward regional variant phrase slots are applied before their character-level variant slots:
 
@@ -822,6 +880,14 @@ keys or values are ignored.
   Traditional Chinese to Japanese variants.
 - `jp2t(input_text: str, punctuation: bool = False) -> str`  
   Japanese Shinjitai to Traditional Chinese.
+- `s2seal(input_text: str, punctuation: bool = False) -> str`
+  Simplified Chinese to Small Seal Script.
+- `t2seal(input_text: str, punctuation: bool = False) -> str`
+  Traditional Chinese to Small Seal Script.
+- `seal2s(input_text: str, punctuation: bool = False) -> str`
+  Small Seal Script to Simplified Chinese.
+- `seal2t(input_text: str, punctuation: bool = False) -> str`
+  Small Seal Script to Traditional Chinese.
 - `st(input_text: str) -> str`  
   Character-only Simplified to Traditional conversion.
 - `ts(input_text: str) -> str`  

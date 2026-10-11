@@ -28,6 +28,7 @@ class DictionaryMaxlength:
         "hk_variants_phrases", "hk_variants",
         "hk_variants_rev", "hk_variants_rev_phrases",
         "jps_characters", "jps_characters_rev", "jps_phrases",
+        "seal_characters", "seal_characters_rev", "seal_variants", "seal_variants_rev",
     )
 
     _provider = None
@@ -58,6 +59,10 @@ class DictionaryMaxlength:
         self.jps_characters: Tuple[Dict[str, str], int] = ({}, 0)
         self.jps_characters_rev: Tuple[Dict[str, str], int] = ({}, 0)
         self.jps_phrases: Tuple[Dict[str, str], int] = ({}, 0)
+        self.seal_characters: Tuple[Dict[str, str], int] = ({}, 0)
+        self.seal_characters_rev: Tuple[Dict[str, str], int] = ({}, 0)
+        self.seal_variants: Tuple[Dict[str, str], int] = ({}, 0)
+        self.seal_variants_rev: Tuple[Dict[str, str], int] = ({}, 0)
 
         self._is_shared_provider = False
 
@@ -309,6 +314,10 @@ class DictionaryMaxlength:
             'jps_characters': "JPShinjitaiCharacters.txt",
             'jps_characters_rev': "JPShinjitaiCharactersRev.txt",
             'jps_phrases': "JPShinjitaiPhrases.txt",
+            "seal_characters": "SealCharacters.txt",
+            "seal_characters_rev": "SealCharactersRev.txt",
+            "seal_variants": "SealVariants.txt",
+            "seal_variants_rev": "SealVariantsRev.txt",
         }
 
         # ------------------------------------------------------------------
@@ -357,6 +366,10 @@ class DictionaryMaxlength:
             "ts_punctuations",
             "hk_phrases",
             "hk_phrases_rev",
+            "seal_characters",
+            "seal_characters_rev",
+            "seal_variants",
+            "seal_variants_rev",
         }
 
         for attr, path in file_map.items():
@@ -605,11 +618,19 @@ class DictionaryMaxlength:
             "JPShinjitaiCharacters.txt",
             "JPShinjitaiCharactersRev.txt",
             "JPShinjitaiPhrases.txt",
+            "SealCharacters.txt",
+            "SealCharactersRev.txt",
+            "SealVariants.txt",
+            "SealVariantsRev.txt",
         ]
 
         optional_files = {
             "HKPhrases.txt",
             "HKPhrasesRev.txt",
+            "SealCharacters.txt",
+            "SealCharactersRev.txt",
+            "SealVariants.txt",
+            "SealVariantsRev.txt",
         }
 
         missing = [
