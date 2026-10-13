@@ -226,7 +226,7 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 ### Changed
 
 - Update and optimize dictionary data to reduce ambiguity.
-- Optimized serialize_to_json ()
+- Optimized `serialize_to_json()`
 
 ---
 
