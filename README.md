@@ -96,7 +96,7 @@ opencc-purepy --help
 ```
 
 ```bash
-opencc-purepy convert -c s2t -t "汉字转换"
+echo "汉字转换" | opencc-purepy convert -c s2t
 ```
 
 ---
