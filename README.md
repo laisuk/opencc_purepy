@@ -60,8 +60,43 @@ It uses dictionary-based segmentation and mapping logic inspired by the original
 
 ## 📦 Installation
 
+### Install from PyPI (Stable Release)
+
+Install the latest published release:
+
 ```bash
-pip install opencc-purepy
+pip install -U opencc-purepy
+```
+
+### Install from GitHub (Development Version)
+
+Install the latest development version directly from GitHub:
+
+**With Git installed:**
+
+```bash
+pip install -U "git+https://github.com/laisuk/opencc_purepy.git@master"
+```
+
+**Without Git:**
+
+```bash
+pip install -U "https://github.com/laisuk/opencc_purepy/archive/refs/heads/master.zip"
+```
+
+Both methods install the development source, including changes not yet published on PyPI.
+
+**Note:** Development versions may contain experimental changes. A Python build backend and its dependencies are
+required, but no native compiler is needed.
+
+### Verify Installation
+
+```bash
+opencc-purepy --help
+```
+
+```bash
+opencc-purepy convert -c s2t -t "汉字转换"
 ```
 
 ---
@@ -87,7 +122,7 @@ Use a config with `convert()` or call a direction-specific method:
 from opencc_purepy import OpenCC, OpenccConfig
 
 cc = OpenCC(OpenccConfig.S2SEAL)  # Also accepts "s2seal"
-seal_text = cc.convert("汉字小篆") # 𾽺𿮵𽌠𽴖
+seal_text = cc.convert("汉字小篆")  # 𾽺𿮵𽌠𽴖
 assert cc.t2seal("漢字小篆") == seal_text
 assert cc.seal2s(seal_text) == "汉字小篆"
 assert cc.seal2t(seal_text) == "漢字小篆"
