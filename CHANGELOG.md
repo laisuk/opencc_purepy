@@ -24,6 +24,7 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
   conversion order and punctuation handling.
 - Include the four Seal dictionaries in the packaged `dictionary_maxlength.json` data. Legacy custom dictionary
   directories and JSON files may omit the new slots.
+- Update dictionary data and Unicode Compatibility mapping table.
 
 ---
 
