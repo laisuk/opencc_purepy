@@ -992,45 +992,100 @@ keys or values are ignored.
 
 ## ⚡ Benchmark
 
-[**OpenCC benchmark summary**](https://github.com/laisuk/opencc_purepy/actions/runs/29361361539#summary-87181990001)
+Measured on GitHub Actions `ubuntu-latest` using the default `s2t` configuration.
 
-> Measured on GitHub Actions `ubuntu-latest` using the default `s2t` configuration.
-> Benchmark separates cold startup, first post-init conversion, and warm cached conversion.
+The benchmark separates cold startup, first post-initialization conversion, and warm cached conversion.
 
-### Runner Platform
+### Latest Results — opencc-purepy v1.5.0
 
-| Field     | Value                                                                                                                      |
-|-----------|----------------------------------------------------------------------------------------------------------------------------|
-| Runner    | Linux X64                                                                                                                  |
-| Image     | ubuntu24 20260705.232.1                                                                                                    |
-| Kernel    | `Linux runnervm5mmn9 6.17.0-1018-azure #18~24.04.1-Ubuntu SMP Thu May 28 16:39:11 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux` |
-| CPU       | AMD EPYC 9V74 80-Core Processor                                                                                            |
-| CPU Cores | 4                                                                                                                          |
-| Memory    |                                                                                                                            |
-| Python    | Python 3.10.20                                                                                                             |
+[**GitHub Actions benchmark summary (
+v1.5.0)**](https://github.com/laisuk/opencc_purepy/actions/runs/40364676044#summary-121719047553)
 
-### Results
+#### Runner Platform
 
-#### opencc-purepy v1.4.1
+| Field         | Value                           |
+|---------------|---------------------------------|
+| Runner        | Linux X64                       |
+| Image         | ubuntu24 20261023.334.3         |
+| Kernel        | `6.17.0-1022-azure`             |
+| CPU           | AMD EPYC 9V74 80-Core Processor |
+| CPU Cores     | 4                               |
+| Memory        | Not reported                    |
+| Python        | Python 3.12.15                  |
+| opencc_purepy | **1.5.0**                       |
+
+#### Results
 
 | Input Size        | Cold Total (ms) | Post-init Cold (ms) |  Warm (ms) |
 |-------------------|----------------:|--------------------:|-----------:|
-| **100 chars**     |       16.025 ms |           14.065 ms |   0.129 ms |
-| **1,000 chars**   |       16.136 ms |           15.459 ms |   1.287 ms |
-| **10,000 chars**  |       25.506 ms |           24.347 ms |  10.441 ms |
-| **100,000 chars** |      121.911 ms |          119.935 ms | 104.965 ms |
+| **100 chars**     |          23.930 |              22.062 |  **0.092** |
+| **1,000 chars**   |          23.547 |              22.860 |  **0.877** |
+| **10,000 chars**  |          28.790 |              28.036 |  **6.852** |
+| **100,000 chars** |          93.009 |              92.082 | **70.177** |
 
-*`cold_total` includes `OpenCC(config)` setup plus conversion. `post_init_cold` measures the first conversion after
-initialization. `warm` measures conversion after the union cache has already been built. Results depend on runner
-hardware and background system load.*
+### Previous Results — opencc-purepy v1.4.1
+
+[**GitHub Actions benchmark summary (
+v1.4.1)**](https://github.com/laisuk/opencc_purepy/actions/runs/29361361539#summary-87181990001)
+
+#### Runner Platform
+
+| Field         | Value                           |
+|---------------|---------------------------------|
+| Runner        | Linux X64                       |
+| Image         | ubuntu24 20260705.232.1         |
+| Kernel        | `6.17.0-1018-azure`             |
+| CPU           | AMD EPYC 9V74 80-Core Processor |
+| CPU Cores     | 4                               |
+| Memory        | Not reported                    |
+| Python        | Python 3.10.20                  |
+| opencc_purepy | **1.4.1**                       |
+
+#### Results
+
+| Input Size        | Cold Total (ms) | Post-init Cold (ms) | Warm (ms) |
+|-------------------|----------------:|--------------------:|----------:|
+| **100 chars**     |          16.025 |              14.065 |     0.129 |
+| **1,000 chars**   |          16.136 |              15.459 |     1.287 |
+| **10,000 chars**  |          25.506 |              24.347 |    10.441 |
+| **100,000 chars** |         121.911 |             119.935 |   104.965 |
+
+### Performance Comparison — v1.4.1 vs v1.5.0
+
+| Input Size        | Warm v1.4.1 (ms) | Warm v1.5.0 (ms) | Time Reduction |
+|-------------------|-----------------:|-----------------:|---------------:|
+| **100 chars**     |            0.129 |            0.092 |      **28.7%** |
+| **1,000 chars**   |            1.287 |            0.877 |      **31.9%** |
+| **10,000 chars**  |           10.441 |            6.852 |      **34.4%** |
+| **100,000 chars** |          104.965 |           70.177 |      **33.1%** |
 
 ### Notes
 
-> Despite being implemented in pure Python, `opencc_purepy` achieves competitive conversion throughput through
-> aggressive caching and starter-index optimizations.
->
-> The warm conversion path is practical for large-text workloads such as document conversion, GUI applications, and
-> batch processing.
+The v1.5.0 benchmark shows approximately **29–34% lower warm-conversion latency** across the tested input sizes compared
+with v1.4.1.
+
+Recent core optimizations include:
+
+- Precomputed, descending per-starter key-length indexes.
+- Direct iteration over existing candidate lengths, avoiding unnecessary dictionary lookups.
+- Range-based conversion that reduces intermediate substring allocations and repeated function calls.
+- Reuse of identical starter-length patterns to limit additional indexing overhead.
+
+The observed warm-path improvements are consistent with these optimizations.
+
+However, the benchmark runs used different Python versions (3.10.20 versus 3.12.15) and different GitHub Actions runner
+images. Consequently, these measurements demonstrate observed end-to-end improvements rather than an isolated
+measurement of the indexing optimization.
+
+Despite being implemented entirely in pure Python, `opencc_purepy` achieves practical conversion throughput through
+union caching, starter indexing, and optimized hot-path matching.
+
+The warm conversion path is particularly suitable for large-text workloads, including document conversion, GUI
+applications, and batch processing.
+
+*`cold_total` includes `OpenCC(config)` setup plus conversion. `post_init_cold` measures the first conversion after
+initialization. `warm` measures conversion after the union cache has already been built. Lower times are better. Results
+depend on Python version, runner hardware, and background system load.*
 
 ---
 
