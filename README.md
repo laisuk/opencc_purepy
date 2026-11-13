@@ -38,7 +38,7 @@ The interactive demo includes:
 - **Chinese Conversion** — 24 configurations supporting Simplified, Traditional, Hong Kong, Taiwan, Japanese Kanji, and
   Small Seal Script.
 - **Custom Dictionaries** — Manage multiple dictionary slots with Append/Override modes, Apply, and Reset.
-- **Document Conversion** — Convert DOCX, XLSX, PPTX, and EPUB files directly in your browser.
+- **Document Conversion** — Convert DOCX, XLSX, PPTX, ODT, ODS, ODT and EPUB files directly in your browser.
 - **Automatic Encoding Detection** — Detect common CJK encodings for text files, with manual selection.
 - **Additional Tools** — Unicode compatibility normalization, DeTofu, punctuation conversion, and GB mojibake repair.
 - **Modern Interface** — Dual editors, character counts, and responsive Light/Dark Theme support.
