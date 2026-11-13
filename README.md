@@ -1102,3 +1102,14 @@ This project is licensed under the [MIT License](https://github.com/laisuk/openc
 ---
 
 Powered by **Pure Python** and **OpenCC** Lexicons.
+
+### Multiprocessing and browser runtimes
+
+Large conversions use up to four worker processes when the input has more than
+1,000 delimiter-separated ranges and at least 1,000,000 characters. Inputs with
+only one range use direct conversion. Multiple CPUs and importable multiprocessing
+support are required; single-core or unknown CPU counts use serial conversion.
+Pyodide/Emscripten and WASI always convert serially without importing multiprocessing.
+Pool startup and worker errors retain the existing error behavior: direct conversion
+methods raise, while `convert()` records and returns a conversion error message.
+Native CPython and Nuitka retain the process-pool path on supported platforms.

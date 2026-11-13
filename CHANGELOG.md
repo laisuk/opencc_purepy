@@ -7,7 +7,22 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ---
 
-## \[1.5.1] - Unreleased
+## \[1.5.2] - Unreleased
+
+### Fixed
+
+- Use serial conversion in Pyodide/Emscripten and WASI, on single-core systems,
+  when CPU counts are unavailable, or when multiprocessing cannot be imported.
+- Import multiprocessing lazily for eligible large conversions. Preserve native
+  multicore thresholds, matching semantics, and propagation of worker failures.
+
+### Tests
+
+- Add serial/parallel parity and multiprocessing portability regression coverage.
+
+---
+
+## \[1.5.1] - 2026-11-13
 
 ### Changed
 
