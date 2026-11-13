@@ -981,6 +981,56 @@ keys or values are ignored.
 
 ---
 
+#### Office and EPUB conversion — Python API
+
+The Office helper accepts a caller-supplied text conversion function (`str -> str`). This keeps document packaging
+independent of the `OpenCC` conversion engine.
+
+```python
+from opencc_purepy import OpenCC
+from opencc_purepy.office_helper import convert_office_doc
+
+cc = OpenCC("s2t")
+
+
+def text_converter(text: str) -> str:
+    return cc.convert(text, punctuation=True)
+
+
+success, message = convert_office_doc(
+    input_path="book.epub",
+    output_path="book_converted.epub",
+    office_format="epub",
+    office_text_converter=text_converter,
+    keep_font=True,
+)
+
+print(message)
+```
+
+The same API supports DOCX, XLSX, PPTX, ODT, ODS, ODP, and EPUB.
+
+The fourth argument must be a callable that accepts a string and returns a string, **not an `OpenCC` instance**.
+Punctuation conversion and other text-processing options belong inside the callback.
+
+For optional Unicode normalization and DeTofu, extend the callback:
+
+```python
+def text_converter(text: str) -> str:
+    text = cc.normalize_compat_extended(text)
+    text = cc.convert(text, punctuation=True)
+    return cc.detofu(text, "ext-b")
+```
+
+The processing order is:
+
+**Normalize → Convert → DeTofu**
+
+`keep_font=True` preserves recognized font-family attributes during document conversion. The helper returns
+`(success, message)` and handles package extraction, rebuilding, validation, and output publication.
+
+---
+
 ## 🛠 Development
 
 - Python bindings: [
