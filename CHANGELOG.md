@@ -7,7 +7,16 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ---
 
-## [1.5.0] - 2026-10-27
+## \[1.5.1] - Unreleased
+
+### Changed
+
+- Update dictionary data.
+- Optimized font placeholder restoration during Office and EPUB document conversion.
+
+---
+
+## \[1.5.0] - 2026-10-27
 
 ### Added
 
@@ -42,7 +51,7 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ---
 
-## [1.4.4] - 2026-10-10
+## \[1.4.4] - 2026-10-10
 
 ### Added
 
@@ -72,7 +81,7 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ---
 
-## [1.4.3] - 2026-08-29
+## \[1.4.3] - 2026-08-29
 
 ### Added
 
@@ -99,7 +108,7 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ---
 
-## [1.4.2] - 2026-08-01
+## \[1.4.2] - 2026-08-01
 
 ### Added
 
@@ -134,7 +143,7 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ---
 
-## [1.4.1] - 2026-07-15
+## \[1.4.1] - 2026-07-15
 
 ### Added
 
@@ -154,7 +163,7 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ---
 
-## [1.4.0] - 2026-06-24
+## \[1.4.0] - 2026-06-24
 
 ### Changed
 
@@ -169,7 +178,7 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ---
 
-## [1.3.3] - 2026-06-14
+## \[1.3.3] - 2026-06-14
 
 ### Added
 
@@ -236,7 +245,7 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ---
 
-## [1.3.2] - 2026-05-31
+## \[1.3.2] - 2026-05-31
 
 ### Changed
 
@@ -245,7 +254,7 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ---
 
-## [1.3.1] - 2026-05-24
+## \[1.3.1] - 2026-05-24
 
 ### Changed
 
@@ -257,7 +266,7 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ---
 
-## [1.3.0] - 2026-05-23
+## \[1.3.0] - 2026-05-23
 
 ### Added
 
@@ -322,7 +331,7 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ---
 
-## [1.2.4] - 2026-05-15
+## \[1.2.4] - 2026-05-15
 
 ### Added
 
@@ -343,7 +352,7 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ---
 
-## [1.2.3] - 2026-05-14
+## \[1.2.3] - 2026-05-14
 
 ### Changed
 
@@ -355,7 +364,7 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ---
 
-## [1.2.2] - 2026-05-14
+## \[1.2.2] - 2026-05-14
 
 ### Changed
 
@@ -379,7 +388,7 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ---
 
-## [1.2.1] - 2026-05-08
+## \[1.2.1] - 2026-05-08
 
 ### Added
 
@@ -392,7 +401,7 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ---
 
-## [1.2.0] - 2026-04-08
+## \[1.2.0] - 2026-04-08
 
 ### Added
 
@@ -411,7 +420,7 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ---
 
-## [1.1.0] - 2025-08-13
+## \[1.1.0] - 2025-08-13
 
 ### Added
 
@@ -428,7 +437,7 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ---
 
-## [1.0.3] – 2025-07-06
+## \[1.0.3] – 2025-07-06
 
 ### Changed
 
@@ -441,7 +450,7 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ---
 
-## [1.0.2] – 2025-06-27
+## \[1.0.2] – 2025-06-27
 
 ### Fixed
 
@@ -454,7 +463,7 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ---
 
-## [1.0.1] – 2025-06-26
+## \[1.0.1] – 2025-06-26
 
 ### Added
 
@@ -467,7 +476,7 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ---
 
-## [1.0.0] – 2025-06-18
+## \[1.0.0] – 2025-06-18
 
 ### Added
 
