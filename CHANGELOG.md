@@ -7,6 +7,14 @@ the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ---
 
+## \[1.5.3] - Unreleased
+
+### Changed
+
+- Updated dictionary data.
+
+---
+
 ## \[1.5.2] - 2026-11-14
 
 ### Fixed
